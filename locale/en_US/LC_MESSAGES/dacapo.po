@@ -1,0 +1,238 @@
+# English (United States) translations for PROJECT.
+# Copyright (C) 2024 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2024-05-01 16:35+0800\n"
+"PO-Revision-Date: 2024-04-30 23:58+0800\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en_US\n"
+"Language-Team: en_US <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: main.py:37
+msgid "打开"
+msgstr "Open"
+
+#: main.py:37
+msgid "隐藏"
+msgstr "Hide"
+
+#: main.py:37
+msgid "退出"
+msgstr "Exit"
+
+#: interface/gui.py:115
+msgid "点击左下角添加配置"
+msgstr "Click the lower left corner to add configuration"
+
+#: interface/common/settings.py:19
+msgid "从已有模板创建"
+msgstr "From template"
+
+#: interface/common/settings.py:19
+msgid "导入"
+msgstr "Import"
+
+#: interface/common/settings.py:26
+msgid "你选择了 {0}"
+msgstr "You have selected {0}"
+
+#: interface/common/settings.py:40
+msgid "请填写 [实例名@模板名]"
+msgstr "Please fill in [instance name@template name]"
+
+#: interface/common/settings.py:44
+msgid "新名字与已有实例名冲突"
+msgstr "The new name conflicts with an existing instance name"
+
+#: interface/common/settings.py:49
+msgid "请选择有效目录, 当前为 "
+msgstr "Please select a valid directory, currently is "
+
+#: interface/common/settings.py:64
+msgid "缺少必要配置文件 {0}"
+msgstr "Missing necessary configuration file {0}"
+
+#: interface/common/settings.py:121
+msgid "确定删除配置<{0}>吗?"
+msgstr "Are you sure you want to delete the configuration<{0}>?"
+
+#: interface/common/settings.py:123
+msgid "确定"
+msgstr "Confirm"
+
+#: interface/common/settings.py:124
+msgid "取消"
+msgstr "Cancel"
+
+#: interface/common/settings.py:152
+msgid "选择文件"
+msgstr "Select"
+
+#: interface/common/settings.py:156 interface/common/settings.py:157
+msgid "新配置名"
+msgstr "New configuration name"
+
+#: interface/common/settings.py:156
+msgid "格式：实例名"
+msgstr "Format: instance name"
+
+#: interface/common/settings.py:157
+msgid "格式：实例名@模板名"
+msgstr "Format: instance name@template name"
+
+#: interface/common/settings.py:165
+msgid "添加新实例"
+msgstr "Add new instance"
+
+#: interface/common/settings.py:169
+msgid "管理实例"
+msgstr "Manage instances"
+
+#: interface/common/settings.py:170
+msgid "全选/取消全选"
+msgstr "Select all/Deselect all"
+
+#: interface/common/settings.py:175
+msgid "应用"
+msgstr "Apply"
+
+#: interface/common/settings.py:181 interface/exclusive/custom.py:168
+msgid "语言"
+msgstr "Language"
+
+#: interface/common/settings.py:191
+msgid "实例"
+msgstr "Instance"
+
+#: interface/common/settings.py:192
+msgid "通用"
+msgstr "General"
+
+#: interface/common/settings.py:193
+msgid "关于"
+msgstr "About"
+
+#: interface/exclusive/custom.py:128
+msgid "任务设置"
+msgstr "Task settings"
+
+#: interface/exclusive/custom.py:131
+msgid "默认优先级"
+msgstr "Default priority"
+
+#: interface/exclusive/custom.py:135
+msgid "在等候队列的排序优先级，不同任务可以重复"
+msgstr "The sorting priority in the waiting queue, different tasks can be repeated"
+
+#: interface/exclusive/custom.py:138
+msgid "运行命令"
+msgstr "Run command"
+
+#: interface/exclusive/custom.py:143
+msgid ""
+"执行该任务的命令，请先在命令行尝试是否能正常运行，例如\n"
+"在设置的工作目录执行“D:\\python\\python.exe test.py -task1”\n"
+"若有多个python环境，请注意python解释器路径"
+msgstr ""
+"Command to execute this task, please try it in the command line first to "
+"see if it can run normally, for example:\n"
+"Execute 'D:\\python\\python.exe test.py -task1' in the set Work dir\n"
+"If there are multiple python environments, please pay attention to the "
+"path of the python interpreter"
+
+#: interface/exclusive/custom.py:149
+msgid "父目录不存在"
+msgstr "Parent directory does not exist"
+
+#: interface/exclusive/custom.py:159
+msgid ""
+"权限不足，请以管理员身份运行本程序\n"
+"或手动创建该实例配置文件软链接（快捷方式）到目标位置下"
+msgstr ""
+"Insufficient permissions, please run this program as an administrator\n"
+"Or manually create a symbolic link (shortcut) of the instance "
+"configuration file to the target location"
+
+#: interface/exclusive/custom.py:165
+msgid "基本设置"
+msgstr "Basic"
+
+#: interface/exclusive/custom.py:172
+msgid "修改将在重启后生效"
+msgstr "Modifications will take effect after restart"
+
+#: interface/exclusive/custom.py:173
+msgid "本界面显示的语言"
+msgstr "The language displayed on this interface"
+
+#: interface/exclusive/custom.py:176
+msgid "工作目录"
+msgstr "Work dir"
+
+#: interface/exclusive/custom.py:180
+msgid "程序运行的工作目录，通常应该是项目根目录"
+msgstr ""
+"The working directory of the program, usually it should be the project "
+"root directory"
+
+#: interface/exclusive/custom.py:183
+msgid "后台任务"
+msgstr "Background"
+
+#: interface/exclusive/custom.py:187
+msgid "是否为完全的后台程序，不占用屏幕键鼠等设备"
+msgstr ""
+"Whether it is a complete background program, not occupying screen, "
+"keyboard, mouse and other devices"
+
+#: interface/exclusive/custom.py:190
+msgid "配置路径"
+msgstr "Config path"
+
+#: interface/exclusive/custom.py:195
+msgid ""
+"你的程序到何处访问配置文件，具体到文件名\n"
+"例如 D:\\MyProject\\config\\template.json"
+msgstr ""
+"Where your program accesses the configuration file, specific to the file "
+"name\n"
+"For example D:\\MyProject\\config\\template.json"
+
+#: interface/exclusive/home.py:115
+msgid ""
+"请检查工作目录和任务运行命令设置\n"
+"报错内容：{0}"
+msgstr ""
+"Please check the working directory and task run command settings\n"
+"Error content: {0}"
+
+#: interface/exclusive/home.py:133
+msgid "运行"
+msgstr "Run"
+
+#: interface/exclusive/home.py:138
+msgid "等待"
+msgstr "Wait"
+
+#: interface/exclusive/home.py:145
+msgid "终止"
+msgstr "Stop"
+
+#: interface/exclusive/home.py:150
+msgid "日志"
+msgstr "Log"
+
+#: interface/exclusive/instance.py:34
+msgid "主页"
+msgstr "Home"
+
