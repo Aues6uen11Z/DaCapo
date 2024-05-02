@@ -5,7 +5,7 @@
 /.nicegui
 /config/*.json
 /config/templates/*
-/static/original.png
+/static/*.png
 
 
 # Byte-compiled / optimized / DLL files

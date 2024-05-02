@@ -34,7 +34,7 @@ def on_exit():
 
 
 if __name__ == "__main__":
-    image = Image.open('static/logo.png')
+    image = Image.open('static/logo.ico')
     menu = Menu(MenuItem(_('打开'), on_open, default=True), MenuItem(_('隐藏'), on_hide), MenuItem(_('退出'), on_exit))
     icon = Icon('DaCapo', image, menu=menu)
     Thread(target=icon.run, daemon=True).start()
