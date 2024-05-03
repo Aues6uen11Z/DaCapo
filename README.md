@@ -88,21 +88,111 @@ menu
 
 - 第一层分别是Menu任务组、Task任务、以及所有Group选项组。
 
-<img src="static/images/trans1.png" style="zoom:50%;" />
+```json
+{
+    "Menu":{...},
+    "Task":{...},
+    "Group1":{...},
+    "Group2":{...},
+    "Group3":{...},
+    ...
+}
+```
 
 - 第二层，对于Menu和Task来说是是任务组名、任务名的翻译。
 
-<img src="static/images/trans2.png" style="zoom:50%;" />
+```json
+{
+    "Menu": {
+      "Project": {
+        "name": "总览"
+      },
+      "Type1": {
+        "name": "类型1"
+      },
+      "Type2": {
+        "name": "类型2"
+      }
+    },
+    "Task": {
+      "General": {
+        "name": "全局设置"
+      },
+      "Task1": {
+        "name": "任务1"
+      },
+      "Task2": {
+        "name": "任务2"
+      },
+      "Task3": {
+        "name": "任务3"
+      },
+      "Task4": {
+        "name": "任务4"
+      }
+    },
+	...
+}
+```
 
 而对于Group来说既包含了该Group的翻译（_info）也包含了其下所有设置项的翻译，若设置项为下拉框，则直接在name和help同级翻译所有选项。
 
-<img src="static/images/trans3.png" style="zoom:50%;" />
-
-
+```json
+"Group1": {
+      "_info": {
+        "name": "组1",
+        "help": "组1的帮助信息"
+      },
+      "setting1": {
+        "name": "设置项1",
+        "help": "设置项1的帮助信息，input类型只需填写name和help，help也可省略"
+      },
+      "setting2": {
+        "name": "设置项2",
+        "help": "设置项2的帮助信息，select类型需填写所有下拉框选项翻译",
+        "option1": "选项1",
+        "option2": "选项2",
+        "option3": "选项3"
+      },
+      "setting3": {
+        "name": "设置项3",
+        "help": "设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略"
+      }
+    },
+```
 
 然后， 你的程序应该接收一个json配置文件，这次省略了任务组，层级为`Task`任务-`Group`选项组-`Argument`选项，形式如下：
 
-<img src="static/images/config.png" style="zoom:50%;" />
+```json
+{
+    "_info": {...},
+    "General": {
+        "Group1": {
+            "setting1": "someting",
+            "setting2": "option1",
+            "setting3": true
+        },
+        "Group2": {
+            "setting1": "someting",
+            "setting2": "option1",
+            "setting3": true
+        }
+    },
+    "Task1": {
+        "Group3": {
+            "setting1": "someting",
+            "setting2": "option1",
+            "setting3": true
+        },
+        "Group4": {
+            "setting1": "someting",
+            "setting2": "option1",
+            "setting3": true
+        }
+    },
+    ...
+}
+```
 
 
 
@@ -158,7 +248,7 @@ menu
 
 ## 使用示例
 
-三言两语可能难以表达清楚，建议结合[示例](https://github.com/Aues6uen11Z/DaCapo/tree/master/examples/SimpleScript)理解，若仍有疑问欢迎在Issue中提问，也欢迎PR来补充文档。
+三言两语可能难以表达清楚，建议结合[示例](https://github.com/Aues6uen11Z/DaCapo/tree/master/examples/SimpleScript)理解，若仍有疑问欢迎在Issue中提问，也欢迎提PR来完善文档。
 
 ## 致谢
 

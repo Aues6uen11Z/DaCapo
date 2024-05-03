@@ -88,20 +88,111 @@ This directory contains parameter translations and help information. If you prov
 
 - The first level consists of the Menu task group, Task tasks, and all Group option groups.
 
-<img src="../static/images/trans1.png" style="zoom:50%;" />
+```json
+{
+    "Menu":{...},
+    "Task":{...},
+    "Group1":{...},
+    "Group2":{...},
+    "Group3":{...},
+    ...
+}
+```
 
 - The second level consists of translations for the names of task groups and tasks for Menu and Task.
 
-<img src="../static/images/trans2.png" style="zoom:50%;" />
+```json
+{
+    "Menu": {
+      "Project": {
+        "name": "总览"
+      },
+      "Type1": {
+        "name": "类型1"
+      },
+      "Type2": {
+        "name": "类型2"
+      }
+    },
+    "Task": {
+      "General": {
+        "name": "全局设置"
+      },
+      "Task1": {
+        "name": "任务1"
+      },
+      "Task2": {
+        "name": "任务2"
+      },
+      "Task3": {
+        "name": "任务3"
+      },
+      "Task4": {
+        "name": "任务4"
+      }
+    },
+	...
+}
+```
 
-- For Group, it includes not only the translation of the Group itself ($_info) but also the translations of all its setting items. If a setting item is a dropdown menu, then all options are translated at the same level as name and help.
+For Group, it includes not only the translation of the Group itself ($_info) but also the translations of all its setting items. If a setting item is a dropdown menu, then all options are translated at the same level as name and help.
 
-<img src="../static/images/trans3.png" style="zoom:50%;" />
-
+```json
+"Group1": {
+      "_info": {
+        "name": "组1",
+        "help": "组1的帮助信息"
+      },
+      "setting1": {
+        "name": "设置项1",
+        "help": "设置项1的帮助信息，input类型只需填写name和help，help也可省略"
+      },
+      "setting2": {
+        "name": "设置项2",
+        "help": "设置项2的帮助信息，select类型需填写所有下拉框选项翻译",
+        "option1": "选项1",
+        "option2": "选项2",
+        "option3": "选项3"
+      },
+      "setting3": {
+        "name": "设置项3",
+        "help": "设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略"
+      }
+    },
+```
 
 Next, your program should accept a JSON configuration file. This time, the task group level is omitted, and the hierarchy is `Task` - `Group` - `Argument`, as follows:
 
-<img src="../static/images/config.png" style="zoom:50%;" />
+```json
+{
+    "_info": {...},
+    "General": {
+        "Group1": {
+            "setting1": "someting",
+            "setting2": "option1",
+            "setting3": true
+        },
+        "Group2": {
+            "setting1": "someting",
+            "setting2": "option1",
+            "setting3": true
+        }
+    },
+    "Task1": {
+        "Group3": {
+            "setting1": "someting",
+            "setting2": "option1",
+            "setting3": true
+        },
+        "Group4": {
+            "setting1": "someting",
+            "setting2": "option1",
+            "setting3": true
+        }
+    },
+    ...
+}
+```
 
 
 
