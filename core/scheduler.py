@@ -28,11 +28,21 @@ class TaskManager:
     async def run_command(self, task_name: str, command: str) -> Optional[Exception]:
         """Run a command in the background and display the output in the pre-created dialog."""
         try:
-            self.process = await asyncio.create_subprocess_exec(
-                *shlex.split(command, posix="win" not in sys.platform.lower()),
-                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
-                cwd=self.ist_config.work_dir
-            )
+            if "win" in sys.platform.lower():
+                self.process = await asyncio.create_subprocess_exec(
+                    *shlex.split(command, posix=False),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT,
+                    cwd=self.ist_config.work_dir,
+                    creationflags=0x08000000  # CREATE_NO_WINDOW
+                )
+            else:
+                self.process = await asyncio.create_subprocess_exec(
+                    *shlex.split(command, posix=True),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT,
+                    cwd=self.ist_config.work_dir
+                )
         except Exception as e:
             logger.error(f'{self.ist_config.name}-{task_name}: {e}')
             return e
