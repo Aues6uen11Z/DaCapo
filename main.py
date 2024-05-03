@@ -5,8 +5,8 @@ from nicegui import app, ui
 from PIL import Image
 from pystray import Icon, Menu, MenuItem
 
-from interface.gui import DaCapoUI
-from interface.utils import get_text
+from src.interface.gui import DaCapoUI
+from src.interface.utils import get_text
 
 # from niceguiToolkit.layout import inject_layout_tool
 # inject_layout_tool()
@@ -34,7 +34,7 @@ def on_exit():
 
 
 if __name__ == "__main__":
-    image = Image.open('static/logo.ico')
+    image = Image.open('static/logo/logo.ico')
     menu = Menu(MenuItem(_('打开'), on_open, default=True), MenuItem(_('隐藏'), on_hide), MenuItem(_('退出'), on_exit))
     icon = Icon('DaCapo', image, menu=menu)
     Thread(target=icon.run, daemon=True).start()

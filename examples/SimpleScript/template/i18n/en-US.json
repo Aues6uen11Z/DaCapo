@@ -1,0 +1,198 @@
+{
+    "Menu": {
+      "Project": {
+        "name": "Overview"
+      },
+      "Type1": {
+        "name": "Type1"
+      },
+      "Type2": {
+        "name": "Type2"
+      }
+    },
+    "Task": {
+      "General": {
+        "name": "Global Settings"
+      },
+      "Task1": {
+        "name": "Task1"
+      },
+      "Task2": {
+        "name": "Task2"
+      },
+      "Task3": {
+        "name": "Task3"
+      },
+      "Task4": {
+        "name": "Task4"
+      }
+    },
+    "Group1": {
+      "_info": {
+        "name": "Group1",
+        "help": "Help information for Group1"
+      },
+      "setting1": {
+        "name": "Setting1",
+        "help": "Help information for Setting1, only need to fill in name and help for input type, help can also be omitted"
+      },
+      "setting2": {
+        "name": "Setting2",
+        "help": "Help information for Setting2, need to fill in all dropdown options for select type",
+        "option1": "Option1",
+        "option2": "Option2",
+        "option3": "Option3"
+      },
+      "setting3": {
+        "name": "Setting3",
+        "help": "Help information for Setting3, only need to fill in name and help for checkbox type, help can also be omitted"
+      }
+    },
+    "Group2": {
+      "_info": {
+        "name": "Group2",
+        "help": "Help information for Group2"
+      },
+      "setting1": {
+        "name": "Setting1",
+        "help": ""
+      },
+      "setting2": {
+        "name": "Setting2",
+        "help": "",
+        "option1": "Option1",
+        "option2": "Option2",
+        "option3": "Option3"
+      },
+      "setting3": {
+        "name": "Setting3",
+        "help": ""
+      }
+    },
+    "Group3": {
+      "_info": {
+        "name": "Group3",
+        "help": "Help information for Group3"
+      },
+      "setting1": {
+        "name": "Setting1",
+        "help": "Help information for Setting1, only need to fill in name and help for input type, help can also be omitted"
+      },
+      "setting2": {
+        "name": "Setting2",
+        "help": "Help information for Setting2, need to fill in all dropdown options for select type",
+        "option1": "Option1",
+        "option2": "Option2",
+        "option3": "Option3"
+      },
+      "setting3": {
+        "name": "Setting3",
+        "help": "Help information for Setting3, only need to fill in name and help for checkbox type, help can also be omitted"
+      }
+    },
+    "Group4": {
+      "_info": {
+        "name": "Group4",
+        "help": "Help information for Group4"
+      },
+      "setting1": {
+        "name": "Setting1",
+        "help": "Help information for Setting1, only need to fill in name and help for input type, help can also be omitted"
+      },
+      "setting2": {
+        "name": "Setting2",
+        "help": "Help information for Setting2, need to fill in all dropdown options for select type",
+        "option1": "Option1",
+        "option2": "Option2",
+        "option3": "Option3"
+      },
+      "setting3": {
+        "name": "Setting3",
+        "help": "Help information for Setting3, only need to fill in name and help for checkbox type, help can also be omitted"
+      }
+    },
+    "Group5": {
+      "_info": {
+        "name": "Group5",
+        "help": "Help information for Group5"
+      },
+      "setting1": {
+        "name": "Setting1",
+        "help": "Help information for Setting1, only need to fill in name and help for input type, help can also be omitted"
+      },
+      "setting2": {
+        "name": "Setting2",
+        "help": "Help information for Setting2, need to fill in all dropdown options for select type",
+        "option1": "Option1",
+        "option2": "Option2",
+        "option3": "Option3"
+      },
+      "setting3": {
+        "name": "Setting3",
+        "help": "Help information for Setting3, only need to fill in name and help for checkbox type, help can also be omitted"
+      }
+    },
+    "Group6": {
+      "_info": {
+        "name": "Group6",
+        "help": "Help information for Group6"
+      },
+      "setting1": {
+        "name": "Setting1",
+        "help": "Help information for Setting1, only need to fill in name and help for input type, help can also be omitted"
+      },
+      "setting2": {
+        "name": "Setting2",
+        "help": "Help information for Setting2, need to fill in all dropdown options for select type",
+        "option1": "Option1",
+        "option2": "Option2",
+        "option3": "Option3"
+      },
+      "setting3": {
+        "name": "Setting3",
+        "help": "Help information for Setting3, only need to fill in name and help for checkbox type, help can also be omitted"
+      }
+    },
+    "Group7": {
+      "_info": {
+        "name": "Group7",
+        "help": "Help information for Group7"
+      },
+      "setting1": {
+        "name": "Setting1",
+        "help": "Help information for Setting1, only need to fill in name and help for input type, help can also be omitted"
+      },
+      "setting2": {
+        "name": "Setting2",
+        "help": "Help information for Setting2, need to fill in all dropdown options for select type",
+        "option1": "Option1",
+        "option2": "Option2",
+        "option3": "Option3"
+      },
+      "setting3": {
+        "name": "Setting3",
+        "help": "Help information for Setting3, only need to fill in name and help for checkbox type, help can also be omitted"
+      }
+    },
+    "Group8": {
+      "_info": {
+        "name": "Group8",
+        "help": "Help information for Group8"
+      },
+      "setting1": {
+        "name": "Setting1",
+        "help": "Help information for Setting1, only need to fill in name and help for input type, help can also be omitted"
+      },
+      "setting2": {
+        "name": "Setting2",
+        "help": "Help information for Setting2, need to fill in all dropdown options for select type",
+        "option1": "Option1",
+        "option2": "Option2",
+        "option3": "Option3"
+      },
+      "setting3": {
+        "name": "Setting3",
+        "help": "Help information for Setting3, only need to fill in name and help for checkbox type, help can also be omitted"
+      }
+    }
+  }
