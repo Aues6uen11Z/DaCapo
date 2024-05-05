@@ -51,7 +51,7 @@ When there are multiple instances, they can be executed with a single click. At 
 Before you start using it, you need to provide a configuration template that includes the content to be generated. In a configuration directory, `args.json` must be included, while `i18n` can be omitted. Specifically, the structure should look like this:
 
 ```
-----Template/		# Dirname is not import
+----Template/		# Dirname is not important
     |----args.json
     |----i18n/
          |----zh-CN.json
