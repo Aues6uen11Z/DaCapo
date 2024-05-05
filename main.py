@@ -32,6 +32,10 @@ def on_exit():
     icon.stop()
     app.shutdown()
 
+def show_exception(e):
+    logger.exception(e)
+    ui.notify(str(e), position='top', type='negative')
+
 
 if __name__ == "__main__":
     image = Image.open('static/logo/logo.ico')
@@ -39,5 +43,6 @@ if __name__ == "__main__":
     icon = Icon('DaCapo', image, menu=menu)
     Thread(target=icon.run, daemon=True).start()
 
+    app.on_exception(lambda e: show_exception(e))
     DaCapoUI().show()
     ui.run(title='DaCapo', window_size=(1200, 800), reload=False)
