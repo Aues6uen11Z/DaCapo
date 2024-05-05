@@ -72,6 +72,8 @@ class Settings:
                 shutil.rmtree(target_path)
             target_path.mkdir()
             for file in files_to_check + ['i18n']:
+                if not (source_path / file).exists():
+                    continue
                 if (source_path / file).is_dir():
                     shutil.copytree(source_path / file, target_path / file)
                 else:

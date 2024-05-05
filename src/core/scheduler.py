@@ -92,7 +92,7 @@ class TaskManager:
                     self.status = 'error'
                 self.gui.move_completed()
                 self.gui.set_btn_visibility(running=False)
-                break   # TODO: 界面显示错误状态
+                break
 
 
 class Scheduler:
