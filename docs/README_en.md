@@ -51,7 +51,7 @@ When there are multiple instances, they can be executed with a single click. At 
 Before you start using it, you need to provide a configuration template that includes the content to be generated. In a configuration directory, `args.json` must be included, while `i18n` can be omitted. Specifically, the structure should look like this:
 
 ```
-----Template/		# Dirname is not import
+----Template/		# Dirname is not important
     |----args.json
     |----i18n/
          |----zh-CN.json
@@ -135,7 +135,7 @@ This directory contains parameter translations and help information. If you prov
 }
 ```
 
-For Group, it includes not only the translation of the Group itself ($_info) but also the translations of all its setting items. If a setting item is a dropdown menu, then all options are translated at the same level as name and help.
+For Group, it includes not only the translation of the Group itself (_info) but also the translations of all its setting items. If a setting item is a dropdown menu, then all options are translated at the same level as name and help.
 
 ```json
 "Group1": {
