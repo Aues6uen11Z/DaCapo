@@ -32,6 +32,7 @@ def on_exit():
     icon.stop()
     app.shutdown()
 
+
 def show_exception(e):
     logger.exception(e)
     ui.notify(str(e), position='top', type='negative')

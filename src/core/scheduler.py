@@ -93,6 +93,9 @@ class TaskManager:
                 self.gui.move_completed()
                 self.gui.set_btn_visibility(running=False)
                 break
+        # No task in the waiting card
+        self.gui.set_btn_visibility(running=False)
+        self.status = 'standby'
 
 
 class Scheduler:
