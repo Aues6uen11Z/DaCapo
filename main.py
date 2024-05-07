@@ -1,3 +1,4 @@
+import atexit
 from threading import Thread
 
 from loguru import logger
@@ -42,6 +43,7 @@ if __name__ == "__main__":
     image = Image.open('static/logo/logo.ico')
     menu = Menu(MenuItem(_('打开'), on_open, default=True), MenuItem(_('隐藏'), on_hide), MenuItem(_('退出'), on_exit))
     icon = Icon('DaCapo', image, menu=menu)
+    atexit.register(icon.stop)
     Thread(target=icon.run, daemon=True).start()
 
     app.on_exception(lambda e: show_exception(e))
