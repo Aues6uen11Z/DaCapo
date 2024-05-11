@@ -49,9 +49,9 @@ class DaCapoUI:
                 ist_task.stop()
         logger.info(f'Scheduler stopped manually')
 
-    # Select different instances
     @ui.refreshable
     def sidebar(self) -> None:
+        """Select different instances"""
         tab_list = []
         with ui.tabs().props('vertical indicator-color="transparent" active-color="primary"') \
                 .classes('w-full h-4/5 text-violet-400') as drawer_tabs:

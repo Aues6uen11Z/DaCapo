@@ -30,8 +30,8 @@ class Home:
         self.task_list = sorted(self.task_list, key=lambda task: self.ist_config.priority(task))
         self.task_list_t = [self.var2trans[task] for task in self.task_list]
 
-    # Move running task item to terminated card
     def move_completed(self) -> None:
+        """Move running task item to terminated card."""
         completed_task = list(self.running_card)[0]
         completed_task.move(self.terminated_card)
 
@@ -42,8 +42,8 @@ class Home:
             return None
         task_item.move(self.running_card)
 
-    # Get first task in the waiting card
     def running_get(self) -> str:
+        """Get first task in the waiting card."""
         try:
             task_item = list(self.waiting_card)[0]
         except IndexError:
@@ -52,8 +52,8 @@ class Home:
         task_name = self.trans2var[task_button.text]
         return task_name
 
-    # Redirect to task config page by clicking the setting button in task item
     def goto_task_panel(self, setting_button: ui.button) -> None:
+        """Redirect to task config page by clicking the setting button in task item."""
         task_button = list(setting_button.parent_slot.parent)[0]
         task_name = task_button.text
         # button.text is translated, but need the original task name to navigate to the task panel
@@ -64,20 +64,20 @@ class Home:
             element = element.parent_slot.parent
         element.set_value(task_name)
 
-    # Move all task items to waiting card
     def move2waiting(self) -> None:
+        """Move all task items to waiting card."""
         tasks = list(self.terminated_card)
         for task in tasks:
             task.move(self.waiting_card)
 
-    # Move all task items to terminated card
     def move2terminated(self) -> None:
+        """Move all task items to terminated card."""
         tasks = list(self.waiting_card)
         for task in tasks:
             task.move(self.terminated_card)
 
-    # Task item on click method
     def move_task(self, button: ui.button) -> None:
+        """Task item on click method"""
         button = button.parent_slot.parent.parent_slot.parent  # ui.button -> ui.row -> ui.row, the "button"
         parent = button.parent_slot.parent  # ui.row -> ui.scroll_area
         if parent == self.running_card:
@@ -87,8 +87,8 @@ class Home:
         elif parent == self.terminated_card:
             button.move(self.waiting_card)
 
-    # Task item in running, waiting, and terminated cards
     def task_item(self, name: str) -> None:
+        """Task item in running, waiting, and terminated cards."""
         with ui.row().classes('w-full'):  # https://github.com/zauberzeug/nicegui/pull/2301
             with ui.row(wrap=False).classes('w-full gap-0 border border-black rounded'):
                 ui.button(name, color=None, on_click=lambda e: self.move_task(e.sender)).classes(
@@ -96,8 +96,8 @@ class Home:
                 ui.button(icon='settings', on_click=lambda e: self.goto_task_panel(e.sender)).classes(
                     'self-center').props('flat round')
 
-    # Garbage code, needs improvement, used in instance.content
     def add_callback(self, start_callback: Callable, stop_callback: Callable):
+        """Garbage code, needs improvement, used in instance.content"""
         self.start_callback = start_callback
         self.stop_callback = stop_callback
 

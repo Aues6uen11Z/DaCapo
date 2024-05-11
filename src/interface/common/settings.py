@@ -20,13 +20,14 @@ class Settings:
         self.apply_btn: ui.button = None
         self.new_instance_dir = None
 
-    # Pick file from local
     async def pick_file(self) -> None:
+        """Pick file from local file system."""
         self.new_instance_dir = await local_file_picker('~', multiple=False)
         ui.notify(_('你选择了 {0}').format(self.new_instance_dir), position='top', type='info')
 
-    # Copy new instance config to the config dir
     def add_new_instance(self, new_name: str, choice: str, tpl_name: str) -> None:
+        """Copy new instance config to the config directory."""
+
         # validation check
         assert choice in self.get_new_method, f"Invalid choice: {choice}"
         if choice == self.get_new_method[0]:
@@ -88,8 +89,8 @@ class Settings:
             for refreshable in self.refreshables:
                 refreshable.refresh()
 
-    # Check all things and apply modifications
     def on_apply(self, inputs: List[ui.input], radio: ui.radio, select: ui.select, switches: List[ui.switch]) -> None:
+        """Check all things and apply modifications."""
         choice = radio.value
         tpl_name = select.value
         if choice == self.get_new_method[0]:
@@ -107,8 +108,8 @@ class Settings:
 
         self.refresh_ui()
 
-    # Show dialog to confirm deletion
     def on_delete(self, instance_name: str) -> None:
+        """Show dialog to confirm deletion of an instance."""
         def delete_instance(instance_name: str) -> None:
             path = Path(f'./config/{instance_name}.json')
             path.unlink()
@@ -126,8 +127,8 @@ class Settings:
                 ui.button(_('取消'), on_click=lambda: cancel()).props('outline')
         dialog.open()
 
-    # Show all instances with switches
     def instance_switches(self) -> List[ui.switch]:
+        """Show all instances with switches"""
         with ui.scroll_area().classes('w-full h-72 border'):
             switches = []
             for instance_name in instance_list():
@@ -139,8 +140,8 @@ class Settings:
                 switches.append(switch)
         return switches
 
-    # Display different effects based on radio
     def linkage_options(self) -> Tuple[List[ui.input], ui.radio, ui.select]:
+        """Display different effects based on radio"""
         with ui.row().classes('items-end w-full gap-0'):
             with ui.row().classes('w-full h-10 items-center justify-between'):
                 selected = {'value': self.get_new_method[0]}

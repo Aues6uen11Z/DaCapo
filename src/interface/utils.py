@@ -20,13 +20,13 @@ def get_text():
     return translate.gettext
 
 
-# Title of the cards in main content(right part)
 def card_title(
         name: str,
         icon: Optional[str] = None,
         extra: Optional[Callable[[], ui.element]] = None,
         help: Optional[str] = None
 ) -> None:
+    """Title of the cards in main content(right part)"""
     with ui.row().classes('w-full justify-between'):
         with ui.row().classes('h-full'):
             if icon:
@@ -42,7 +42,6 @@ def card_title(
     ui.separator()
 
 
-# A temporary method, https://github.com/zauberzeug/nicegui/discussions/2978
 def bind_value(
         obj: ValueElement,
         target_object: Any,
@@ -50,6 +49,7 @@ def bind_value(
         forward: Callable[..., Any] = lambda x: x,
         backward: Callable[..., Any] = lambda x: x,
 ) -> ValueElement:
+    """A temporary method, https://github.com/zauberzeug/nicegui/discussions/2978"""
     def _convert_target(
             target_object: Any,
             target_name: Union[str, Tuple[str, ...]]

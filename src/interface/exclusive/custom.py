@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Optional
+from loguru import logger
 from nicegui import ui
 
 from src.core.config import InstanceConfig, TemplateConfig
@@ -28,8 +29,8 @@ class Custom:
         self.storage = self.ist_config.storage
         self.group_dict = self.tpl_config.group_dict(self.task_name)
 
-    # Translate the group name, argument name, and argument value
     def tr(self, group: str, argument: str = None, key: str = None) -> str:
+        """Translate the group name, argument name, and argument value"""
         if self.language == 'default':
             if not argument:
                 return group
@@ -49,8 +50,8 @@ class Custom:
         res = self.tpl_config.translation(self.language).get(group, {}).get(argument, {}).get(key, key)
         return res
 
-    # Gray explanatory text
     def help(self, group: str, argument: str = None) -> str:
+        """Gray explanatory text for each configuration item."""
         if self.language == 'default':
             return ''
 
@@ -60,8 +61,8 @@ class Custom:
         res = self.tpl_config.translation(self.language).get(group, {}).get(argument, {}).get('help', '')
         return res
 
-    # Configuration items for custom pages
     def argument_item(self, group: str, argument: str, args: dict) -> bool:
+        """Configuration items for custom pages."""
         with ui.grid(columns='2fr 1fr').classes('w-full gap-0'):
             label = ui.label(f'{self.tr(group, argument)}').classes('text-lg content-center')
             display = {"display": False if args.get('display') else True}
@@ -110,8 +111,8 @@ class Custom:
 
         return display['display']  # Return whether the item is displayed
 
-    # A group contains multiple argument items
     def group_item(self, group: str):
+        """A group contains multiple argument items."""
         argument_count = {'count': 0}
         with ui.card().style('width:90%') as card:
             card_title(self.tr(group), help=self.help(group))
@@ -121,15 +122,16 @@ class Custom:
                         argument_count['count'] += 1
         card.bind_visibility_from(argument_count, 'count')
 
-    # Each task has a group for setting the priority and command
     def task_group(self):
+        """Each task has a group for setting the priority and command."""
         with ui.card().style('width:90%'):
             card_title(_('任务设置'))
             with ui.column().classes('w-full gap-1'):
                 with ui.grid(columns='2fr 1fr').classes('w-full gap-0'):
                     ui.label(_('默认优先级')).classes('text-lg content-center')
-                    priority = ui.number(value=self.ist_config.priority(self.task_name), min=0, max=100).props(
-                        'dense').classes('justify-center')
+                    priority = ui.number(value=self.ist_config.priority(self.task_name), min=0, max=100)\
+                        .props('dense').classes('justify-center')
+                    priority.set_enabled(self.ist_config.priority_enabled(self.task_name))
                     # priority.bind_value(self.storage, ('_info', 'tasks', self.task_name, 'priority'))
                     bind_value(priority, self.storage, ('_info', 'tasks', self.task_name, 'priority'))
                     ui.label(_('在等候队列的排序优先级，不同任务可以重复')).classes('text-gray-500').style(
@@ -137,8 +139,9 @@ class Custom:
                     ui.space()
 
                     ui.label(_('运行命令')).classes('text-lg content-center')
-                    command = ui.input(value=self.ist_config.command(self.task_name)).props('dense').classes(
-                        'justify-center')
+                    command = ui.input(value=self.ist_config.command(self.task_name))\
+                        .props('dense').classes('justify-center')
+                    command.set_enabled(self.ist_config.command_enabled(self.task_name))
                     # command.bind_value(self.storage, ('_info', 'tasks', self.task_name, 'command'))
                     bind_value(command, self.storage, ('_info', 'tasks', self.task_name, 'command'))
                     ui.label(
@@ -147,9 +150,11 @@ class Custom:
                     ).classes('text-gray-500').style('white-space: pre-wrap')
 
     def on_config_path_change(self):
-        config_path = Path(self.ist_config.config_path)
+        config_path = Path(self.ist_config.config_path).resolve()
+        
         if not config_path.parent.exists():
             ui.notify(_('父目录不存在'), type='error', position='top')
+            logger.warning(f'{self.ist_config.name}: config path {config_path.parent} does not exist')
             return
 
         # Create a symbolic link pointing to source
@@ -162,8 +167,8 @@ class Custom:
             ui.notify(_('权限不足，请以管理员身份运行本程序\n或手动创建该实例配置文件软链接（快捷方式）到目标位置下'),
                       type='warning', position='top', multi_line=True, classes='multi-line-notification')
 
-    # If this task is "General", show an extra group for language and working directory settings.
     def general_group(self):
+        """If this task is "General", show an extra group for language and working directory settings."""
         with ui.card().style('width:90%'):
             card_title(_('基本设置'))
             with ui.column().classes('w-full gap-1'):
@@ -179,6 +184,7 @@ class Custom:
 
                     ui.label(_('工作目录')).classes('text-lg content-center')
                     cwd = ui.input(value=self.ist_config.work_dir).props('dense').classes('justify-center')
+                    cwd.set_enabled(self.ist_config.work_dir_enabled)
                     # cwd.bind_value(self.storage, ('_info', 'work_dir'))
                     bind_value(cwd, self.storage, ('_info', 'work_dir'))
                     ui.label(_('程序运行的工作目录，通常应该是项目根目录')).classes('text-gray-500').style(
@@ -187,6 +193,7 @@ class Custom:
 
                     ui.label(_('后台任务')).classes('text-lg content-center')
                     is_bg = ui.checkbox(value=self.ist_config.is_background).classes('justify-center')
+                    is_bg.set_enabled(self.ist_config.is_background_enabled)
                     # is_bg.bind_value(self.storage, ('_info', 'is_background'))
                     bind_value(is_bg, self.storage, ('_info', 'is_background'))
                     ui.label(_('是否为完全的后台程序，不占用屏幕键鼠等设备')).classes('text-gray-500').style(
@@ -195,6 +202,10 @@ class Custom:
 
                     ui.label(_('配置路径')).classes('text-lg content-center')
                     config_path = ui.input(value=self.ist_config.config_path).props('dense').classes('justify-center')
+                    config_path.set_enabled(self.ist_config.config_path_enabled)
+                    # If the config path is not enabled, call the function to create a symbolic link initiatively.
+                    if not config_path.enabled:
+                        self.on_config_path_change()
                     # config_path.bind_value(self.storage, ('_info', 'config_path'))
                     bind_value(config_path, self.storage, ('_info', 'config_path'))
                     config_path.on('blur', self.on_config_path_change)
@@ -211,4 +222,6 @@ class Custom:
             else:
                 self.task_group()
             for group in list(self.group_dict.keys()):
+                if group == '_Base':
+                    continue
                 self.group_item(group)

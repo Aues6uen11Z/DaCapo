@@ -1,7 +1,7 @@
 from functools import cached_property, lru_cache
 import locale
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from nicegui.storage import PersistentDict
 
@@ -46,9 +46,9 @@ class TemplateConfig:
         assert (self.i18n_path / f'{language}.json').exists(), f"Language {language} is not supported."
         return read_json(self.i18n_path / f'{language}.json')
 
-    # List of tuples, each tuple contains a menu name and some tasks of this menu.
     @lru_cache
     def navbar_list(self, language: str) -> List[Tuple[str, List[str]]]:
+        """List of tuples, each tuple contains a menu name and some tasks of this menu."""
         menu_tasks_list = []
         menu_names = list(self.args.keys())
         for menu_name in menu_names:
@@ -62,8 +62,8 @@ class TemplateConfig:
 
         return menu_tasks_list
     
-    # List of task names, excluding the first menu which should be general settings, not tasks
     def task_list(self, language: str) -> list[str]:
+        """List of task names, excluding the first menu which should be general settings, not tasks."""
         unordered_list = []
         menu_names = list(self.args.keys())
         for menu_name in menu_names[1:]:
@@ -76,9 +76,9 @@ class TemplateConfig:
         
         return unordered_list
     
-    # Argument groups included in a task, task_name is not translated
     @lru_cache
     def group_dict(self, task_name: str) -> dict:
+        """Argument groups included in a task, task_name is not translated."""
         group_dict = {}
         for menu, tasks in self.navbar_list('default'):
             if task_name in tasks:
@@ -86,9 +86,9 @@ class TemplateConfig:
                 break
         return group_dict
 
-    # IETF language tag, if not found i18n directory, return 'default'
     @property
     def default_language(self) -> str:
+        """IETF language tag, if not found i18n directory, return 'default'."""
         i18n_path = Path(f'./config/templates/{self.name}/i18n')
         if not i18n_path.exists() or not list(i18n_path.glob('*.json')):
             return 'default'
@@ -98,21 +98,66 @@ class TemplateConfig:
             return system_language
         else:
             return list(i18n_path.glob('*.json'))[0].stem
+    
+    @property
+    def _work_dir(self) -> Tuple[str, bool]:
+        first_menu = list(self.args.keys())[0]
+        if '_Base' not in self.args[first_menu]['General']:
+            return '', True
+        value = self.args[first_menu]['General']['_Base'].get('work_dir', '')
+        enabled = self.args[first_menu]['General']['_Base'].get('work_dir_enabled', True)
+        return value, enabled
+    
+    @property
+    def _is_background(self) -> Tuple[bool, bool]:
+        first_menu = list(self.args.keys())[0]
+        if '_Base' not in self.args[first_menu]['General']:
+            return False, True
+        value = self.args[first_menu]['General']['_Base'].get('is_background', False)
+        enabled = self.args[first_menu]['General']['_Base'].get('is_background_enabled', True)
+        return value, enabled
+    
+    @property
+    def _config_path(self) -> Tuple[str, bool]:
+        first_menu = list(self.args.keys())[0]
+        if '_Base' not in self.args[first_menu]['General']:
+            return '', True
+        value = self.args[first_menu]['General']['_Base'].get('config_path', '')
+        enabled = self.args[first_menu]['General']['_Base'].get('config_path_enabled', True)
+        return value, enabled
+    
+    @property
+    def _tasks(self) -> Dict:
+        tasks_list = dict()
+        for menu, tasks in self.navbar_list('default')[1:]:
+            for task in tasks:
+                priority = self.args[menu][task].get('_Base', {}).get('priority', 1)
+                priority_enabled = self.args[menu][task].get('_Base', {}).get('priority_enabled', True)
+                command = self.args[menu][task].get('_Base', {}).get('command', '')
+                command_enabled = self.args[menu][task].get('_Base', {}).get('command_enabled', True)
+                tasks_list[task] = {
+                    'priority': priority,
+                    'priority_enabled': priority_enabled,
+                    'command': command,
+                    'command_enabled': command_enabled
+                }
+        return tasks_list
         
     def add_instance(self, instance_name: str) -> None:
         path = Path(f'./config/{instance_name}.json')
         path.touch()
         init_data = dict()
-        tasks = self.task_list('default')
-        tasks_dict = {task: {'priority': 1, 'command': ''} for task in tasks}
         init_data['_info'] = {
             'is_ready': True,
             'template': self.name,
             'language': self.default_language,
-            'work_dir': '',
-            'is_background': False,
-            'config_path': '',
-            'tasks': tasks_dict
+            'work_dir': self._work_dir[0],
+            'work_dir_enabled': self._work_dir[1],
+            'is_background': self._is_background[0],
+            'is_background_enabled': self._is_background[1],
+            'config_path': self._config_path[0],
+            'config_path_enabled': self._config_path[1],
+            'tasks': self._tasks
             }
         write_json(path, init_data)
 
@@ -140,20 +185,38 @@ class InstanceConfig:
     @property
     def work_dir(self) -> str:
         return self.storage['_info']['work_dir']
+    
+    @property
+    def work_dir_enabled(self) -> bool:
+        return self.storage['_info']['work_dir_enabled']
 
     @property
     def is_background(self) -> bool:
         return self.storage['_info']['is_background']
     
     @property
+    def is_background_enabled(self) -> bool:
+        return self.storage['_info']['is_background_enabled']
+    
+    @property
     def config_path(self) -> str:
         return self.storage['_info']['config_path']
+    
+    @property
+    def config_path_enabled(self) -> bool:
+        return self.storage['_info']['config_path_enabled']
     
     def priority(self, task_name: str) -> int:
         return self.storage['_info']['tasks'][task_name]['priority']
     
+    def priority_enabled(self, task_name: str) -> bool:
+        return self.storage['_info']['tasks'][task_name]['priority_enabled']
+    
     def command(self, task_name: str) -> str:
         return self.storage['_info']['tasks'][task_name]['command']
+    
+    def command_enabled(self, task_name: str) -> bool:
+        return self.storage['_info']['tasks'][task_name]['command_enabled']
 
     def update_ready_status(self, status: bool) -> None:
         self.storage['_info']['is_ready'] = status

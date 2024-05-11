@@ -1,4 +1,3 @@
-import atexit
 from threading import Thread
 
 from loguru import logger
@@ -15,7 +14,7 @@ from src.interface.utils import get_text
 
 _ = get_text()
 
-logger.add('dacapo.log', format="<green>{time:YY-MM-DD HH:mm:ss}</green> | "
+logger.add('dacapo.log', format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
                                 "<level>{level: <7}</level> | "
                                 "<level>{message}</level>"
            )
@@ -43,9 +42,9 @@ if __name__ == "__main__":
     image = Image.open('static/logo/logo.ico')
     menu = Menu(MenuItem(_('打开'), on_open, default=True), MenuItem(_('隐藏'), on_hide), MenuItem(_('退出'), on_exit))
     icon = Icon('DaCapo', image, menu=menu)
-    atexit.register(icon.stop)
     Thread(target=icon.run, daemon=True).start()
 
     app.on_exception(lambda e: show_exception(e))
     DaCapoUI().show()
     ui.run(title='DaCapo', window_size=(1200, 800), reload=False)
+    icon.stop()

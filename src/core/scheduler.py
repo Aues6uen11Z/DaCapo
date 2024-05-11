@@ -1,5 +1,6 @@
 import asyncio
 from asyncio.subprocess import Process
+from pathlib import Path
 import shlex
 import sys
 from typing import List, Literal, Optional
@@ -27,13 +28,14 @@ class TaskManager:
     # Inspired by https://github.com/zauberzeug/nicegui/blob/main/examples/script_executor/main.py
     async def run_command(self, task_name: str, command: str) -> Optional[Exception]:
         """Run a command in the background and display the output in the pre-created dialog."""
+        work_dir = Path(self.ist_config.work_dir).resolve()
         try:
             if "win" in sys.platform.lower():
                 self.process = await asyncio.create_subprocess_exec(
                     *shlex.split(command, posix=False),
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.STDOUT,
-                    cwd=self.ist_config.work_dir,
+                    cwd=work_dir,
                     creationflags=0x08000000  # CREATE_NO_WINDOW
                 )
             else:
@@ -41,7 +43,7 @@ class TaskManager:
                     *shlex.split(command, posix=True),
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.STDOUT,
-                    cwd=self.ist_config.work_dir
+                    cwd=work_dir
                 )
         except Exception as e:
             logger.error(f'{self.ist_config.name}-{task_name}: {e}')
@@ -92,7 +94,7 @@ class TaskManager:
                     self.status = 'error'
                 self.gui.move_completed()
                 self.gui.set_btn_visibility(running=False)
-                break
+                return
         # No task in the waiting card
         self.gui.set_btn_visibility(running=False)
         self.status = 'standby'

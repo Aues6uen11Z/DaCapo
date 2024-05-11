@@ -1,7 +1,7 @@
 from nicegui import app, ui
 
-# Title and window-control buttons
 class Header:
+    """Title and window-control buttons."""
     def __init__(self, height: int):
         self.name = 'DaCapo'
         self.height = height

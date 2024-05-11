@@ -24,8 +24,8 @@ class Instance:
         self.custom_tabs: List[ui.tab] = None
         self.task_manager: TaskManager = None
     
-    # navbar, middle part
     def navbar(self) -> None:
+        """navbar, middle part"""
         language = self.ist_config.language
         with ui.card().classes('w-48 p-0 gap-0'):
             custom_tabs = []
@@ -45,8 +45,8 @@ class Instance:
         self.home_tab = home_tab
         self.custom_tabs = custom_tabs
 
-    # sub content, right part
     def content(self) -> None:
+        """sub content, right part"""
         language = self.ist_config.language
         with ui.tab_panels(self.nav_tabs, value=self.home_tab).classes('w-full h-full'):
             with ui.tab_panel(self.home_tab).classes('p-0.5'):
