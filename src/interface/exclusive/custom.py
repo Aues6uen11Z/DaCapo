@@ -150,7 +150,7 @@ class Custom:
                     ).classes('text-gray-500').style('white-space: pre-wrap')
 
     def on_config_path_change(self):
-        config_path = Path(self.ist_config.config_path).resolve()
+        config_path = Path(self.ist_config.config_path)
         
         if not config_path.parent.exists():
             ui.notify(_('父目录不存在'), type='error', position='top')
