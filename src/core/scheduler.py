@@ -21,7 +21,7 @@ class TaskManager:
         self.gui = gui
         self.is_background = ist_config.is_background
 
-        self.process: Process = None
+        self.process: Optional[Process] = None
         self.manual_stop: bool = False    # Whether the task is manually stopped
         self.status: Literal['standby', 'running', 'error'] = 'standby'
 

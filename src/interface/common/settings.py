@@ -1,6 +1,6 @@
 from pathlib import Path
 import shutil
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from nicegui import app, ui
 
 from src.core.config import InstanceConfig, TemplateConfig
@@ -17,7 +17,7 @@ class Settings:
     def __init__(self, refreshables: List[ui.refreshable] = None):
         self.refreshables = refreshables
         self.get_new_method = [_('从已有模板创建'), _('导入')]
-        self.apply_btn: ui.button = None
+        self.apply_btn: Optional[ui.button] = None
         self.new_instance_dir = None
 
     async def pick_file(self) -> None:

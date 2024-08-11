@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Optional
 
 from nicegui import ui
 
 from src.core.config import InstanceConfig, TemplateConfig
 from src.core.scheduler import TaskManager
+from src.interface.exclusive.general import General
 from src.interface.exclusive.home import Home
 from src.interface.exclusive.custom import Custom
 from src.interface.utils import get_text
@@ -19,10 +20,10 @@ class Instance:
         self.ist_config = InstanceConfig(self.name)
         self.tpl_config = TemplateConfig(self.ist_config.template)
 
-        self.nav_tabs: ui.tabs = None
-        self.home_tab: ui.tab = None
-        self.custom_tabs: List[ui.tab] = None
-        self.task_manager: TaskManager = None
+        self.nav_tabs: Optional[ui.tabs] = None
+        self.home_tab: Optional[ui.tab] = None
+        self.custom_tabs: Optional[List[ui.tab]] = None
+        self.task_manager: Optional[TaskManager] = None
     
     def navbar(self) -> None:
         """navbar, middle part"""
@@ -64,7 +65,7 @@ class Instance:
                 with ui.tab_panel(tab).classes('p-0'):
                     tab_name = tab._props['name']   # not translated
                     if tab_name == 'General':
-                        Custom(tab_name, self.ist_config, self.tpl_config, is_general=True).show()
+                        General(tab_name, self.ist_config, self.tpl_config).show()
                     else:
                         Custom(tab_name, self.ist_config, self.tpl_config).show()
     

@@ -23,7 +23,7 @@ def get_text():
 def card_title(
         name: str,
         icon: Optional[str] = None,
-        extra: Optional[Callable[[], ui.element]] = None,
+        extra: Optional[Callable[[], Any]] = None,
         help: Optional[str] = None
 ) -> None:
     """Title of the cards in main content(right part)"""

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from loguru import logger
 from nicegui import context, ui
 
@@ -19,12 +19,12 @@ class DaCapoUI:
         # self.header = Header(self.HEADER_HEIGHT)
         self.settings_page = Settings([self.sidebar, self.content])
         self.scheduler = Scheduler()
-        self.settings_dialog: ui.dialog = None
-        self.drawer_tabs: ui.tabs = None
-        self.tab_list: List[ui.tab] = None
+        self.settings_dialog: Optional[ui.dialog] = None
+        self.drawer_tabs: Optional[ui.tabs] = None
+        self.tab_list: Optional[List[ui.tab]] = None
         self.ist_tasks: List[TaskManager] = []
-        self.start_btn: ui.button = None
-        self.stop_btn: ui.button = None
+        self.start_btn: Optional[ui.button] = None
+        self.stop_btn: Optional[ui.button] = None
 
         context.client.content.classes('py-0')
         ui.scroll_area.default_props('content-style="padding:0; gap:6px" content-active-style="padding:0; gap:6px"')
