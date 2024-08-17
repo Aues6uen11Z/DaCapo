@@ -142,11 +142,45 @@ class TemplateConfig:
                     'command_enabled': command_enabled
                 }
         return tasks_list
+
+    @property
+    def _repo_url(self) -> Tuple[str, bool]:
+        first_menu = list(self.args.keys())[0]
+        if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
+            return '', True
+        value = self.args[first_menu]['Update']['_Base'].get('repo_url', '')
+        enabled = self.args[first_menu]['Update']['_Base'].get('repo_url_enabled', True)
+        return value, enabled
+
+    @property
+    def _branch(self) -> Tuple[str, bool]:
+        first_menu = list(self.args.keys())[0]
+        if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
+            return '', True
+        value = self.args[first_menu]['Update']['_Base'].get('branch', '')
+        enabled = self.args[first_menu]['Update']['_Base'].get('branch_enabled', True)
+        return value, enabled
+
+    @property
+    def _local_path(self) -> Tuple[str, bool]:
+        first_menu = list(self.args.keys())[0]
+        if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
+            return '', True
+        value = self.args[first_menu]['Update']['_Base'].get('local_path', '')
+        enabled = self.args[first_menu]['Update']['_Base'].get('local_path_enabled', True)
+        return value, enabled
+    
+    @property
+    def auto_update(self) -> bool:
+        first_menu = list(self.args.keys())[0]
+        if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
+            return False
+        return self.args[first_menu]['Update']['_Base'].get('auto_update', False)
         
     def add_instance(self, instance_name: str) -> None:
         path = Path(f'./config/{instance_name}.json')
         path.touch()
-        init_data = dict()
+        init_data = dict()  # config data for program running, task scheduling, etc.
         init_data['_info'] = {
             'is_ready': True,
             'template': self.name,
@@ -159,6 +193,14 @@ class TemplateConfig:
             'config_path_enabled': self._config_path[1],
             'tasks': self._tasks
             }
+        if 'Update' in self.args[list(self.args.keys())[0]]:
+            init_data['_info']['repo_url'] = self._repo_url[0]
+            init_data['_info']['repo_url_enabled'] = self._repo_url[1]
+            init_data['_info']['branch'] = self._branch[0]
+            init_data['_info']['branch_enabled'] = self._branch[1]
+            init_data['_info']['local_path'] = self._local_path[0]
+            init_data['_info']['local_path_enabled'] = self._local_path[1]
+            init_data['_info']['auto_update'] = self.auto_update
         write_json(path, init_data)
 
 
@@ -221,3 +263,31 @@ class InstanceConfig:
     def update_ready_status(self, status: bool) -> None:
         self.storage['_info']['is_ready'] = status
         write_json(self.path, self.storage)
+
+    @property
+    def repo_url(self) -> str:
+        return self.storage['_info'].get('repo_url', '')
+
+    @property
+    def repo_url_enabled(self) -> bool:
+        return self.storage['_info'].get('repo_url_enabled', False)
+
+    @property
+    def branch(self) -> str:
+        return self.storage['_info'].get('branch', '')
+
+    @property
+    def branch_enabled(self) -> bool:
+        return self.storage['_info'].get('branch_enabled', False)
+
+    @property
+    def local_path(self) -> str:
+        return self.storage['_info'].get('local_path', '')
+
+    @property
+    def local_path_enabled(self) -> bool:
+        return self.storage['_info'].get('local_path_enabled', False)
+
+    @property
+    def auto_update(self) -> bool:
+        return self.storage['_info'].get('auto_update', False)

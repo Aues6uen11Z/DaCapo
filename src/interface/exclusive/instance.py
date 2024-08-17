@@ -7,6 +7,7 @@ from src.core.scheduler import TaskManager
 from src.interface.exclusive.general import General
 from src.interface.exclusive.home import Home
 from src.interface.exclusive.custom import Custom
+from src.interface.exclusive.update import Update
 from src.interface.utils import get_text
 
 
@@ -66,6 +67,8 @@ class Instance:
                     tab_name = tab._props['name']   # not translated
                     if tab_name == 'General':
                         General(tab_name, self.ist_config, self.tpl_config).show()
+                    elif tab_name == 'Update':
+                        Update(self.ist_config, self.task_manager.update).show()
                     else:
                         Custom(tab_name, self.ist_config, self.tpl_config).show()
     

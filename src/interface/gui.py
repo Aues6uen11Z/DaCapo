@@ -33,7 +33,7 @@ class DaCapoUI:
 
     async def on_start(self):
         for ist_task in self.ist_tasks:
-            if ist_task.ist_config.is_ready and ist_task.status == 'standby':
+            if ist_task.ist_config.is_ready and ist_task.status in ['standby', 'updating']:
                 if ist_task.ist_config.is_background:
                     self.scheduler.add_background_task(ist_task)
                 else:
