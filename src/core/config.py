@@ -207,7 +207,7 @@ class TemplateConfig:
 class InstanceConfig:
     """Configuration for a specific instance, necessary for running GUI and tasks."""
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
         self.path = Path(f'./config/{self.name}.json').resolve()
         self.storage = PersistentDict(self.path, encoding='utf-8')

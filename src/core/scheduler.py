@@ -1,6 +1,5 @@
 import asyncio
 from asyncio.subprocess import Process
-from functools import partial
 from pathlib import Path
 import shlex
 import sys
@@ -8,11 +7,9 @@ from typing import List, Literal, Optional, Tuple
 
 from loguru import logger
 
+from src.core.updater import Updater
 from src.core.config import InstanceConfig
 from src.interface.exclusive.home import Home
-from src.interface.utils import get_text
-
-_ = get_text()
 
 
 class TaskManager:
@@ -29,99 +26,14 @@ class TaskManager:
         self.manual_stop: bool = False  # Whether the task is manually stopped
         self.status: Literal['standby', 'updating', 'running', 'error'] = 'standby'
 
-    async def update(self) -> Tuple[bool, Optional[Exception]]:
-        async def execute_command(command: list, repo_path: Path) -> Tuple[bool, str, Optional[Exception]]:
-            try:
-                process = await asyncio.create_subprocess_exec(
-                    *command,
-                    cwd=repo_path,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    creationflags=0x08000000
-                )
-                logger.info(f'{self.ist_config.name}-Update started with command: {" ".join(command)}')
-
-                stdout, stderr = await process.communicate()
-                output = stdout.decode().strip()
-                error = stderr.decode().strip()
-                if process.returncode == 0:
-                    return True, output, None
-                else:
-                    self.status = 'error'
-                    logger.error(f'{self.ist_config.name}-{" ".join(command)}: {error}')
-                    return False, output, Exception(error)
-            except Exception as e:
-                self.status = 'error'
-                logger.error(f'{self.ist_config.name}-{" ".join(command)}: {e}')
-                return False, '', e
-
+    async def update(self) -> Optional[Exception]:
+        updater = Updater(self.ist_config)
         self.status = 'updating'
-        repo_url = self.ist_config.repo_url
-        branch = self.ist_config.branch
-
-        local_path = Path(self.ist_config.local_path).resolve()
-        repo_name = repo_url.rstrip('/').split('/')[-1].replace('.git', '')
-        if local_path.name != repo_name:
-            if not local_path.is_dir():
-                self.status = 'error'
-                global _
-                return False, Exception(_('本地路径设置有误'))
-            else :
-                local_path /= repo_name
-
-        execute_command_p = partial(execute_command, repo_path=local_path)
-
-        if not local_path.exists():
-            # Clone the repository if it does not exist
-            is_success, _, error = await execute_command(['git', 'clone', repo_url, str(local_path)], local_path.parent)
-            if not is_success:
-                return False, error
-            # Switch to the specified branch
-            if branch:
-                is_success, _, error = await execute_command_p(['git', 'checkout', branch])
-                if not is_success:
-                    return False, error
-        else:
-            # Get the default branch if not specified
-            if not branch:
-                is_success, output, error = await execute_command_p(['git', 'remote', 'show', 'origin'])
-                if not is_success:
-                    return False, error
-                for line in output.splitlines():
-                    if 'HEAD branch' in line:
-                        branch = line.split(':')[-1].strip()
-                        break
-
-            # Stash local changes
-            await execute_command_p(['git', 'stash'])
-            # Switch to the specified branch
-            is_success, _, error = await execute_command_p(['git', 'checkout', branch])
-            if not is_success:
-                return False, error
-
-            # Fetch the latest changes from the remote repository
-            is_success, _, error = await execute_command_p(['git', 'fetch'])
-            if not is_success:
-                return False, error
-            # Check if the current commit is the same as the remote commit
-            _, current_commit, _ = await execute_command_p(['git', 'rev-parse', 'HEAD'])
-            _, remote_commit, _ = await execute_command_p(['git', 'rev-parse', f'origin/{branch}'])
-            if current_commit == remote_commit:
-                await execute_command_p(['git', 'stash', 'pop'])
-                self.status = 'standby'
-                logger.info(f'{self.ist_config.name}: {repo_name} already up to date')
-                return True, None
-
-            # Pull the latest changes
-            is_success, _, error = await execute_command_p(['git', 'merge', 'origin', branch])
-            if not is_success:
-                return False, error
-            # Apply stashed changes if any
-            await execute_command_p(['git', 'stash', 'pop'])
-
+        error = await updater.update_repo()
+        if error:
+            self.status = 'error'
+            return error
         self.status = 'standby'
-        logger.info(f'{self.ist_config.name}-Update finished successfully')
-        return True, None
 
     # Inspired by https://github.com/zauberzeug/nicegui/blob/main/examples/script_executor/main.py
     async def run_command(self, task_name: str, command: str) -> Optional[Exception]:

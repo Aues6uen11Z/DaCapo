@@ -25,15 +25,15 @@ class Update:
         self.update_btn.set_text(_('更新中...'))
         self.update_btn.set_enabled(False)
 
-        is_success, error = await self.update_start()
+        error = await self.update_start()
 
-        if is_success:
-            self.update_btn.set_text(_('已是最新版本'))
-        else:
+        if error:
             ui.notify(_('更新出错：\n{0}').format(error),
                       type='negative', position='top', multi_line=True, classes='multi-line-notification')
             self.update_btn.set_enabled(True)
             self.update_btn.set_text(_('检查更新'))
+        else:
+            self.update_btn.set_text(_('已是最新版本'))
 
     def update_group(self):
         with ui.card().style('width:90%'):
