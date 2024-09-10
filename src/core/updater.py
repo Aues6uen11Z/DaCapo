@@ -103,8 +103,11 @@ class Updater:
         env_path = Path('./envs') / self.env_name
         env_path.parent.mkdir(exist_ok=True)
         if not env_path.exists():
-            # Python embed can not use venv module
-            shutil.copytree(Path('./tools/Python'), env_path)
+            if self.python_exec == 'python':
+                await self.run_command([self.python_exec, '-m', 'venv', self.env_name], str(env_path.parent))
+            else:
+                # Python embed can not use venv module
+                shutil.copytree(Path('./tools/Python'), env_path)
             logger.info(f'{self.ist_name}: Create virtual environment: {self.env_name}')
 
     async def install_deps(self) -> None:
@@ -117,9 +120,11 @@ class Updater:
         if last_modified < self.env_last_update:
             logger.info(f'{self.ist_name}: python dependencies already up to date')
             return
-        
-        python_exec = str((Path('./envs') / self.env_name / 'python.exe').resolve())
-        await self.run_command_p([python_exec, '-m', 'pip', 'install', '-r', 'requirements.txt', '-i', self.pip_mirror])
+        if self.python_exec == 'python':
+            venv_python = str((Path('./envs') / self.env_name / 'Scripts/python.exe').resolve())
+        else:
+            venv_python = str((Path('./envs') / self.env_name / 'python.exe').resolve())
+        await self.run_command_p([venv_python, '-m', 'pip', 'install', '-r', 'requirements.txt', '-i', self.pip_mirror])
 
     async def update(self) -> Optional[Exception]:
         try:
