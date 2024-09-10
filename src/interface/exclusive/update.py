@@ -3,7 +3,7 @@ from typing import Callable, Optional
 from nicegui import ui
 
 from src.core.config import InstanceConfig
-from src.interface.utils import get_text, bind_value
+from src.utils import get_text, bind_value, venv_list
 
 _ = get_text()
 
@@ -49,6 +49,9 @@ class Update:
                     repo_url = ui.input(value=self.ist_config.repo_url).props('dense').classes('justify-center')
                     repo_url.set_enabled(self.ist_config.repo_url_enabled)
                     bind_value(repo_url, self.storage, ('_info', 'repo_url'))
+                    ui.label(_('例如 https://github.com/OwnerName/RepoName')) \
+                        .classes('text-gray-500').style('white-space: pre-wrap')
+                    ui.space()
 
                     ui.label(_('Git分支')).classes('text-lg content-center')
                     branch = ui.input(value=self.ist_config.branch).props('dense').classes('justify-center')
@@ -71,6 +74,42 @@ class Update:
                     ui.space()
                     if auto_update.value:
                         ui.timer(0.1, callback=self.on_update, once=True)
+            
+            self.py_expansion()
+
+    def py_expansion(self):
+        """Manage the python environment.
+        If env_name is set, DaCapo will find requirements.txt in local_path and install dependencies.
+        To use this virtual environment, replace 'python' in the command with 'py'. e.g. 'py main.py'
+        """
+        ui.add_head_html('<link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.6.0/css/all.css" '
+                         'rel="stylesheet">')
+        with ui.expansion(icon='fa-brands fa-python', value=bool(self.ist_config.env_name)) \
+                .classes('w-[calc(100%+32px)] -ml-4').props('dense'):
+            with ui.grid(columns='2fr 1fr').classes('w-full gap-0'):
+                ui.label(_('虚拟环境名')).classes('text-lg content-center')
+                env_name = ui.select(
+                    venv_list(), value=self.ist_config.env_name, with_input=True, new_value_mode='add-unique'
+                ).props('dense').classes('justify-center')
+                bind_value(env_name, self.storage, ('_info', 'env_name'))
+                ui.label(_('第一次填写此项，点击更新将新建python虚拟环境并安装依赖\n'
+                           '默认在仓库根目录下寻找requirements.txt\n'
+                           '要使用此虚拟环境，请将命令中的“python”替换为“py”，如“py main.py”')) \
+                    .classes('text-gray-500').style('white-space: pre-wrap')
+                ui.space()
+
+                ui.label(_('PyPI镜像源')).classes('text-lg content-center')
+                mirrors = [
+                    '',
+                    'https://pypi.tuna.tsinghua.edu.cn/simple/',
+                    'https://mirrors.aliyun.com/pypi/simple/',
+                    'https://pypi.mirrors.ustc.edu.cn/simple/'
+                    ]
+                pip_mirror = ui.select(mirrors, value=self.ist_config.pip_mirror) \
+                    .props('dense').classes('justify-center')
+                bind_value(pip_mirror, self.storage, ('_info', 'pip_mirror'))
+                ui.label(_('用于解决pip网络问题')).classes('text-gray-500').style('white-space: pre-wrap')
+                ui.space()
 
     def show(self):
         with ui.scroll_area().classes('h-full').props(

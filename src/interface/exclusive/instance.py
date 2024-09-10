@@ -8,7 +8,7 @@ from src.interface.exclusive.general import General
 from src.interface.exclusive.home import Home
 from src.interface.exclusive.custom import Custom
 from src.interface.exclusive.update import Update
-from src.interface.utils import get_text
+from src.utils import get_text
 
 
 _ = get_text()
@@ -36,7 +36,7 @@ class Instance:
 
                 ori_navbar_list = self.tpl_config.navbar_list('default')    # Get the original navbar list
                 for i, (menu, tasks_t) in enumerate(self.tpl_config.navbar_list(language)):
-                    with ui.expansion(menu, value=True)\
+                    with ui.expansion(menu, value=True) \
                             .props('dense expand-separator').classes('w-full font-medium uppercase'):
                         with ui.column().classes('w-full my-[-15px] gap-0'):
                             for j, task_t in enumerate(tasks_t):

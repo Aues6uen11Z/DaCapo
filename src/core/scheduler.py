@@ -20,7 +20,6 @@ class TaskManager:
     def __init__(self, ist_config: InstanceConfig, gui: Home = None):
         self.ist_config = ist_config
         self.gui = gui
-        self.is_background = ist_config.is_background
 
         self.process: Optional[Process] = None
         self.manual_stop: bool = False  # Whether the task is manually stopped
@@ -29,7 +28,7 @@ class TaskManager:
     async def update(self) -> Optional[Exception]:
         updater = Updater(self.ist_config)
         self.status = 'updating'
-        error = await updater.update_repo()
+        error = await updater.update()
         if error:
             self.status = 'error'
             return error
@@ -41,20 +40,26 @@ class TaskManager:
         work_dir = Path(self.ist_config.work_dir).resolve()
         try:
             if "win" in sys.platform.lower():
-                self.process = await asyncio.create_subprocess_exec(
-                    *shlex.split(command, posix=False),
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.STDOUT,
-                    cwd=work_dir,
-                    creationflags=0x08000000  # CREATE_NO_WINDOW
-                )
+                cmd = shlex.split(command, posix=False)
             else:
-                self.process = await asyncio.create_subprocess_exec(
-                    *shlex.split(command, posix=True),
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.STDOUT,
-                    cwd=work_dir
+                cmd = shlex.split(command, posix=True)
+            
+            if cmd[0] == 'py':
+                if not self.ist_config.env_name:
+                    raise ValueError('"py" command is only supported when env_name is set')
+                python_exec = Path('./envs') / self.ist_config.env_name / 'python.exe'
+                if not python_exec.exists():
+                    raise FileNotFoundError(f'Python executable not found: {python_exec}')
+                cmd[0] = str(python_exec.resolve())
+            
+            self.process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+                cwd=work_dir,
+                creationflags=0x08000000  # CREATE_NO_WINDOW
                 )
+
         except Exception as e:
             logger.error(f'{self.ist_config.name}-{task_name}: {e}')
             return e

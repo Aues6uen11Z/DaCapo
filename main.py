@@ -6,7 +6,7 @@ from PIL import Image
 from pystray import Icon, Menu, MenuItem
 
 from src.interface.gui import DaCapoUI
-from src.interface.utils import get_text
+from src.utils import get_text
 
 # from niceguiToolkit.layout import inject_layout_tool
 # inject_layout_tool()

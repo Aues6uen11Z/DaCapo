@@ -4,10 +4,9 @@ from nicegui import context, ui
 
 from src.core.config import InstanceConfig
 from src.core.scheduler import Scheduler, TaskManager
-from src.core.utils import instance_list
 from src.interface.common.settings import Settings
 from src.interface.exclusive.instance import Instance
-from src.interface.utils import get_text
+from src.utils import get_text, instance_list
 
 _ = get_text()
 

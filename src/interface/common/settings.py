@@ -4,10 +4,8 @@ from typing import List, Tuple, Optional
 from nicegui import app, ui
 
 from src.core.config import InstanceConfig, TemplateConfig
-from src.core.utils import instance_list
 from src.interface.common.file_picker import local_file_picker
-from src.interface.utils import default_ui_lang, get_text
-
+from src.utils import default_ui_lang, get_text, instance_list
 
 _ = get_text()
 
@@ -135,8 +133,8 @@ class Settings:
                 with ui.row().classes('w-full justify-between'):
                     switch = ui.switch(instance_name, value=InstanceConfig(instance_name).is_ready)
                     ui.button(icon='delete_outline',
-                              on_click=lambda instance_name=instance_name: self.on_delete(instance_name)).props(
-                        'flat round')
+                              on_click=lambda instance_name=instance_name: self.on_delete(instance_name)
+                              ).props('flat round')
                 switches.append(switch)
         return switches
 
@@ -145,25 +143,26 @@ class Settings:
         with ui.row().classes('items-end w-full gap-0'):
             with ui.row().classes('w-full h-10 items-center justify-between'):
                 selected = {'value': self.get_new_method[0]}
-                radio = ui.radio(self.get_new_method, value=self.get_new_method[0]).props(
-                    'dense inline size="sm"').bind_value_to(selected, 'value')
+                radio = ui.radio(self.get_new_method, value=self.get_new_method[0]) \
+                    .props('dense inline size="sm"').bind_value_to(selected, 'value')
 
                 tpl_path = Path('./config/templates')
                 tpl_list = [p.name for p in tpl_path.iterdir() if p.is_dir()]
                 if not tpl_list:
                     tpl_list = ['']
-                select = ui.select(tpl_list, value=tpl_list[0]).props('dense').classes('grow').bind_visibility_from(
-                    radio, 'value', value=self.get_new_method[0])
+                select = ui.select(tpl_list, value=tpl_list[0]).props('dense').classes('grow') \
+                    .bind_visibility_from(radio, 'value', value=self.get_new_method[0])
 
-                ui.button(_('选择文件'), on_click=lambda: self.pick_file(), icon='folder_open').props(
-                    'outline color="primary"').bind_visibility_from(radio, 'value', value=self.get_new_method[1])
+                ui.button(_('选择文件'), on_click=lambda: self.pick_file(), icon='folder_open') \
+                    .props('outline color="primary"') \
+                    .bind_visibility_from(radio, 'value', value=self.get_new_method[1])
 
         ui.space()
 
-        input1 = ui.input(_('新配置名'), placeholder=_('格式：实例名')).props('dense').classes(
-            'w-full').bind_visibility_from(radio, 'value', value=self.get_new_method[0])
-        input2 = ui.input(_('新配置名'), placeholder=_('格式：实例名@模板名')).props('dense').classes(
-            'w-full').bind_visibility_from(radio, 'value', value=self.get_new_method[1])
+        input1 = ui.input(_('新配置名'), placeholder=_('格式：实例名')).props('dense') \
+            .classes('w-full').bind_visibility_from(radio, 'value', value=self.get_new_method[0])
+        input2 = ui.input(_('新配置名'), placeholder=_('格式：实例名@模板名')).props('dense') \
+            .classes('w-full').bind_visibility_from(radio, 'value', value=self.get_new_method[1])
 
         return [input1, input2], radio, select
 
@@ -181,8 +180,8 @@ class Settings:
             ui.space()
             switches = self.instance_switches()
 
-        self.apply_btn = ui.button(_('应用'), on_click=lambda: self.on_apply(inputs, radio, select, switches)).props(
-            'outline color="primary"').classes('place-self-end')
+        self.apply_btn = ui.button(_('应用'), on_click=lambda: self.on_apply(inputs, radio, select, switches)) \
+            .props('outline color="primary"').classes('place-self-end')
 
     @staticmethod
     def general_panel() -> None:

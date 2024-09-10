@@ -1,11 +1,11 @@
 from functools import cached_property, lru_cache
 import locale
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from nicegui.storage import PersistentDict
 
-from src.core.utils import read_json, write_json
+from src.utils import read_json, write_json
 
 
 class TemplateConfig:
@@ -100,7 +100,7 @@ class TemplateConfig:
             return list(i18n_path.glob('*.json'))[0].stem
     
     @property
-    def _work_dir(self) -> Tuple[str, bool]:
+    def work_dir(self) -> Tuple[str, bool]:
         first_menu = list(self.args.keys())[0]
         if '_Base' not in self.args[first_menu]['General']:
             return '', True
@@ -109,7 +109,7 @@ class TemplateConfig:
         return value, enabled
     
     @property
-    def _is_background(self) -> Tuple[bool, bool]:
+    def is_background(self) -> Tuple[bool, bool]:
         first_menu = list(self.args.keys())[0]
         if '_Base' not in self.args[first_menu]['General']:
             return False, True
@@ -118,7 +118,7 @@ class TemplateConfig:
         return value, enabled
     
     @property
-    def _config_path(self) -> Tuple[str, bool]:
+    def config_path(self) -> Tuple[str, bool]:
         first_menu = list(self.args.keys())[0]
         if '_Base' not in self.args[first_menu]['General']:
             return '', True
@@ -127,7 +127,7 @@ class TemplateConfig:
         return value, enabled
     
     @property
-    def _tasks(self) -> Dict:
+    def tasks(self) -> Dict:
         tasks_list = dict()
         for menu, tasks in self.navbar_list('default')[1:]:
             for task in tasks:
@@ -144,7 +144,7 @@ class TemplateConfig:
         return tasks_list
 
     @property
-    def _repo_url(self) -> Tuple[str, bool]:
+    def repo_url(self) -> Tuple[str, bool]:
         first_menu = list(self.args.keys())[0]
         if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
             return '', True
@@ -153,7 +153,7 @@ class TemplateConfig:
         return value, enabled
 
     @property
-    def _branch(self) -> Tuple[str, bool]:
+    def branch(self) -> Tuple[str, bool]:
         first_menu = list(self.args.keys())[0]
         if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
             return '', True
@@ -162,13 +162,27 @@ class TemplateConfig:
         return value, enabled
 
     @property
-    def _local_path(self) -> Tuple[str, bool]:
+    def local_path(self) -> Tuple[str, bool]:
         first_menu = list(self.args.keys())[0]
         if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
             return '', True
         value = self.args[first_menu]['Update']['_Base'].get('local_path', '')
         enabled = self.args[first_menu]['Update']['_Base'].get('local_path_enabled', True)
         return value, enabled
+    
+    @property
+    def env_name(self) -> str:
+        first_menu = list(self.args.keys())[0]
+        if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
+            return ''
+        return self.args[first_menu]['Update']['_Base'].get('env_name', '')
+
+    @property
+    def pip_mirror(self) -> str:
+        first_menu = list(self.args.keys())[0]
+        if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
+            return ''
+        return self.args[first_menu]['Update']['_Base'].get('pip_mirror', '')
     
     @property
     def auto_update(self) -> bool:
@@ -185,22 +199,25 @@ class TemplateConfig:
             'is_ready': True,
             'template': self.name,
             'language': self.default_language,
-            'work_dir': self._work_dir[0],
-            'work_dir_enabled': self._work_dir[1],
-            'is_background': self._is_background[0],
-            'is_background_enabled': self._is_background[1],
-            'config_path': self._config_path[0],
-            'config_path_enabled': self._config_path[1],
-            'tasks': self._tasks
+            'work_dir': self.work_dir[0],
+            'work_dir_enabled': self.work_dir[1],
+            'is_background': self.is_background[0],
+            'is_background_enabled': self.is_background[1],
+            'config_path': self.config_path[0],
+            'config_path_enabled': self.config_path[1],
+            'tasks': self.tasks
             }
         if 'Update' in self.args[list(self.args.keys())[0]]:
-            init_data['_info']['repo_url'] = self._repo_url[0]
-            init_data['_info']['repo_url_enabled'] = self._repo_url[1]
-            init_data['_info']['branch'] = self._branch[0]
-            init_data['_info']['branch_enabled'] = self._branch[1]
-            init_data['_info']['local_path'] = self._local_path[0]
-            init_data['_info']['local_path_enabled'] = self._local_path[1]
+            init_data['_info']['repo_url'] = self.repo_url[0]
+            init_data['_info']['repo_url_enabled'] = self.repo_url[1]
+            init_data['_info']['branch'] = self.branch[0]
+            init_data['_info']['branch_enabled'] = self.branch[1]
+            init_data['_info']['local_path'] = self.local_path[0]
+            init_data['_info']['local_path_enabled'] = self.local_path[1]
+            init_data['_info']['env_name'] = self.env_name
+            init_data['_info']['pip_mirror'] = self.pip_mirror
             init_data['_info']['auto_update'] = self.auto_update
+            init_data['_info']['env_last_update'] = 0.0
         write_json(path, init_data)
 
 
@@ -291,3 +308,15 @@ class InstanceConfig:
     @property
     def auto_update(self) -> bool:
         return self.storage['_info'].get('auto_update', False)
+    
+    @property
+    def env_name(self) -> Optional[str]:
+        return self.storage['_info'].get('env_name', '')
+    
+    @property
+    def pip_mirror(self) -> str:
+        return self.storage['_info'].get('pip_mirror', '')
+
+    @property
+    def env_last_update(self) -> float:
+        return self.storage['_info'].get('env_last_update', 0.0)

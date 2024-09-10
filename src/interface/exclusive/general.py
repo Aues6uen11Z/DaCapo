@@ -6,7 +6,7 @@ from nicegui import ui
 
 from src.core.config import InstanceConfig, TemplateConfig
 from src.interface.exclusive.custom import Custom
-from src.interface.utils import get_text, card_title, bind_value
+from src.utils import get_text, card_title, bind_value
 
 _ = get_text()
 
@@ -46,8 +46,8 @@ class General(Custom):
             with ui.column().classes('w-full gap-1'):
                 with ui.grid(columns='2fr 1fr').classes('w-full gap-0'):
                     ui.label(_('语言')).classes('text-lg content-center')
-                    lang = ui.select(self.tpl_config.available_languages, value=self.language).props(
-                        'dense outlined').classes('justify-center')
+                    lang = ui.select(self.tpl_config.available_languages, value=self.language) \
+                        .props('dense outlined').classes('justify-center')
                     # lang.bind_value(self.storage, ('_info', 'language'))
                     bind_value(lang, self.storage, ('_info', 'language'))
                     lang.on_value_change(lambda: ui.notify(_('修改将在重启后生效'), type='info', position='top'))
@@ -59,8 +59,8 @@ class General(Custom):
                     cwd.set_enabled(self.ist_config.work_dir_enabled)
                     # cwd.bind_value(self.storage, ('_info', 'work_dir'))
                     bind_value(cwd, self.storage, ('_info', 'work_dir'))
-                    ui.label(_('程序运行的工作目录，通常应该是项目根目录')).classes('text-gray-500').style(
-                        'white-space: pre-wrap')
+                    ui.label(_('程序运行的工作目录，通常应该是项目根目录')) \
+                        .classes('text-gray-500').style('white-space: pre-wrap')
                     ui.space()
 
                     ui.label(_('后台任务')).classes('text-lg content-center')
@@ -68,8 +68,8 @@ class General(Custom):
                     is_bg.set_enabled(self.ist_config.is_background_enabled)
                     # is_bg.bind_value(self.storage, ('_info', 'is_background'))
                     bind_value(is_bg, self.storage, ('_info', 'is_background'))
-                    ui.label(_('是否为完全的后台程序，不占用屏幕键鼠等设备')).classes('text-gray-500').style(
-                        'white-space: pre-wrap')
+                    ui.label(_('是否为完全的后台程序，不占用屏幕键鼠等设备')) \
+                        .classes('text-gray-500').style('white-space: pre-wrap')
                     ui.space()
 
                     ui.label(_('配置路径')).classes('text-lg content-center')

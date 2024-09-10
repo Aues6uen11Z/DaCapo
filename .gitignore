@@ -6,6 +6,8 @@
 /config/*.json
 /config/templates/*
 /static/logo/original.png
+/tools
+/envs
 
 
 # Byte-compiled / optimized / DLL files

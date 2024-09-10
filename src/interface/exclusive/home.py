@@ -2,7 +2,7 @@ from typing import Callable, List
 from nicegui import ui
 
 from src.core.config import InstanceConfig
-from src.interface.utils import card_title, get_text
+from src.utils import card_title, get_text
 
 _ = get_text()
 

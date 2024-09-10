@@ -1,7 +1,7 @@
 from nicegui import ui
 
 from src.core.config import InstanceConfig, TemplateConfig
-from src.interface.utils import bind_value, card_title, get_text
+from src.utils import bind_value, card_title, get_text
 
 _ = get_text()
 
@@ -87,7 +87,7 @@ class Custom:
                 bind_value(element, self.storage, (self.task_name, group, argument))
 
             elif args.get('type') == 'checkbox':
-                element = ui.checkbox(value=value)
+                element = ui.checkbox(value=bool(value))
                 # element.bind_value(self.storage, (self.task_name, group, argument))
                 bind_value(element, self.storage, (self.task_name, group, argument))
 
@@ -138,10 +138,10 @@ class Custom:
                     command.set_enabled(self.ist_config.command_enabled(self.task_name))
                     # command.bind_value(self.storage, ('_info', 'tasks', self.task_name, 'command'))
                     bind_value(command, self.storage, ('_info', 'tasks', self.task_name, 'command'))
-                    ui.label(
-                        _('执行该任务的命令，请先在命令行尝试是否能正常运行，例如\n'
-                          '在设置的工作目录执行“D:\\python\\python.exe test.py -task1”\n若有多个python环境，请注意python解释器路径')
-                    ).classes('text-gray-500').style('white-space: pre-wrap')
+                    ui.label(_('执行该任务的命令，请先在命令行尝试是否能正常运行，例如\n'
+                               '在设置的工作目录执行“D:\\python\\python.exe test.py -task1”\n'
+                               '若有多个python环境，请注意python解释器路径')
+                             ).classes('text-gray-500').style('white-space: pre-wrap')
 
     def show(self):
         with ui.scroll_area().classes('h-full').props(
