@@ -1,10 +1,10 @@
 import gettext
-import json
 import locale
 from os import PathLike
 from pathlib import Path
 from typing import Any, Callable, Optional, Tuple, Union, List
 
+import anyconfig
 from nicegui import app, ui
 from nicegui.elements.mixins.value_element import ValueElement
 
@@ -77,15 +77,15 @@ def bind_value(
     return obj.bind_value(target_object, target_name, forward=forward, backward=backward)
 
 
-def read_json(path: PathLike):
+def read_config(path: PathLike):
     with open(path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        data = anyconfig.load(f)
     return data
 
 
-def write_json(path: PathLike, data: dict):
+def write_config(path: PathLike, data: dict):
     with open(path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False)
+        anyconfig.dump(data, f, ensure_ascii=False, indent=4, allow_unicode=True)
 
 
 def instance_list() -> List[str]:

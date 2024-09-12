@@ -56,13 +56,9 @@ class Settings:
                 ui.notify(warning + f"{source_path}", position='top', type='warning')
                 return
 
-            files_to_check = ['args.json']
-            fail_flag = False  # Remind users of all missing files
-            for file in files_to_check:
-                if not (source_path / file).exists():
-                    ui.notify(_("缺少必要配置文件 {0}").format(file), position='top', type='warning')
-                    fail_flag = True
-            if fail_flag:
+            args_path = TemplateConfig(new_tpl_name).find_path_by_stem(source_path, 'args')
+            if not args_path:
+                ui.notify(_("缺少必要配置文件 {0}").format(file), position='top', type='warning')
                 return
 
             # Copy files to config/templates
@@ -70,7 +66,7 @@ class Settings:
             if target_path.exists():
                 shutil.rmtree(target_path)
             target_path.mkdir()
-            for file in files_to_check + ['i18n']:
+            for file in [args_path.name, 'i18n']:
                 if not (source_path / file).exists():
                     continue
                 if (source_path / file).is_dir():

@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple
 
 from nicegui.storage import PersistentDict
 
-from src.utils import read_json, write_json
+from src.utils import read_config, write_config
 
 
 class TemplateConfig:
@@ -28,23 +28,34 @@ class TemplateConfig:
 
     def __init__(self, name: str):
         self.name = name
-        self.args_path = Path(f'./config/templates/{self.name}/args.json')
-        self.i18n_path = Path(f'./config/templates/{self.name}/i18n')
+        self.args_dir = Path(f'./config/templates/{self.name}')
+        self.i18n_dir = Path(f'./config/templates/{self.name}/i18n')
+        self.supported_format = ['.json', '.yaml', '.yml', '.toml']
+
+    def find_path_by_stem(self, dir_path: Path, stem: str) -> Optional[Path]:
+        """Find the extension of a file and return the corresponding path."""
+        for suffix in self.supported_format:
+            file_path = dir_path / (stem + suffix)
+            if file_path.exists():
+                return file_path
+        return None
 
     @cached_property
     def args(self) -> dict:
-        return read_json(self.args_path)
+        args_path = self.find_path_by_stem(self.args_dir, 'args')
+        return read_config(args_path)
     
     @cached_property
     def available_languages(self) -> List[str]:
-        lang_list = [lang.stem for lang in self.i18n_path.glob('*.json')]
+        lang_list = [lang.stem for lang in self.i18n_dir.glob('*') if lang.suffix in self.supported_format]
         lang_list.append('default')
         return lang_list
     
     @lru_cache
     def translation(self, language: str) -> dict:
-        assert (self.i18n_path / f'{language}.json').exists(), f"Language {language} is not supported."
-        return read_json(self.i18n_path / f'{language}.json')
+        i18n_path = self.find_path_by_stem(self.i18n_dir, language)
+        assert i18n_path, f"Language {language} is not supported."
+        return read_config(i18n_path)
 
     @lru_cache
     def navbar_list(self, language: str) -> List[Tuple[str, List[str]]]:
@@ -89,15 +100,14 @@ class TemplateConfig:
     @property
     def default_language(self) -> str:
         """IETF language tag, if not found i18n directory, return 'default'."""
-        i18n_path = Path(f'./config/templates/{self.name}/i18n')
-        if not i18n_path.exists() or not list(i18n_path.glob('*.json')):
+        if not self.i18n_dir.exists() or self.available_languages == ['default']:
             return 'default'
 
         system_language = locale.getdefaultlocale()[0].replace('_', '-')  # Get the system language
-        if system_language and (i18n_path / f'{system_language}.json').exists():
+        if system_language and self.find_path_by_stem(self.i18n_dir, system_language):
             return system_language
         else:
-            return list(i18n_path.glob('*.json'))[0].stem
+            return self.available_languages[0]
     
     @property
     def work_dir(self) -> Tuple[str, bool]:
@@ -218,7 +228,7 @@ class TemplateConfig:
             init_data['_info']['pip_mirror'] = self.pip_mirror
             init_data['_info']['auto_update'] = self.auto_update
             init_data['_info']['env_last_update'] = 0.0
-        write_json(path, init_data)
+        write_config(path, init_data)
 
 
 class InstanceConfig:
@@ -279,7 +289,7 @@ class InstanceConfig:
 
     def update_ready_status(self, status: bool) -> None:
         self.storage['_info']['is_ready'] = status
-        write_json(self.path, self.storage)
+        write_config(self.path, self.storage)
 
     @property
     def repo_url(self) -> str:
