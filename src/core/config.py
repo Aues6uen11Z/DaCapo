@@ -1,11 +1,11 @@
-from functools import cached_property, lru_cache
 import locale
+from functools import cached_property, lru_cache
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from nicegui.storage import PersistentDict
 
-from src.utils import read_config, write_config
+from src.utils import TMP_FLAG, read_config, write_config
 
 
 class TemplateConfig:
@@ -111,7 +111,7 @@ class TemplateConfig:
     
     @property
     def work_dir(self) -> Tuple[str, bool]:
-        first_menu = list(self.args.keys())[0]
+        first_menu = next(iter(self.args))
         if '_Base' not in self.args[first_menu]['General']:
             return '', True
         value = self.args[first_menu]['General']['_Base'].get('work_dir', '')
@@ -120,7 +120,7 @@ class TemplateConfig:
     
     @property
     def is_background(self) -> Tuple[bool, bool]:
-        first_menu = list(self.args.keys())[0]
+        first_menu = next(iter(self.args))
         if '_Base' not in self.args[first_menu]['General']:
             return False, True
         value = self.args[first_menu]['General']['_Base'].get('is_background', False)
@@ -129,7 +129,7 @@ class TemplateConfig:
     
     @property
     def config_path(self) -> Tuple[str, bool]:
-        first_menu = list(self.args.keys())[0]
+        first_menu = next(iter(self.args))
         if '_Base' not in self.args[first_menu]['General']:
             return '', True
         value = self.args[first_menu]['General']['_Base'].get('config_path', '')
@@ -155,7 +155,7 @@ class TemplateConfig:
 
     @property
     def repo_url(self) -> Tuple[str, bool]:
-        first_menu = list(self.args.keys())[0]
+        first_menu = next(iter(self.args))
         if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
             return '', True
         value = self.args[first_menu]['Update']['_Base'].get('repo_url', '')
@@ -164,7 +164,7 @@ class TemplateConfig:
 
     @property
     def branch(self) -> Tuple[str, bool]:
-        first_menu = list(self.args.keys())[0]
+        first_menu = next(iter(self.args))
         if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
             return '', True
         value = self.args[first_menu]['Update']['_Base'].get('branch', '')
@@ -173,7 +173,7 @@ class TemplateConfig:
 
     @property
     def local_path(self) -> Tuple[str, bool]:
-        first_menu = list(self.args.keys())[0]
+        first_menu = next(iter(self.args))
         if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
             return '', True
         value = self.args[first_menu]['Update']['_Base'].get('local_path', '')
@@ -181,28 +181,45 @@ class TemplateConfig:
         return value, enabled
     
     @property
+    def template_path(self) -> Tuple[str, bool]:
+        first_menu = next(iter(self.args))
+        if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
+            return '', True
+        value = self.args[first_menu]['Update']['_Base'].get('template_path', '')
+        enabled = self.args[first_menu]['Update']['_Base'].get('template_path_enabled', True)
+        return value, enabled
+    
+    @property
+    def auto_update(self) -> bool:
+        first_menu = next(iter(self.args))
+        if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
+            return False
+        return self.args[first_menu]['Update']['_Base'].get('auto_update', False)
+    
+    @property
     def env_name(self) -> str:
-        first_menu = list(self.args.keys())[0]
+        first_menu = next(iter(self.args))
         if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
             return ''
         return self.args[first_menu]['Update']['_Base'].get('env_name', '')
 
     @property
     def pip_mirror(self) -> str:
-        first_menu = list(self.args.keys())[0]
+        first_menu = next(iter(self.args))
         if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
             return ''
         return self.args[first_menu]['Update']['_Base'].get('pip_mirror', '')
     
-    @property
-    def auto_update(self) -> bool:
-        first_menu = list(self.args.keys())[0]
-        if 'Update' not in self.args[first_menu] or '_Base' not in self.args[first_menu]['Update']:
-            return False
-        return self.args[first_menu]['Update']['_Base'].get('auto_update', False)
-        
-    def add_instance(self, instance_name: str) -> None:
-        path = Path(f'./config/{instance_name}.json')
+    def add_instance(self, instance_name: str, is_tmp: bool = False) -> dict[str, dict[str, Union[str, bool, dict]]]:
+        """Create a new instance configuration file, and add built-in configuration items of DaCapo.
+
+        Args:
+            instance_name: Also the file name
+            is_tmp: When creating an instance from an empty template, a new configuration file
+                with a different name will be created to avoid conflicts
+        """
+        tmp_flag = TMP_FLAG if is_tmp else ''
+        path = Path(f'./config/{instance_name}{tmp_flag}.json')
         path.touch()
         init_data = dict()  # config data for program running, task scheduling, etc.
         init_data['_info'] = {
@@ -217,18 +234,22 @@ class TemplateConfig:
             'config_path_enabled': self.config_path[1],
             'tasks': self.tasks
             }
-        if 'Update' in self.args[list(self.args.keys())[0]]:
+        if 'Update' in self.args[next(iter(self.args))]:
             init_data['_info']['repo_url'] = self.repo_url[0]
             init_data['_info']['repo_url_enabled'] = self.repo_url[1]
             init_data['_info']['branch'] = self.branch[0]
             init_data['_info']['branch_enabled'] = self.branch[1]
             init_data['_info']['local_path'] = self.local_path[0]
             init_data['_info']['local_path_enabled'] = self.local_path[1]
+            init_data['_info']['template_path'] = self.template_path[0]
+            init_data['_info']['template_path_enabled'] = self.template_path[1]
+            init_data['_info']['auto_update'] = self.auto_update
             init_data['_info']['env_name'] = self.env_name
             init_data['_info']['pip_mirror'] = self.pip_mirror
-            init_data['_info']['auto_update'] = self.auto_update
             init_data['_info']['env_last_update'] = 0.0
+
         write_config(path, init_data)
+        return init_data
 
 
 class InstanceConfig:
@@ -237,7 +258,7 @@ class InstanceConfig:
     def __init__(self, name: str):
         self.name = name
         self.path = Path(f'./config/{self.name}.json').resolve()
-        self.storage = PersistentDict(self.path, encoding='utf-8')
+        self.storage = PersistentDict(self.path, encoding='utf-8', indent=4)
 
     @property
     def is_ready(self) -> bool:
@@ -314,6 +335,14 @@ class InstanceConfig:
     @property
     def local_path_enabled(self) -> bool:
         return self.storage['_info'].get('local_path_enabled', False)
+    
+    @property
+    def template_path(self) -> str:
+        return self.storage['_info'].get('template_path', '')
+    
+    @property
+    def template_path_enabled(self) -> bool:
+        return self.storage['_info'].get('template_path_enabled', False)
 
     @property
     def auto_update(self) -> bool:

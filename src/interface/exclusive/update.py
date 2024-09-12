@@ -67,6 +67,13 @@ class Update:
                     ui.label(_('仓库在本地存储路径')).classes('text-gray-500').style('white-space: pre-wrap')
                     ui.space()
 
+                    ui.label(_('模板路径')).classes('text-lg content-center')
+                    template_path = ui.input(value=self.ist_config.template_path).props('dense').classes('justify-center')
+                    template_path.set_enabled(self.ist_config.template_path_enabled)
+                    bind_value(template_path, self.storage, ('_info', 'template_path'))
+                    ui.label(_('布局模板文件相对于仓库根目录的路径')).classes('text-gray-500').style('white-space: pre-wrap')
+                    ui.space()
+
                     ui.label(_('自动更新')).classes('text-lg content-center')
                     auto_update = ui.checkbox().classes('justify-center')
                     bind_value(auto_update, self.storage, ('_info', 'auto_update'))

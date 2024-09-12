@@ -1,12 +1,24 @@
 import gettext
 import locale
 from os import PathLike
+import os
 from pathlib import Path
 from typing import Any, Callable, Optional, Tuple, Union, List
 
 import anyconfig
 from nicegui import app, ui
 from nicegui.elements.mixins.value_element import ValueElement
+
+
+TMP_FLAG = '=^.^='  # Hope no one would actually choose a name with this
+
+
+class CmdFailError(Exception):
+    pass
+
+
+class InitTemplateError(Exception):
+    pass
 
 
 def default_ui_lang():
@@ -90,7 +102,19 @@ def write_config(path: PathLike, data: dict):
 
 def instance_list() -> List[str]:
     path = Path('./config')
-    return [p.stem for p in path.glob('*.json')]
+    instances = set()
+    for ist_path in path.glob('*.json'):
+        if TMP_FLAG in ist_path.stem:
+            empty_config_path = Path(str(ist_path).replace(TMP_FLAG, ''))
+            if empty_config_path.exists():
+                # Remove the empty config file
+                os.remove(empty_config_path)
+                # Rename the temporary file to the new name
+                ist_path.rename(empty_config_path)
+                instances.add(empty_config_path.stem)
+        else:
+            instances.add(ist_path.stem)
+    return list(instances)
 
 
 def venv_list() -> List[str]:

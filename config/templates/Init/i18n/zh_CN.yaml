@@ -1,0 +1,8 @@
+Menu:
+    Project:
+        name: 项目
+Task:
+    General:
+        name: 总览
+    Update:
+        name: 更新

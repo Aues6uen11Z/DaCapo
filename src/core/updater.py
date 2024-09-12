@@ -1,20 +1,20 @@
 import asyncio
+import copy
 from functools import partial
 from pathlib import Path
 import shutil
 from typing import Optional
 
+import anyconfig
 from loguru import logger
 
-from src.core.config import InstanceConfig
-
-
-class CmdFailError(Exception):
-    pass
+from src.core.config import InstanceConfig, TemplateConfig
+from src.utils import TMP_FLAG, CmdFailError
 
 
 class Updater:
     def __init__(self, ist_config: InstanceConfig):
+        self.ist_config = ist_config
         # Git repository
         local_git = Path('./tools/Git/cmd/git.exe')
         self.git_exec = str(local_git.resolve()) if local_git.exists() else 'git'
@@ -51,13 +51,13 @@ class Updater:
             output = stdout.decode().strip()
             error = stderr.decode().strip()
         except Exception as e:
-            logger.error(f'{self.ist_name}-{" ".join(command)}: {e}')
+            logger.error(f'{self.ist_name}: {" ".join(command)}: {e}')
             raise
 
         if process.returncode == 0:
             return output
         else:
-            logger.error(f'{self.ist_name}-{" ".join(command)}: {error}')
+            logger.error(f'{self.ist_name}: {" ".join(command)}: {error}')
             raise CmdFailError(error)
 
     async def clone(self) -> None:
@@ -104,7 +104,7 @@ class Updater:
         env_path.parent.mkdir(exist_ok=True)
         if not env_path.exists():
             if self.python_exec == 'python':
-                await self.run_command([self.python_exec, '-m', 'venv', self.env_name], str(env_path.parent))
+                await self.run_command([self.python_exec, '-m', 'venv', self.env_name], env_path.parent)
             else:
                 # Python embed can not use venv module
                 shutil.copytree(Path('./tools/Python'), env_path)
@@ -115,7 +115,7 @@ class Updater:
         if not requirements_path.exists():
             logger.warning(f'{self.ist_name}: requirements.txt not found in {self.local_path}')
             raise FileNotFoundError(f'requirements.txt not found in {self.local_path}')
-        
+
         last_modified = requirements_path.stat().st_mtime
         if last_modified < self.env_last_update:
             logger.info(f'{self.ist_name}: python dependencies already up to date')
@@ -126,17 +126,59 @@ class Updater:
             venv_python = str((Path('./envs') / self.env_name / 'python.exe').resolve())
         await self.run_command_p([venv_python, '-m', 'pip', 'install', '-r', 'requirements.txt', '-i', self.pip_mirror])
 
+    def load_template(self) -> None:
+        """
+        Copy template files from the repository and create instance configuration,
+        similar to add_new_instance() in Settings.
+        """
+
+        source_path = self.local_path / self.ist_config.template_path
+        target_path = Path('./config/templates') / self.repo_name
+        if target_path.exists():
+            shutil.rmtree(target_path)
+        target_path.mkdir()
+
+        tpl_config = TemplateConfig(self.repo_name)
+        args_path = tpl_config.find_path_by_stem(source_path, 'args')
+        if not args_path:
+            logger.error(f'{self.ist_name}: Layout args not found in {source_path}')
+            raise FileNotFoundError(f'Layout args not found in {source_path}')
+
+        # Copy template files
+        for file in [args_path.name, 'i18n']:
+            if not (source_path / file).exists():
+                continue
+            if (source_path / file).is_dir():
+                shutil.copytree(source_path / file, target_path / file)
+            else:
+                shutil.copy2(source_path / file, target_path / file)
+
+        # Merge the newly created instance configuration with the old one
+        old_config = dict(copy.deepcopy(self.ist_config.storage))
+        del old_config['_info']['template']
+        del old_config['_info']['language']
+        new_config = tpl_config.add_instance(self.ist_name, True)  # File name has a flag suffix
+        anyconfig.merge(new_config, old_config)
+        anyconfig.dump(new_config, self.ist_config.path.with_name(f'{self.ist_name}{TMP_FLAG}.json'))
+
     async def update(self) -> Optional[Exception]:
         try:
             if not self.local_path.exists():
                 await self.clone()
             else:
                 await self.pull()
-            
+            logger.info(f'{self.ist_name}: Git repository update completed')
+
             if self.env_name:
                 await self.create_venv()
                 await self.install_deps()
+                logger.info(f'{self.ist_name}: Python environment update completed')
+
+            if self.ist_config.template == 'Init':
+                logger.info(f'{self.ist_name}: Init from empty template')
+                self.load_template()
         except Exception as e:
+            logger.error(f'{self.ist_name}: {e}')
             return e
 
         logger.info(f'{self.ist_name}-Update finished successfully')
