@@ -243,12 +243,13 @@ class TemplateConfig:
             init_data['_info']['local_path_enabled'] = self.local_path[1]
             init_data['_info']['template_path'] = self.template_path[0]
             init_data['_info']['template_path_enabled'] = self.template_path[1]
+            init_data['_info']['layout_last_update'] = 0.0
             init_data['_info']['auto_update'] = self.auto_update
             init_data['_info']['env_name'] = self.env_name
             init_data['_info']['pip_mirror'] = self.pip_mirror
             init_data['_info']['env_last_update'] = 0.0
 
-        write_config(path, init_data)
+        write_config(init_data, path)
         return init_data
 
 
@@ -308,9 +309,9 @@ class InstanceConfig:
     def command_enabled(self, task_name: str) -> bool:
         return self.storage['_info']['tasks'][task_name]['command_enabled']
 
-    def update_ready_status(self, status: bool) -> None:
-        self.storage['_info']['is_ready'] = status
-        write_config(self.path, self.storage)
+    def update_config(self, key: str, value) -> None:
+        self.storage['_info'][key] = value
+        write_config(self.storage, self.path)
 
     @property
     def repo_url(self) -> str:
@@ -343,6 +344,10 @@ class InstanceConfig:
     @property
     def template_path_enabled(self) -> bool:
         return self.storage['_info'].get('template_path_enabled', False)
+    
+    @property
+    def layout_last_update(self) -> float:
+        return self.storage['_info'].get('env_last_update', 0.0)
 
     @property
     def auto_update(self) -> bool:

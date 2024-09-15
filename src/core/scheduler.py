@@ -3,7 +3,7 @@ from asyncio.subprocess import Process
 from pathlib import Path
 import shlex
 import sys
-from typing import List, Literal, Optional, Tuple
+from typing import List, Literal, Optional
 
 from loguru import logger
 

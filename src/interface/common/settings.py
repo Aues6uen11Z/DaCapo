@@ -58,7 +58,7 @@ class Settings:
 
             args_path = TemplateConfig(new_tpl_name).find_path_by_stem(source_path, 'args')
             if not args_path:
-                ui.notify(_("缺少必要配置文件 {0}").format(file), position='top', type='warning')
+                ui.notify(_("缺少必要配置文件 args"), position='top', type='warning')
                 return
 
             # Copy files to config/templates
@@ -98,7 +98,7 @@ class Settings:
         # Update instance "is_ready" status
         for switch in switches:
             ist_config = InstanceConfig(switch.text)
-            ist_config.update_ready_status(switch.value)
+            ist_config.update_config('is_ready', switch.value)
 
         self.refresh_ui()
 
@@ -129,7 +129,7 @@ class Settings:
                 with ui.row().classes('w-full justify-between'):
                     switch = ui.switch(instance_name, value=InstanceConfig(instance_name).is_ready)
                     ui.button(icon='delete_outline',
-                              on_click=lambda instance_name=instance_name: self.on_delete(instance_name)
+                              on_click=lambda name=instance_name: self.on_delete(name)
                               ).props('flat round')
                 switches.append(switch)
         return switches

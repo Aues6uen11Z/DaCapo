@@ -1,9 +1,9 @@
 from typing import Callable, Optional
 
-from nicegui import ui
+from nicegui import app, ui
 
 from src.core.config import InstanceConfig
-from src.utils import get_text, bind_value, venv_list
+from src.utils import LayoutOutdatedError, get_text, bind_value, venv_list
 
 _ = get_text()
 
@@ -21,6 +21,13 @@ class Update:
 
         self.update_btn: Optional[ui.button] = None
 
+    @staticmethod
+    def restart_dialog():
+        with ui.dialog() as dialog, ui.card().classes('items-center'):
+            ui.label(_('检测到界面更新，需要重新启动'))
+            ui.button(_('关闭程序'), on_click=app.shutdown)
+        return dialog
+
     async def on_update(self):
         self.update_btn.set_text(_('更新中...'))
         self.update_btn.set_enabled(False)
@@ -28,10 +35,13 @@ class Update:
         error = await self.update_start()
 
         if error:
-            ui.notify(_('更新出错：\n{0}').format(error),
-                      type='negative', position='top', multi_line=True, classes='multi-line-notification')
-            self.update_btn.set_enabled(True)
-            self.update_btn.set_text(_('检查更新'))
+            if isinstance(error, LayoutOutdatedError):
+                self.restart_dialog().open()
+            else:
+                ui.notify(_('更新出错：\n{0}').format(error),
+                          type='negative', position='top', multi_line=True, classes='multi-line-notification')
+                self.update_btn.set_enabled(True)
+                self.update_btn.set_text(_('检查更新'))
         else:
             self.update_btn.set_text(_('已是最新版本'))
 
@@ -68,10 +78,12 @@ class Update:
                     ui.space()
 
                     ui.label(_('模板路径')).classes('text-lg content-center')
-                    template_path = ui.input(value=self.ist_config.template_path).props('dense').classes('justify-center')
+                    template_path = ui.input(value=self.ist_config.template_path) \
+                        .props('dense').classes('justify-center')
                     template_path.set_enabled(self.ist_config.template_path_enabled)
                     bind_value(template_path, self.storage, ('_info', 'template_path'))
-                    ui.label(_('布局模板文件相对于仓库根目录的路径')).classes('text-gray-500').style('white-space: pre-wrap')
+                    ui.label(_('布局模板文件相对于仓库根目录的路径')) \
+                        .classes('text-gray-500').style('white-space: pre-wrap')
                     ui.space()
 
                     ui.label(_('自动更新')).classes('text-lg content-center')
@@ -81,7 +93,7 @@ class Update:
                     ui.space()
                     if auto_update.value:
                         ui.timer(0.1, callback=self.on_update, once=True)
-            
+
             self.py_expansion()
 
     def py_expansion(self):
@@ -111,7 +123,7 @@ class Update:
                     'https://pypi.tuna.tsinghua.edu.cn/simple/',
                     'https://mirrors.aliyun.com/pypi/simple/',
                     'https://pypi.mirrors.ustc.edu.cn/simple/'
-                    ]
+                ]
                 pip_mirror = ui.select(mirrors, value=self.ist_config.pip_mirror) \
                     .props('dense').classes('justify-center')
                 bind_value(pip_mirror, self.storage, ('_info', 'pip_mirror'))

@@ -3,13 +3,14 @@ import copy
 from functools import partial
 from pathlib import Path
 import shutil
+import time
 from typing import Optional
 
 import anyconfig
 from loguru import logger
 
 from src.core.config import InstanceConfig, TemplateConfig
-from src.utils import TMP_FLAG, CmdFailError
+from src.utils import TMP_FLAG, CmdFailError, LayoutOutdatedError, write_config
 
 
 class Updater:
@@ -63,7 +64,7 @@ class Updater:
     async def clone(self) -> None:
         """Clone the repository if it does not exist."""
 
-        await self.run_command([self.git_exec, 'clone', self.repo_url, str(self.local_path)], self.local_path.parent)
+        await self.run_command([self.git_exec, 'clone', self.repo_url], self.local_path.parent)
         # Switch to the specified branch
         if self.branch:
             await self.run_command_p([self.git_exec, 'checkout', self.branch])
@@ -125,6 +126,7 @@ class Updater:
         else:
             venv_python = str((Path('./envs') / self.env_name / 'python.exe').resolve())
         await self.run_command_p([venv_python, '-m', 'pip', 'install', '-r', 'requirements.txt', '-i', self.pip_mirror])
+        self.ist_config.update_config('env_last_update', time.time())
 
     def load_template(self) -> None:
         """
@@ -152,6 +154,7 @@ class Updater:
                 shutil.copytree(source_path / file, target_path / file)
             else:
                 shutil.copy2(source_path / file, target_path / file)
+        self.ist_config.update_config('layout_last_update', time.time())
 
         # Merge the newly created instance configuration with the old one
         old_config = dict(copy.deepcopy(self.ist_config.storage))
@@ -159,7 +162,19 @@ class Updater:
         del old_config['_info']['language']
         new_config = tpl_config.add_instance(self.ist_name, True)  # File name has a flag suffix
         anyconfig.merge(new_config, old_config)
-        anyconfig.dump(new_config, self.ist_config.path.with_name(f'{self.ist_name}{TMP_FLAG}.json'))
+        write_config(new_config, self.ist_config.path.with_name(f'{self.ist_name}{TMP_FLAG}.json'))
+        
+        raise LayoutOutdatedError
+
+    def layout_outdated(self) -> bool:
+        """Check if local layout args need to be updated."""
+        tpl_path = self.local_path / self.ist_config.template_path
+        args_path = TemplateConfig(self.repo_name).find_path_by_stem(tpl_path, 'args')
+        if not args_path:
+            logger.error(f'{self.ist_name}: Layout args not found in {tpl_path}')
+            raise FileNotFoundError(f'Layout args not found in {tpl_path}')
+
+        return args_path.stat().st_mtime > self.ist_config.layout_last_update
 
     async def update(self) -> Optional[Exception]:
         try:
@@ -177,6 +192,12 @@ class Updater:
             if self.ist_config.template == 'Init':
                 logger.info(f'{self.ist_name}: Init from empty template')
                 self.load_template()
+            elif self.layout_outdated():
+                logger.info(f'{self.ist_name}: Layout args outdated')
+                self.load_template()
+        except LayoutOutdatedError as e:
+            logger.info(f'{self.ist_name}-Update finished successfully, need to restart')
+            return e
         except Exception as e:
             logger.error(f'{self.ist_name}: {e}')
             return e

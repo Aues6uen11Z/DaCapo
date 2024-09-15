@@ -108,7 +108,7 @@ class DaCapoUI:
 
                     # Bind the status of the instance to the tab and start/stop button, using a hidden input element
                     proxy_element = ui.input().bind_value_from(ist_task, 'status')
-                    proxy_element.on_value_change(lambda e, tab=tab: self.set_status(tab, e.value))
+                    proxy_element.on_value_change(lambda e, t=tab: self.set_status(t, e.value))
         else:
             ui.label(_('点击左下角添加配置')).classes(
                 f'h-[calc(100vh-{self.HEADER_HEIGHT}px)] content-center self-center text-5xl')

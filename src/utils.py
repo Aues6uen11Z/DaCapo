@@ -17,7 +17,7 @@ class CmdFailError(Exception):
     pass
 
 
-class InitTemplateError(Exception):
+class LayoutOutdatedError(Exception):
     pass
 
 
@@ -95,7 +95,7 @@ def read_config(path: PathLike):
     return data
 
 
-def write_config(path: PathLike, data: dict):
+def write_config(data: dict, path: PathLike):
     with open(path, 'w', encoding='utf-8') as f:
         anyconfig.dump(data, f, ensure_ascii=False, indent=4, allow_unicode=True)
 
@@ -114,7 +114,7 @@ def instance_list() -> List[str]:
                 instances.add(empty_config_path.stem)
         else:
             instances.add(ist_path.stem)
-    return list(instances)
+    return sorted(list(instances))
 
 
 def venv_list() -> List[str]:
