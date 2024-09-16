@@ -38,18 +38,23 @@ def show_exception(e):
     ui.notify(str(e), position='top', type='negative')
 
 
+@ui.page('/')
+def create_ui():
+    DaCapoUI().show()
+
+
 # app.on_exception(lambda e: show_exception(e))
 # if __name__ == "__mp_main__":
 #     DaCapoUI().show()
 # ui.run(title='DaCapo', window_size=(1200, 800), reload=True)
 
+if __name__ == "__main__":
+    image = Image.open('static/logo/logo.ico')
+    menu = Menu(MenuItem(_('打开'), on_open, default=True), MenuItem(_('隐藏'), on_hide), MenuItem(_('退出'), on_exit))
+    icon = Icon('DaCapo', image, menu=menu)
+    Thread(target=icon.run, daemon=True).start()
 
-image = Image.open('static/logo/logo.ico')
-menu = Menu(MenuItem(_('打开'), on_open, default=True), MenuItem(_('隐藏'), on_hide), MenuItem(_('退出'), on_exit))
-icon = Icon('DaCapo', image, menu=menu)
-Thread(target=icon.run, daemon=True).start()
-
-app.on_exception(lambda e: show_exception(e))
-DaCapoUI().show()
-ui.run(title='DaCapo', window_size=(1200, 800), reload=False)
-icon.stop()
+    app.on_startup(create_ui)
+    app.on_exception(lambda e: show_exception(e))
+    ui.run(title='DaCapo', window_size=(1200, 800), reload=False)
+    icon.stop()

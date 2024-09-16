@@ -1,0 +1,167 @@
+Group1:
+    _info:
+        help: Help information for Group1
+        name: Group1
+    setting1:
+        help: Help information for Setting1, only need to fill in name and help for
+            input type, help can also be omitted
+        name: Setting1
+    setting2:
+        help: Help information for Setting2, need to fill in all dropdown options
+            for select type
+        name: Setting2
+        option1: Option1
+        option2: Option2
+        option3: Option3
+    setting3:
+        help: Help information for Setting3, only need to fill in name and help for
+            checkbox type, help can also be omitted
+        name: Setting3
+Group2:
+    _info:
+        help: Help information for Group2
+        name: Group2
+    setting1:
+        help: ''
+        name: Setting1
+    setting2:
+        help: ''
+        name: Setting2
+        option1: Option1
+        option2: Option2
+        option3: Option3
+    setting3:
+        help: ''
+        name: Setting3
+Group3:
+    _info:
+        help: Help information for Group3
+        name: Group3
+    setting1:
+        help: Help information for Setting1, only need to fill in name and help for
+            input type, help can also be omitted
+        name: Setting1
+    setting2:
+        help: Help information for Setting2, need to fill in all dropdown options
+            for select type
+        name: Setting2
+        option1: Option1
+        option2: Option2
+        option3: Option3
+    setting3:
+        help: Help information for Setting3, only need to fill in name and help for
+            checkbox type, help can also be omitted
+        name: Setting3
+Group4:
+    _info:
+        help: Help information for Group4
+        name: Group4
+    setting1:
+        help: Help information for Setting1, only need to fill in name and help for
+            input type, help can also be omitted
+        name: Setting1
+    setting2:
+        help: Help information for Setting2, need to fill in all dropdown options
+            for select type
+        name: Setting2
+        option1: Option1
+        option2: Option2
+        option3: Option3
+    setting3:
+        help: Help information for Setting3, only need to fill in name and help for
+            checkbox type, help can also be omitted
+        name: Setting3
+Group5:
+    _info:
+        help: Help information for Group5
+        name: Group5
+    setting1:
+        help: Help information for Setting1, only need to fill in name and help for
+            input type, help can also be omitted
+        name: Setting1
+    setting2:
+        help: Help information for Setting2, need to fill in all dropdown options
+            for select type
+        name: Setting2
+        option1: Option1
+        option2: Option2
+        option3: Option3
+    setting3:
+        help: Help information for Setting3, only need to fill in name and help for
+            checkbox type, help can also be omitted
+        name: Setting3
+Group6:
+    _info:
+        help: Help information for Group6
+        name: Group6
+    setting1:
+        help: Help information for Setting1, only need to fill in name and help for
+            input type, help can also be omitted
+        name: Setting1
+    setting2:
+        help: Help information for Setting2, need to fill in all dropdown options
+            for select type
+        name: Setting2
+        option1: Option1
+        option2: Option2
+        option3: Option3
+    setting3:
+        help: Help information for Setting3, only need to fill in name and help for
+            checkbox type, help can also be omitted
+        name: Setting3
+Group7:
+    _info:
+        help: Help information for Group7
+        name: Group7
+    setting1:
+        help: Help information for Setting1, only need to fill in name and help for
+            input type, help can also be omitted
+        name: Setting1
+    setting2:
+        help: Help information for Setting2, need to fill in all dropdown options
+            for select type
+        name: Setting2
+        option1: Option1
+        option2: Option2
+        option3: Option3
+    setting3:
+        help: Help information for Setting3, only need to fill in name and help for
+            checkbox type, help can also be omitted
+        name: Setting3
+Group8:
+    _info:
+        help: Help information for Group8
+        name: Group8
+    setting1:
+        help: Help information for Setting1, only need to fill in name and help for
+            input type, help can also be omitted
+        name: Setting1
+    setting2:
+        help: Help information for Setting2, need to fill in all dropdown options
+            for select type
+        name: Setting2
+        option1: Option1
+        option2: Option2
+        option3: Option3
+    setting3:
+        help: Help information for Setting3, only need to fill in name and help for
+            checkbox type, help can also be omitted
+        name: Setting3
+Menu:
+    Project:
+        name: Overview
+    Type1:
+        name: Type1
+    Type2:
+        name: Type2
+Task:
+    General:
+        name: Global Settings
+    Task1:
+        name: Task1
+    Task2:
+        name: Task2
+    Task3:
+        name: Task3
+    Task4:
+        name: Task4

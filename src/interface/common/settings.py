@@ -6,6 +6,7 @@ from nicegui import app, ui
 from src.core.config import InstanceConfig, TemplateConfig
 from src.interface.common.file_picker import local_file_picker
 from src.utils import default_ui_lang, get_text, instance_list
+from src import __version__
 
 _ = get_text()
 
@@ -190,6 +191,15 @@ class Settings:
             lang.bind_value(app.storage.general, 'language')
             lang.on_value_change(lambda: ui.notify(_('修改将在重启后生效'), type='info', position='top'))
 
+    def about_panel(self) -> None:
+        with ui.column().classes('h-full w-full justify-center items-center'):
+            ui.image('./static/logo/logo.png').classes('w-1/3 h-1/3')
+            ui.label('DaCapo').classes('text-2xl font-bold')
+            
+            ui.markdown(_('**主页**: https://github.com/Aues6uen11Z/DaCapo')).classes('text-lg')
+            ui.markdown(_('**版本**: {0}'.format(__version__))).classes('text-lg')
+            ui.markdown(_('**开源协议**: GPL-3.0')).classes('text-lg')
+
     # Setting page, accessed by clicking button on the bottom left
     def show(self, open: bool = False) -> ui.dialog:
         with ui.dialog(value=open) as dialog:
@@ -204,6 +214,8 @@ class Settings:
                         self.instance_panel()
                     with ui.tab_panel(general_tab):
                         self.general_panel()
+                    with ui.tab_panel(about_tab):
+                        self.about_panel()
 
         return dialog
 

@@ -1,6 +1,6 @@
 from typing import List, Optional
 from loguru import logger
-from nicegui import context, ui
+from nicegui import app, context, ui
 
 from src.core.config import InstanceConfig
 from src.core.scheduler import Scheduler, TaskManager
@@ -64,11 +64,11 @@ class DaCapoUI:
                 tab_list.append(tab)
 
         with ui.column().classes('w-full'):
-            self.start_btn = ui.button(icon='play_arrow').props(
-                'push color="white" text-color="primary" round').classes('self-center')
+            self.start_btn = ui.button(icon='play_arrow') \
+                .props('push color="white" text-color="primary" round').classes('self-center')
             self.start_btn.on_click(self.on_start)
-            self.stop_btn = ui.button(icon='stop').props('push color="white" text-color="primary" round').classes(
-                'self-center')
+            self.stop_btn = ui.button(icon='stop') \
+                .props('push color="white" text-color="primary" round').classes('self-center')
             self.stop_btn.set_visibility(False)
             self.stop_btn.on_click(self.on_stop)
             ui.button(icon='settings', on_click=self.settings_dialog.open) \
@@ -100,8 +100,8 @@ class DaCapoUI:
     def content(self):
         self.ist_tasks = []
         if self.tab_list:
-            with ui.tab_panels(self.drawer_tabs, value=self.tab_list[0]).classes(
-                    f'w-full h-[calc(100vh-{self.HEADER_HEIGHT}px)]'):
+            with ui.tab_panels(self.drawer_tabs, value=self.tab_list[0]) \
+                .classes(f'w-full h-[calc(100vh-{self.HEADER_HEIGHT}px)]'):
                 for tab in self.tab_list:
                     ist_task = Instance(tab._props['name']).show()
                     self.ist_tasks.append(ist_task)
@@ -110,8 +110,15 @@ class DaCapoUI:
                     proxy_element = ui.input().bind_value_from(ist_task, 'status')
                     proxy_element.on_value_change(lambda e, t=tab: self.set_status(t, e.value))
         else:
-            ui.label(_('点击左下角添加配置')).classes(
-                f'h-[calc(100vh-{self.HEADER_HEIGHT}px)] content-center self-center text-5xl')
+            if app.storage.general['language'] == 'zh_CN':
+                with open('./docs/用户指南.md', 'r', encoding='utf-8') as f: 
+                    instruction = f.read()
+            else:
+                with open('./docs/UserGuide.md', 'r', encoding='utf-8') as f: 
+                    instruction = f.read()
+            
+            with ui.card().classes('w-5/6 self-center my-12'):
+                ui.markdown(instruction).classes('w-full')
 
     def show(self):
         ui.colors(primary='#711FCE')

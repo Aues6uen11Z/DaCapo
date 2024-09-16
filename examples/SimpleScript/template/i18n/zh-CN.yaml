@@ -1,0 +1,146 @@
+Group1:
+    _info:
+        help: 组1的帮助信息
+        name: 组1
+    setting1:
+        help: 设置项1的帮助信息，input类型只需填写name和help，help也可省略
+        name: 设置项1
+    setting2:
+        help: 设置项2的帮助信息，select类型需填写所有下拉框选项翻译
+        name: 设置项2
+        option1: 选项1
+        option2: 选项2
+        option3: 选项3
+    setting3:
+        help: 设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略
+        name: 设置项3
+Group2:
+    _info:
+        help: 组2的帮助信息
+        name: 组2
+    setting1:
+        help: ''
+        name: 设置项1
+    setting2:
+        help: ''
+        name: 设置项2
+        option1: 选项1
+        option2: 选项2
+        option3: 选项3
+    setting3:
+        help: ''
+        name: 设置项3
+Group3:
+    _info:
+        help: 组3的帮助信息
+        name: 组3
+    setting1:
+        help: 设置项1的帮助信息，input类型只需填写name和help，help也可省略
+        name: 设置项1
+    setting2:
+        help: 设置项2的帮助信息，select类型需填写所有下拉框选项翻译
+        name: 设置项2
+        option1: 选项1
+        option2: 选项2
+        option3: 选项3
+    setting3:
+        help: 设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略
+        name: 设置项3
+Group4:
+    _info:
+        help: 组4的帮助信息
+        name: 组4
+    setting1:
+        help: 设置项1的帮助信息，input类型只需填写name和help，help也可省略
+        name: 设置项1
+    setting2:
+        help: 设置项2的帮助信息，select类型需填写所有下拉框选项翻译
+        name: 设置项2
+        option1: 选项1
+        option2: 选项2
+        option3: 选项3
+    setting3:
+        help: 设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略
+        name: 设置项3
+Group5:
+    _info:
+        help: 组5的帮助信息
+        name: 组5
+    setting1:
+        help: 设置项1的帮助信息，input类型只需填写name和help，help也可省略
+        name: 设置项1
+    setting2:
+        help: 设置项2的帮助信息，select类型需填写所有下拉框选项翻译
+        name: 设置项2
+        option1: 选项1
+        option2: 选项2
+        option3: 选项3
+    setting3:
+        help: 设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略
+        name: 设置项3
+Group6:
+    _info:
+        help: 组6的帮助信息
+        name: 组6
+    setting1:
+        help: 设置项1的帮助信息，input类型只需填写name和help，help也可省略
+        name: 设置项1
+    setting2:
+        help: 设置项2的帮助信息，select类型需填写所有下拉框选项翻译
+        name: 设置项2
+        option1: 选项1
+        option2: 选项2
+        option3: 选项3
+    setting3:
+        help: 设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略
+        name: 设置项3
+Group7:
+    _info:
+        help: 组7的帮助信息
+        name: 组7
+    setting1:
+        help: 设置项1的帮助信息，input类型只需填写name和help，help也可省略
+        name: 设置项1
+    setting2:
+        help: 设置项2的帮助信息，select类型需填写所有下拉框选项翻译
+        name: 设置项2
+        option1: 选项1
+        option2: 选项2
+        option3: 选项3
+    setting3:
+        help: 设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略
+        name: 设置项3
+Group8:
+    _info:
+        help: 组8的帮助信息
+        name: 组8
+    setting1:
+        help: 设置项1的帮助信息，input类型只需填写name和help，help也可省略
+        name: 设置项1
+    setting2:
+        help: 设置项2的帮助信息，select类型需填写所有下拉框选项翻译
+        name: 设置项2
+        option1: 选项1
+        option2: 选项2
+        option3: 选项3
+    setting3:
+        help: 设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略
+        name: 设置项3
+Menu:
+    Project:
+        name: 总览
+    Type1:
+        name: 类型1
+    Type2:
+        name: 类型2
+Task:
+    General:
+        name: 全局设置
+    Task1:
+        name: 任务1
+    Task2:
+        name: 任务2
+    Task3:
+        name: 任务3
+    Task4:
+        name: 任务4

@@ -199,7 +199,6 @@ class Updater:
             logger.info(f'{self.ist_name}-Update finished successfully, need to restart')
             return e
         except Exception as e:
-            logger.error(f'{self.ist_name}: {e}')
             return e
 
         logger.info(f'{self.ist_name}-Update finished successfully')

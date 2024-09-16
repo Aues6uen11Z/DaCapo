@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-05-01 16:35+0800\n"
+"POT-Creation-Date: 2024-09-17 00:04+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,204 +17,301 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.14.0\n"
 
-#: main.py:37
+#: main.py:53
 msgid "打开"
 msgstr ""
 
-#: main.py:37
+#: main.py:53
 msgid "隐藏"
 msgstr ""
 
-#: main.py:37
+#: main.py:53
 msgid "退出"
 msgstr ""
 
-#: interface/gui.py:115
-msgid "点击左下角添加配置"
-msgstr ""
-
-#: interface/common/settings.py:19
+#: src/interface/common/settings.py:18
 msgid "从已有模板创建"
 msgstr ""
 
-#: interface/common/settings.py:19
+#: src/interface/common/settings.py:18
 msgid "导入"
 msgstr ""
 
-#: interface/common/settings.py:26
+#: src/interface/common/settings.py:25
 msgid "你选择了 {0}"
 msgstr ""
 
-#: interface/common/settings.py:40
+#: src/interface/common/settings.py:40
 msgid "请填写 [实例名@模板名]"
 msgstr ""
 
-#: interface/common/settings.py:44
+#: src/interface/common/settings.py:44
 msgid "新名字与已有实例名冲突"
 msgstr ""
 
-#: interface/common/settings.py:49
+#: src/interface/common/settings.py:49
 msgid "请选择有效目录, 当前为 "
 msgstr ""
 
-#: interface/common/settings.py:64
-msgid "缺少必要配置文件 {0}"
+#: src/interface/common/settings.py:62
+msgid "缺少必要配置文件 args"
 msgstr ""
 
-#: interface/common/settings.py:121
+#: src/interface/common/settings.py:119
 msgid "确定删除配置<{0}>吗?"
 msgstr ""
 
-#: interface/common/settings.py:123
+#: src/interface/common/settings.py:121
 msgid "确定"
 msgstr ""
 
-#: interface/common/settings.py:124
+#: src/interface/common/settings.py:122
 msgid "取消"
 msgstr ""
 
-#: interface/common/settings.py:152
+#: src/interface/common/settings.py:153
 msgid "选择文件"
 msgstr ""
 
-#: interface/common/settings.py:156 interface/common/settings.py:157
+#: src/interface/common/settings.py:159 src/interface/common/settings.py:161
 msgid "新配置名"
 msgstr ""
 
-#: interface/common/settings.py:156
+#: src/interface/common/settings.py:159
 msgid "格式：实例名"
 msgstr ""
 
-#: interface/common/settings.py:157
+#: src/interface/common/settings.py:161
 msgid "格式：实例名@模板名"
 msgstr ""
 
-#: interface/common/settings.py:165
+#: src/interface/common/settings.py:170
 msgid "添加新实例"
 msgstr ""
 
-#: interface/common/settings.py:169
+#: src/interface/common/settings.py:174
 msgid "管理实例"
 msgstr ""
 
-#: interface/common/settings.py:170
+#: src/interface/common/settings.py:175
 msgid "全选/取消全选"
 msgstr ""
 
-#: interface/common/settings.py:175
+#: src/interface/common/settings.py:180
 msgid "应用"
 msgstr ""
 
-#: interface/common/settings.py:181 interface/exclusive/custom.py:168
+#: src/interface/common/settings.py:188 src/interface/exclusive/general.py:48
 msgid "语言"
 msgstr ""
 
-#: interface/common/settings.py:191
+#: src/interface/common/settings.py:192 src/interface/exclusive/general.py:53
+msgid "修改将在重启后生效"
+msgstr ""
+
+#: src/interface/common/settings.py:199
+msgid "**主页**: https://github.com/Aues6uen11Z/DaCapo"
+msgstr ""
+
+#: src/interface/common/settings.py:200
+msgid "**版本**: {0}"
+msgstr ""
+
+#: src/interface/common/settings.py:201
+msgid "**开源协议**: GPL-3.0"
+msgstr ""
+
+#: src/interface/common/settings.py:208
 msgid "实例"
 msgstr ""
 
-#: interface/common/settings.py:192
+#: src/interface/common/settings.py:209
 msgid "通用"
 msgstr ""
 
-#: interface/common/settings.py:193
+#: src/interface/common/settings.py:210
 msgid "关于"
 msgstr ""
 
-#: interface/exclusive/custom.py:128
+#: src/interface/exclusive/custom.py:122
 msgid "任务设置"
 msgstr ""
 
-#: interface/exclusive/custom.py:131
+#: src/interface/exclusive/custom.py:125
 msgid "默认优先级"
 msgstr ""
 
-#: interface/exclusive/custom.py:135
+#: src/interface/exclusive/custom.py:131
 msgid "在等候队列的排序优先级，不同任务可以重复"
 msgstr ""
 
-#: interface/exclusive/custom.py:138
+#: src/interface/exclusive/custom.py:135
 msgid "运行命令"
 msgstr ""
 
-#: interface/exclusive/custom.py:143
+#: src/interface/exclusive/custom.py:141
 msgid ""
 "执行该任务的命令，请先在命令行尝试是否能正常运行，例如\n"
 "在设置的工作目录执行“D:\\python\\python.exe test.py -task1”\n"
 "若有多个python环境，请注意python解释器路径"
 msgstr ""
 
-#: interface/exclusive/custom.py:149
+#: src/interface/exclusive/general.py:28
 msgid "父目录不存在"
 msgstr ""
 
-#: interface/exclusive/custom.py:159
+#: src/interface/exclusive/general.py:39
 msgid ""
 "权限不足，请以管理员身份运行本程序\n"
 "或手动创建该实例配置文件软链接（快捷方式）到目标位置下"
 msgstr ""
 
-#: interface/exclusive/custom.py:165
+#: src/interface/exclusive/general.py:45
 msgid "基本设置"
 msgstr ""
 
-#: interface/exclusive/custom.py:172
-msgid "修改将在重启后生效"
-msgstr ""
-
-#: interface/exclusive/custom.py:173
+#: src/interface/exclusive/general.py:54
 msgid "本界面显示的语言"
 msgstr ""
 
-#: interface/exclusive/custom.py:176
+#: src/interface/exclusive/general.py:57
 msgid "工作目录"
 msgstr ""
 
-#: interface/exclusive/custom.py:180
+#: src/interface/exclusive/general.py:62
 msgid "程序运行的工作目录，通常应该是项目根目录"
 msgstr ""
 
-#: interface/exclusive/custom.py:183
+#: src/interface/exclusive/general.py:66
 msgid "后台任务"
 msgstr ""
 
-#: interface/exclusive/custom.py:187
+#: src/interface/exclusive/general.py:71
 msgid "是否为完全的后台程序，不占用屏幕键鼠等设备"
 msgstr ""
 
-#: interface/exclusive/custom.py:190
+#: src/interface/exclusive/general.py:75
 msgid "配置路径"
 msgstr ""
 
-#: interface/exclusive/custom.py:195
+#: src/interface/exclusive/general.py:85
 msgid ""
 "你的程序到何处访问配置文件，具体到文件名\n"
 "例如 D:\\MyProject\\config\\template.json"
 msgstr ""
 
-#: interface/exclusive/home.py:115
+#: src/interface/exclusive/home.py:116
 msgid ""
 "请检查工作目录和任务运行命令设置\n"
 "报错内容：{0}"
 msgstr ""
 
-#: interface/exclusive/home.py:133
+#: src/interface/exclusive/home.py:134
 msgid "运行"
 msgstr ""
 
-#: interface/exclusive/home.py:138
+#: src/interface/exclusive/home.py:139
 msgid "等待"
 msgstr ""
 
-#: interface/exclusive/home.py:145
+#: src/interface/exclusive/home.py:147
 msgid "终止"
 msgstr ""
 
-#: interface/exclusive/home.py:150
+#: src/interface/exclusive/home.py:153
 msgid "日志"
 msgstr ""
 
-#: interface/exclusive/instance.py:34
+#: src/interface/exclusive/instance.py:35
 msgid "主页"
+msgstr ""
+
+#: src/interface/exclusive/update.py:27
+msgid "检测到界面更新，需要重新启动"
+msgstr ""
+
+#: src/interface/exclusive/update.py:28
+msgid "关闭程序"
+msgstr ""
+
+#: src/interface/exclusive/update.py:32
+msgid "更新中..."
+msgstr ""
+
+#: src/interface/exclusive/update.py:41
+msgid ""
+"更新出错：\n"
+"{0}"
+msgstr ""
+
+#: src/interface/exclusive/update.py:44 src/interface/exclusive/update.py:53
+msgid "检查更新"
+msgstr ""
+
+#: src/interface/exclusive/update.py:46
+msgid "已是最新版本"
+msgstr ""
+
+#: src/interface/exclusive/update.py:52
+msgid "更新设置"
+msgstr ""
+
+#: src/interface/exclusive/update.py:58
+msgid "Git仓库地址"
+msgstr ""
+
+#: src/interface/exclusive/update.py:62
+msgid "例如 https://github.com/OwnerName/RepoName"
+msgstr ""
+
+#: src/interface/exclusive/update.py:66
+msgid "Git分支"
+msgstr ""
+
+#: src/interface/exclusive/update.py:70
+msgid "留空则为默认分支"
+msgstr ""
+
+#: src/interface/exclusive/update.py:73
+msgid "本地路径"
+msgstr ""
+
+#: src/interface/exclusive/update.py:77
+msgid "仓库在本地存储路径"
+msgstr ""
+
+#: src/interface/exclusive/update.py:80
+msgid "模板路径"
+msgstr ""
+
+#: src/interface/exclusive/update.py:85
+msgid "布局模板文件相对于仓库根目录的路径"
+msgstr ""
+
+#: src/interface/exclusive/update.py:89
+msgid "自动更新"
+msgstr ""
+
+#: src/interface/exclusive/update.py:92
+msgid "修改将在下次启动生效"
+msgstr ""
+
+#: src/interface/exclusive/update.py:109
+msgid "虚拟环境名"
+msgstr ""
+
+#: src/interface/exclusive/update.py:114
+msgid ""
+"第一次填写此项，点击更新将新建python虚拟环境并安装依赖\n"
+"默认在仓库根目录下寻找requirements.txt\n"
+"要使用此虚拟环境，请将命令中的“python”替换为“py”，如“py main.py”"
+msgstr ""
+
+#: src/interface/exclusive/update.py:120
+msgid "PyPI镜像源"
+msgstr ""
+
+#: src/interface/exclusive/update.py:130
+msgid "用于解决pip网络问题"
 msgstr ""
 

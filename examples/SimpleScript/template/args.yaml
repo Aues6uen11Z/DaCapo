@@ -1,0 +1,148 @@
+Project:
+    General:
+        Group1:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
+        Group2:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
+Type1:
+    Task1:
+        Group3:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
+        Group4:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
+    Task2:
+        Group5:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
+        Group6:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
+Type2:
+    Task3:
+        Group7:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
+        Group8:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
+    Task4:
+        Group10:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
+        Group9:
+            setting1:
+                type: input
+                value: someting
+            setting2:
+                option:
+                - option1
+                - option2
+                - option3
+                type: select
+                value: option1
+            setting3:
+                type: checkbox
+                value: true
