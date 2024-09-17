@@ -47,7 +47,10 @@ class TaskManager:
             if cmd[0] == 'py':
                 if not self.ist_config.env_name:
                     raise ValueError('"py" command is only supported when env_name is set')
-                python_exec = Path('./envs') / self.ist_config.env_name / 'python.exe'
+                if Path('./tools/Python/python.exe').exists():
+                    python_exec = Path('./envs') / self.ist_config.env_name / 'python.exe'
+                else:
+                    python_exec = Path('./envs') / self.ist_config.env_name / 'Scripts/python.exe'
                 if not python_exec.exists():
                     raise FileNotFoundError(f'Python executable not found: {python_exec}')
                 cmd[0] = str(python_exec.resolve())
