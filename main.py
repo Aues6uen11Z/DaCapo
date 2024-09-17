@@ -38,9 +38,11 @@ def show_exception(e):
     ui.notify(str(e), position='top', type='negative')
 
 
-@ui.page('/')
-def create_ui():
-    DaCapoUI().show()
+def startup():
+    """https://github.com/zauberzeug/nicegui/issues/3149"""
+    @ui.page('/')
+    def create_ui():
+        DaCapoUI().show()
 
 
 # app.on_exception(lambda e: show_exception(e))
@@ -54,7 +56,7 @@ if __name__ == "__main__":
     icon = Icon('DaCapo', image, menu=menu)
     Thread(target=icon.run, daemon=True).start()
 
-    app.on_startup(create_ui)
+    app.on_startup(startup)
     app.on_exception(lambda e: show_exception(e))
     ui.run(title='DaCapo', window_size=(1200, 800), reload=False)
     icon.stop()
