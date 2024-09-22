@@ -72,7 +72,7 @@ jobs:
           cp -r python DaCapo/tools
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+git+python.zip
 
-          rm -rf DaCapo/tools/git
+          rm -r DaCapo/tools/git
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+python.zip
 
       - name: Release
