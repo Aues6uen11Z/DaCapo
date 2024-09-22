@@ -55,7 +55,8 @@ jobs:
 
       - name: Prepare release
         run: |
-          mv main.dist DaCapo
+          ls -R
+          mv build/main.dist DaCapo
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo.zip
 
           mkdir -p DaCapo/tools
