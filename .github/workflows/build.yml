@@ -1,0 +1,79 @@
+name: Nuitka Package & Publish
+on:
+  push:
+    tags:
+      - v*.*.*
+
+jobs:
+  build:
+    # Windows is currently the only platform this action supports
+    runs-on: windows-latest
+  
+    steps:
+  
+      - name: Check out repository code
+        uses: actions/checkout@v4
+  
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: 'x64'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+  
+      - name: Package python script into exe
+        uses: Nuitka/Nuitka-Action@v1.1
+        with:
+          script-name: main.py
+          mingw64: true
+          standalone: true
+          windows-icon-from-ico: static/logo/logo.ico
+          windows-uac-admin: true
+          include-data-dir: |
+            config=config
+            locale=locale
+            docs=docs
+            static=static
+            examples=examples
+          include-package: pygments.formatters
+          include-package-data: nicegui
+          output-filename: DaCapo
+          remove-output: true
+          disable-console: true
+
+      - name: Download portable Python and Git
+        run: |
+          curl -L -o git.zip https://github.com/Aues6uen11Z/DaCapo/releases/download/tools/Git.zip
+          unzip git.zip -d git
+          curl -L -o python.zip https://github.com/Aues6uen11Z/DaCapo/releases/download/tools/Python.zip
+          unzip python.zip -d python
+
+      - name: Prepare release
+        run: |
+          mv main.dist DaCapo
+          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo.zip
+
+          mkdir -p DaCapo/tools
+          cp -r git DaCapo/tools
+          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+git.zip
+
+          cp -r python DaCapo/tools
+          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+git+python.zip
+
+          rm -rf DaCapo/tools/git
+          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+python.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            DaCapo.zip
+            DaCapo+git.zip
+            DaCapo+python.zip
+            DaCapo+git+python.zip
