@@ -76,7 +76,12 @@ class TaskManager:
             new = await self.process.stdout.read(4096)
             if not new:
                 break
-            yield new.decode()
+
+            try:
+                decoded = new.decode('GB2312')
+            except UnicodeDecodeError:
+                decoded = new.decode('utf-8', errors='ignore')
+            yield decoded
         await self.process.wait()
 
     def stop(self):

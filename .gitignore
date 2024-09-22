@@ -4,11 +4,13 @@
 /dacapo.log
 /.nicegui
 /config/*.json
-/config/templates/*
+/config/templates
 !/config/templates/Init
 /static/logo/original.png
 /tools
 /envs
+/examples
+!/examples/SimpleScript
 
 
 # Byte-compiled / optimized / DLL files
