@@ -74,6 +74,9 @@ jobs:
           rm -r DaCapo/tools/Git
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+python.zip
 
+          echo "github.ref_name: ${{ github.ref_name }}"
+          echo "github.event.inputs.tag: ${{ github.event.inputs.tag }}"
+
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
