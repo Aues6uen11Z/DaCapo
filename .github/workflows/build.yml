@@ -54,25 +54,24 @@ jobs:
 
       - name: Download portable Python and Git
         run: |
-          curl -L -o git.zip https://github.com/Aues6uen11Z/DaCapo/releases/download/tools/Git.zip
-          unzip git.zip -d git
-          curl -L -o python.zip https://github.com/Aues6uen11Z/DaCapo/releases/download/tools/Python.zip
-          unzip python.zip -d python
+          curl -L -o git.zip https://github.com/Aues6uen11Z/DaCapo/releases/download/master/Git.zip
+          unzip git.zip -d Git
+          curl -L -o python.zip https://github.com/Aues6uen11Z/DaCapo/releases/download/master/Python.zip
+          unzip python.zip -d Python
 
       - name: Prepare release
         run: |
-          ls -R
           mv build/main.dist DaCapo
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo.zip
 
           mkdir -p DaCapo/tools
-          cp -r git DaCapo/tools
+          cp -r Git DaCapo/tools
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+git.zip
 
-          cp -r python DaCapo/tools
+          cp -r Python DaCapo/tools
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+git+python.zip
 
-          rm -r DaCapo/tools/git
+          rm -r DaCapo/tools/Git
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+python.zip
 
       - name: Release
@@ -80,7 +79,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
           tag_name: ${{ github.ref_name || github.event.inputs.tag }}
+          name: ${{ github.ref_name || github.event.inputs.tag }}
           body: |
+            DaCapo 的更新功能依赖于 Git，虚拟环境管理依赖于 Python。如果你的本地环境中没有安装 Git 或 Python，请使用预装了对应工具的版本。
+            
             The update functionality of DaCapo relies on Git, and the Python virtual environment management depends on Python.
             If Git or Python is not installed in your local environment, please use the version that includes these pre-installed tools.
           files: |
