@@ -59,7 +59,7 @@ class Custom:
         """Configuration items for custom pages."""
         with ui.grid(columns='2fr 1fr').classes('w-full gap-0'):
             label = ui.label(f'{self.tr(group, argument)}').classes('text-lg content-center')
-            display = {"display": False if args.get('display') else True}
+            display = {"display": False if args.get('hide') else True}
             label.bind_visibility_from(display, 'display')
 
             value = args.get('value', '')
