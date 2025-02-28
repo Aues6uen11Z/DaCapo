@@ -1,220 +1,199 @@
 ## Table of Contents
+
 - [Quick Start](#quick-start)
+
   - [Customize Interface](#customize-interface)
-  - [Load User Settings](#load-user-settings)
+  - [Read User Settings](#read-user-settings)
 
 - [Advanced](#advanced)
-  - [Multilingual and Help](#multilingual-and-help)
-  - [Enable Updates](#enable-updates)
-  - [Predefine Basic Option Groups](#predefine-basic-option-groups)
+  - [Multilingual Support](#multilingual-support)
+  - [Remote Repository Updates](#remote-repository-updates)
+  - [Predefined Basic Setting Groups](#predefined-basic-setting-groups)
 
 ## Quick Start
 
-### Custom Interface
+### Customize Interface
 
-You need to provide a configuration template, currently supporting configuration files in `JSON`/`YAML`/`TOML` formats (the latter two must be fully convertible to JSON). As of now, it should have the following structure, with only one layout parameter file:
+You need to provide a configuration template, currently supporting `JSON`/`YAML` formats, and the file name must be "template":
 
 ```
-----Template/		# Dirname is not important
-    |----args.yaml
+----Template/		# This naming is not important
+    |----template.yml
 ```
 
-This file contains all the configuration content that needs to be generated, divided into four levels representing task groups, tasks, option groups, and options, respectively. Among them, **tasks** are the units of command execution.
+This file contains all the configuration content that needs to be generated, divided into 4 levels representing task groups (Menu), tasks, setting groups (Group), and settings (Item), where **tasks** are the units of command execution.
 
-The first task group is used for some overall settings, and it **must** include a "General" task. None of the tasks in the first task group will enter the execution queue; you should place the settings for the tasks to be executed in the subsequent task groups.
+<img src="./images/1.png" style="zoom: 50%;" />
 
-The `argument` option currently supports three types: `input` text box, `select` dropdown box, and `checkbox` checkbox.
-
-> Note that DaCapo does not provide data validation for the content of the input text box; you need to handle possible exceptions in your own program.
-
-<img src="../static/images/architecture.png" style="zoom: 50%;" />
-
-After understanding the meaning of each level of elements, you can write your own layout arguments, where `type` and `value` refer to the type and default value, respectively.
+The first task group "Project" is special, it has a fixed structure, and its tasks "General" and "Update" will not enter the execution queue. You should put the settings for tasks to be executed in the subsequent task groups. You can add custom option groups to the "General" task, like this:
 
 ```yaml
-# args.yaml
-
-Project:    # menu
-    General:    # task
-        Group1:     # group
-            setting1:    # argument
-                type: input
-                value: something
-            setting2:
-                option:
-                - option1
-                - option2
-                - option3
-                type: select
-                value: option1
-            setting3:
-                type: checkbox
-                value: true
+Project:
+  General:
+    Group1:
+      _help: # Special Item, used to display setting group help information
+        value: This group shows 4 types of setting
+      input:
+        type: input
+        value: someting
+        help: type "input" shows a text box
 ```
 
-### Load User Settings
+To generate a setting, just fill in its information in the template file, including:
 
-To allow users to freely create multiple instances, the modified settings are not saved in args.xxxx. The above layout arguments are just a template, and the specific content is derived from the instance configuration.
+- type: One of the 5 types - input box, select dropdown, checkbox, folder input, file input
+- value: Default value
+- help: Help information
+- option: Options, only effective when type is select
+- hidden: Whether to hide this setting item, when all Items in a Group are hidden, the Group will also be hidden
+- disabled: Whether it is non-editable
 
-Your program should accept a **json** configuration file (note that YAML/TOML is not supported). This time, the task group is omitted, and the hierarchy is `Task` - `Group` - `Argument`, as follows:
+> Note that DaCapo does not provide validation for input content, you need to handle possible exceptions in your own program.
+
+Organize your template freely according to the Menu-Task-Group-Item structure, and you will get the corresponding page. You can refer to [this repository](https://github.com/Aues6uen11Z/DaCapoExample) for details. A simple example is as follows:
+
+```yaml
+Menu:
+  Task1:
+    Group2:
+      setting1:
+        value: ""
+        type: input
+        help: settings can be disabled
+        disabled: true
+```
+
+<img src="./images/2.png" style="zoom:50%;" />
+
+### Read User Settings
+
+To allow users to freely create multiple instances, the modified settings are not saved in `template.xxxx`. The above layout parameters are just a template, and the specific content is derived from the instance configuration.
+
+Your program should accept a **json** configuration file (note that YAML/TOML is not supported), still in a four-layer structure, but with type, option list, and other information removed, which can be directly read as a multi-layer hash table (dictionary):
 
 ```json
 {
-    "_info": {...},
+  "Project": {
     "General": {
-        "Group1": {
-            "setting1": "someting",
-            "setting2": "option1",
-            "setting3": true
-        },
-        "Group2": {
-            "setting1": "someting",
-        }
-    },
-    "Task1": {
-        "Group3": {
-            "setting1": "someting",
-        }
+      "Group1": {
+        "input": "someting",
+        "select": "option1",
+        "checkbox": true,
+        "folder": "./repos/DaCapoExample",
+        "file": "./repos/DaCapoExample/template/template.yml"
+      }
     }
+  },
+  "Menu": {
+    "Task1": {
+      "Group2": {
+        "setting1": "1",
+        "setting2": "2",
+        "setting3": "3"
+      }
+    },
+    "Task2": {
+      "Group3": {
+        "setting1": "4",
+        "setting2": "5"
+      }
+    },
+    "Task3": {
+      "Group4": {
+        "setting1": "6"
+      }
+    }
+  }
 }
 ```
 
-Here, the type, option list, and other information are removed, and it can be directly read as a multi-layer hash table (dictionary).
-
-Next, you need to set an execution command for each task, which is also the way DaCapo actually calls the program: command line execution.
+Next, you need to set an execution command for each task, which is also the way DaCapo actually calls programs—command line execution, so be very careful about the safety of the command itself.
 
 ## Advanced
 
-### Multilingual and Help
+### Multilingual Support
 
-If you need to add multilingual support to your program or just write some explanations for the options, you need to add an i18n directory:
+If you need to add multilingual support to your program, you need to add an `i18n` directory to store translation json files:
 
 ```
 ----Template/
-    |----args.yaml
+    |----template.yaml
     |----i18n/
-         |----zh-CN.yaml
-         |----en-US.yaml
+         |----中文.json
+         |----English.json
          |----......
 ```
 
-Although it is strange, the translation files are organized as follows:
+Translation files are organized like this:
 
-- The first layer includes `Menu`, `Task`, and all `Group`.
-
-```yaml
-# i18n/zh-CN.yaml
-
-Menu: ...
-Task: ...
-Group1: ...
-Group2: ...
-Group3: ...
+```json
+{
+  "Menu": {
+    "name": "菜单",
+    "tasks": {
+      "Task1": {
+        "groups": {
+          "Group2": {
+            "help": "",
+            "items": {
+              "setting1": {
+                "help": "设置可以被禁用",
+                "name": "设置1"
+              },
+......
 ```
 
-- The second layer, for Menu and Task, is the translation of task group names and task names.
+Although it looks complicated, don't worry, if you're too lazy to write it manually, you can easily use a [python script](https://github.com/Aues6uen11Z/DaCapoExample/blob/master/gen_i18n.py) to export translation files from the template file.
 
-```yaml
-# i18n/zh-CN.yaml
+Finally, seamlessly switch the display language through the language settings on the interface
 
-Menu:
-    Project:
-        name: 总览
-    Type1:
-        name: 类型1
-Task:
-    General:
-        name: 全局设置
-    Task1:
-        name: 任务1
-```
+<img src="./images/3.png" style="zoom:50%;" />
 
-For Group, it includes the translation of the Group (_info) and the translation of all its settings. If the setting is a dropdown box, all options are translated at the same level as name and help.
+### Remote Repository Updates
 
-```yaml
-# i18n/zh-CN.yaml
+If your repository is a public repository hosted on platforms like Github, and the project uses a language like Python that can be updated via source code, you can choose to create an instance from remote, and an update interface will automatically appear after creation.
 
-Group1:
-    _info:
-        help: 组1的帮助信息
-        name: 组1
-    setting1:
-        help: 设置项1的帮助信息，input类型只需填写name和help，help也可省略
-        name: 设置项1
-    setting2:
-        help: 设置项2的帮助信息，select类型需填写所有下拉框选项翻译
-        name: 设置项2
-        option1: 选项1
-        option2: 选项2
-        option3: 选项3
-    setting3:
-        help: 设置项3的帮助信息，checkbox类型只需填写name和help，help也可省略
-        name: 设置项3
-```
+![image-20250227194918354](./images/4.png)
 
-### Enable Updates
+<img src="./images/5.png" style="zoom:50%;" />
 
-If your repository is a public repository on platforms like GitHub, and the project uses a language like Python that can be updated via source code, you can enable the update settings page. It's very simple, just add a line in the layout arguments file:
+If the project happens to use Python, you can also set the virtual environment name and dependency file location. Clicking update will automatically create a virtual environment and install dependencies. By default, it uses the Python pointed to by system variables; if a different version is needed, you can fill in the specific path to the Python executable.
 
-```yaml
-# args.yaml
+### Predefined Basic Setting Groups
 
-Project:
-    General: {}
-    Update: {}
-```
+You may have noticed that there are option groups on the interface that you didn't write in the layout parameter file. These option groups are called "basic option groups." If you need to predefine their content or even make them non-modifiable to prevent novice users from accidentally changing them, you can edit them in the template file.
 
-If it happens to be a Python project, you can also let DaCapo manage the Python virtual environment. All you need to do is place a requirements.txt file specifying the list of dependencies in the root directory of the repository.
-
-### Predefine Basic Option Groups
-
-You may have noticed that some option groups appear on the interface that you didn't write in the layout parameter file. These option groups are called "basic option groups." If you need to predefine their content or even set them as unmodifiable to prevent novice users from accidentally changing them, you can edit them in args.xxxx.
-
-The current basic options are:
+Currently, the basic options are:
 
 - Project (the first task group)
 
   - General
-      - language
-      - work_dir: Working directory
-      - work_dir_enabled: Set the editability of the above item, same below
-      - is_background: Is it a background task
-      - is_background_enabled
-      - config_path: Configuration file path
-      - config_path_enabled
+    - language: Language
+    - work_dir: Working directory
+    - background: Whether it is a background task
+    - config_path: Configuration file path, the specific settings of the instance are saved in the root directory's instances directory, modifying this item will create a symbolic link to config_path
   - Update
-      - repo_url: Remote repository URL
-      - repo_url_enabled
-      - branch: Git repository branch
-      - branch_enabled
-      - local_path: Local storage path of the repository
-      - local_path_enabled
-      - template_path: Path of the layout arguments file relative to the root directory of the repository
-      - template_path_enabled
-      - auto_update: Enable automatic updates
-      - env_name: Virtual environment name
-      - pip_mirror: PyPI mirror source
+    - auto_update: Whether to enable automatic updates
+    - env_name: Virtual environment name
+    - deps_path: Path of the Python dependency file relative to the repository root directory
+    - python_exec: Python executable file used to create the virtual environment, mainly used when there are requirements for Python version
 
-  - Menu (other actual task groups)
+- Menu (other actual task groups)
 
-    - Task (for all tasks)
+  - Task (for all tasks)
+    - active: Whether to enable, determines whether this task is added to the waiting queue at startup
+    - priority: Task priority, determines the position of this task in the waiting queue at startup
+    - command: Command to execute this task
 
-        - priority: Task priority
-
-        - priority_enabled
-
-        - command: Command to execute the task
-
-        - command_enabled
-
-To modify these options, add a "_Base" option group under the corresponding task and directly fill in the values, for example:
+To modify these options, add a "\_Base" option group under the corresponding task, for example:
 
 ```yaml
-# args.yaml
+# template.yaml
 
 Project:
-    General:
-        _Base:
-            is_background: false
-            is_background_enabled: false
+  General:
+    _Base:
+      work_dir:
+        value: ./repos/DaCapoExample
+        disabled: true
 ```

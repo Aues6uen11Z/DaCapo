@@ -1,0 +1,50 @@
+{
+  "name": "DaCapo",
+  "version": "0.0.1",
+  "description": "DaCapo frontend",
+  "productName": "DaCapo",
+  "author": "Aues6uen11Z",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint --ext .js,.ts,.vue ./",
+    "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
+    "test": "echo \"No test specified\" && exit 0",
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "postinstall": "quasar prepare"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.4",
+    "ansi-to-html": "^0.7.2",
+    "axios": "^1.2.1",
+    "pinia": "^2.0.11",
+    "quasar": "^2.16.0",
+    "vue": "^3.4.18",
+    "vue-draggable-plus": "^0.6.0",
+    "vue-i18n": "^9.2.2",
+    "vue-router": "^4.0.12"
+  },
+  "devDependencies": {
+    "@intlify/unplugin-vue-i18n": "^2.0.0",
+    "@quasar/app-vite": "^2.0.0",
+    "@types/node": "^20.5.9",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "postcss": "^8.4.49",
+    "prettier": "^3.0.3",
+    "tailwindcss": "^3.4.15",
+    "typescript": "~5.5.3",
+    "vite-plugin-checker": "^0.8.0",
+    "vue-tsc": "^2.0.29"
+  },
+  "engines": {
+    "node": "^24 || ^22 || ^20 || ^18",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  }
+}

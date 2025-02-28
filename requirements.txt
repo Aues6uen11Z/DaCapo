@@ -1,9 +1,0 @@
-nicegui==1.4.34
-pystray==0.19.5
-loguru==0.7.2
-Pillow==10.1.0
-pywebview==5.1
-pywin32==306
-anyconfig==0.14.0
-toml==0.10.2
-PyYAML==6.0.2

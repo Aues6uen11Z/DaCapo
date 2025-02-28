@@ -1,4 +1,4 @@
-name: Nuitka Package & Publish
+name: Wails Build
 on:
   push:
     tags:
@@ -6,90 +6,77 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to release'
+        description: "Tag to release"
         required: true
 
 jobs:
   build:
-    # Windows is currently the only platform this action supports
-    runs-on: windows-latest
-  
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [
+            {
+              name: "Windows-amd64",
+              platform: windows/amd64,
+              os: windows-latest,
+            },
+            # { name: "Linux-amd64", platform: linux/amd64, os: ubuntu-latest },
+            # {
+            #   name: "MacOS-universal",
+            #   platform: darwin/universal,
+            #   os: macos-latest,
+            # },
+          ]
+    runs-on: ${{ matrix.build.os }}
+
     steps:
-  
       - name: Check out repository code
         uses: actions/checkout@v4
-  
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          architecture: 'x64'
-          cache: 'pip'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-  
-      - name: Package python script into exe
-        uses: Nuitka/Nuitka-Action@v1.1
+      - name: Build Wails app
+        uses: dAppServer/wails-build-action@main
         with:
-          script-name: main.py
-          mingw64: true
-          standalone: true
-          windows-icon-from-ico: static/logo/logo.ico
-          windows-uac-admin: true
-          include-data-dir: |
-            config=config
-            locale=locale
-            docs=docs
-            static=static
-            examples=examples
-          include-package: pygments.formatters
-          include-package-data: nicegui
-          output-filename: DaCapo
-          remove-output: true
-          disable-console: true
-          onefile: false
+          build-name: "DaCapo.exe"
+          build-platform: ${{ matrix.build.platform }}
+          wails-version: v2.9.2
+          go-version: 1.23
+          node-version: 22.11
+          nsis: true
+          package: false
 
-      - name: Download portable Python and Git
+      - name: Debug
         run: |
-          curl -L -o git.zip https://github.com/Aues6uen11Z/DaCapo/releases/download/master/Git.zip
-          unzip git.zip -d Git
-          curl -L -o python.zip https://github.com/Aues6uen11Z/DaCapo/releases/download/master/Python.zip
-          unzip python.zip -d Python
+          dir build/bin
+
+      - name: Get version from tag
+        id: get_version
+        shell: bash
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          elif [[ -n "${{ github.event.inputs.tag }}" ]]; then
+            echo "VERSION=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=dev" >> $GITHUB_ENV
+          fi
 
       - name: Prepare release
         run: |
-          mv build/main.dist DaCapo
-          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo.zip
+          mkdir -p DaCapo
+          mv build/bin/DaCapo.exe DaCapo/
+          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo-${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
 
-          mkdir -p DaCapo/tools
-          cp -r Git DaCapo/tools
-          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+git.zip
-
-          cp -r Python DaCapo/tools
-          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+git+python.zip
-
-          rm -r DaCapo/tools/Git
-          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo+python.zip
-
-          echo "github.ref_name: ${{ github.ref_name }}"
-          echo "github.event.inputs.tag: ${{ github.event.inputs.tag }}"
+          mv build/bin/DaCapo-amd64-installer.exe DaCapo-${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
 
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: ${{ github.event.inputs.tag || github.ref_name }}
           body: |
-            DaCapo 的更新功能依赖于 Git，虚拟环境管理依赖于 Python。如果你的本地环境中没有安装 Git 或 Python，请使用预装了对应工具的版本。
-            
-            The update functionality of DaCapo relies on Git, and the Python virtual environment management depends on Python.
-            If Git or Python is not installed in your local environment, please use the version that includes these pre-installed tools.
+            仅支持Windows10/11，需自行安装python环境。
+
+            Only supports Windows 10/11. Python environment needs to be installed separately.
           files: |
-            DaCapo.zip
-            DaCapo+git.zip
-            DaCapo+python.zip
-            DaCapo+git+python.zip
+            DaCapo-${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
+            DaCapo-${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
