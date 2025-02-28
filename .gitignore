@@ -3,7 +3,7 @@ instances
 **/logs
 **/*.db
 envs
-repos
+repos/*
 !repos/DaCapoExample
 server.go
 
