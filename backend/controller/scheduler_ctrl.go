@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/autobrr/go-shellwords"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -222,18 +223,16 @@ func stopOne(instanceName string, err error) {
 // runCommand executes a command and processes the output
 func runCommand(tm *model.TaskManager, command string, workDir string) error {
 	// Create command
-	var cmd *exec.Cmd
-	switch runtime.GOOS {
-	case "windows":
-		cmd = exec.Command("cmd", "/C", command)
+	args, err := shellwords.Parse(command)
+	if err != nil {
+		return fmt.Errorf("failed to parse command: %w", err)
+	}
+	cmd := exec.Command(args[0], args[1:]...)
+	if runtime.GOOS == "windows" {
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			HideWindow:    true,
 			CreationFlags: 0x08000000,
 		}
-	case "linux", "darwin":
-		cmd = exec.Command("sh", "-c", command)
-	default:
-		return fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
 
 	// Set environment variables to force color output

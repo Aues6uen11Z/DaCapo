@@ -173,7 +173,7 @@ func (s *Scheduler) UpdateQueue(queues map[string]TaskQueue) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	utils.Logger.Debugf("Updating queues: %+v", queues)
+	// utils.Logger.Debugf("Updating queues: %+v", queues)
 	for istName, queue := range queues {
 		if tm, ok := s.TaskManagers[istName]; ok {
 			tm.Queue = TaskQueue{
