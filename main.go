@@ -31,11 +31,20 @@ func main() {
 	r := router.SetupRouter()
 	go r.Run(":48596")
 
+	// Check if the symlink is valid, if not, create it
+	paths, err := model.GetConfigPaths()
+	if err == nil {
+		for _, path := range paths {
+			utils.Logger.Debugf("Checking link %s -> %s", path[0], path[1])
+			utils.CheckLink(path[0], path[1])
+		}
+	}
+
 	// Create an instance of the app structure
 	app := app.NewApp()
 
 	// Create application with options
-	err := wails.Run(&options.App{
+	err = wails.Run(&options.App{
 		Title:             "DaCapo",
 		Width:             1200,
 		Height:            800,

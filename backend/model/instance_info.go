@@ -2,6 +2,7 @@ package model
 
 import (
 	"os"
+	"path/filepath"
 	"slices"
 	"time"
 
@@ -94,6 +95,24 @@ func DeleteIstInfoByName(name string) error {
 	// Delete the instance from database
 	err := instance.Delete()
 	return err
+}
+
+func GetConfigPaths() ([][2]string, error) {
+	type Result struct {
+		Name       string
+		ConfigPath string
+	}
+
+	var results []Result
+	err := db.Model(&InstanceInfo{}).Select("name, config_path").Find(&results).Error
+
+	paths := make([][2]string, len(results))
+	for i, result := range results {
+		paths[i][0] = filepath.Join("instances", result.Name+".json")
+		paths[i][1] = result.ConfigPath
+	}
+
+	return paths, err
 }
 
 // Create initializes a new instance with values from a template

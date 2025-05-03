@@ -32,7 +32,6 @@ func (a *App) GetVersion() string {
 
 // startup is called at application startup
 func (a *App) Startup(ctx context.Context) {
-	// Perform your setup here
 	utils.Logger.Info("Application is starting up")
 	a.ctx = ctx
 }

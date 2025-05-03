@@ -5,7 +5,6 @@ import (
 	"dacapo/backend/utils"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -165,7 +164,7 @@ func UpdateInstance(c *gin.Context) {
 			srcPath := filepath.Join("instances", instanceName+".json")
 			tgtPath := req.Value.(string)
 			oldPath := istInfo.ConfigPath
-			if err := createLink(srcPath, tgtPath, oldPath); err != nil {
+			if err := utils.CreateLink(srcPath, tgtPath, oldPath); err != nil {
 				c.JSON(http.StatusOK, gin.H{
 					"code":    model.StatusFile.Code,
 					"message": model.StatusFile.Message,
@@ -254,47 +253,6 @@ func DeleteInstance(c *gin.Context) {
 	})
 }
 
-// Creates a symlink to the instance configuration file for access by user programs
-func createLink(srcPath, tgtPath, oldPath string) error {
-	absSource, err := filepath.Abs(srcPath)
-	if err != nil {
-		return fmt.Errorf("failed to get absolute source path: %w", err)
-	}
-	absTarget, err := filepath.Abs(tgtPath)
-	if err != nil {
-		return fmt.Errorf("failed to get absolute target path: %w", err)
-	}
-	absOld, err := filepath.Abs(oldPath)
-	if err != nil {
-		return fmt.Errorf("failed to get absolute old path: %w", err)
-	}
-
-	if absTarget == absOld {
-		return nil
-	} else {
-		if _, err := os.Stat(absTarget); err == nil {
-			utils.Logger.Warnf("Target path already exists, skipped: %s", absTarget)
-			return nil
-		}
-	}
-
-	targetDir := filepath.Dir(absTarget)
-	if _, err := os.Stat(targetDir); err != nil {
-		utils.Logger.Warnf("target directory does not exist: %s", targetDir)
-		return nil
-	}
-
-	if oldPath != "" {
-		os.Remove(absOld)
-	}
-
-	if err := os.Symlink(absSource, absTarget); err != nil {
-		utils.Logger.Warnf("failed to create symlink in %s: %v", targetDir, err)
-	}
-
-	return nil
-}
-
 func fromLocal(req model.ReqFromLocal) (model.Status, error) {
 	// 1. Read the template file content
 	templateDir := req.TemplatePath
@@ -327,7 +285,7 @@ func fromLocal(req model.ReqFromLocal) (model.Status, error) {
 	// 5. Create configuration file symlink
 	srcPath := filepath.Join("instances", req.InstanceName+".json")
 	tgtPath := instanceInfo.ConfigPath
-	if err := createLink(srcPath, tgtPath, ""); err != nil {
+	if err := utils.CreateLink(srcPath, tgtPath, ""); err != nil {
 		return model.StatusFile, err
 	}
 
@@ -369,7 +327,7 @@ func fromTemplate(req model.ReqFromTemplate) (model.Status, error) {
 	// 5. Create configuration file symlink
 	srcPath := filepath.Join("instances", req.InstanceName+".json")
 	tgtPath := instanceInfo.ConfigPath
-	if err := createLink(srcPath, tgtPath, ""); err != nil {
+	if err := utils.CreateLink(srcPath, tgtPath, ""); err != nil {
 		return model.StatusFile, err
 	}
 
