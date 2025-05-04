@@ -343,7 +343,7 @@ func startOne(instanceName string) {
 				stopOne(instanceName, fmt.Errorf("failed to get absolute path: %w", err))
 				return
 			}
-			cmd = strings.Replace(task.Command, "py ", pythonExec+" ", 1)
+			cmd = strings.Replace(task.Command, "py ", "\""+pythonExec+"\" ", 1)
 		}
 
 		utils.Logger.Infof("[%s]: Running task <%s>: %s", instanceName, taskName, cmd)
