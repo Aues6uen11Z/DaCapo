@@ -78,7 +78,15 @@
 
     <q-card class="tw-w-full tw-h-full">
       <q-card-section class="tw-h-full tw-flex tw-flex-col">
-        <card-title :name="t('home.logs')" icon="description" />
+        <card-title :name="t('home.logs')" icon="description">
+          <q-btn
+              icon="open_in_new"
+              flat
+              round
+              text-color="primary"
+              @click="openLog"
+            />
+        </card-title>
 
         <log-viewer :instance-name="instanceName" />
       </q-card-section>
@@ -88,13 +96,14 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { useSchedulerStore } from '../stores/global-store';
+import { useIstStore, useSchedulerStore } from '../stores/global-store';
 import { updateSchedulerState } from '../services/api';
 import { useDraggable } from 'vue-draggable-plus';
 import { useI18n } from 'vue-i18n';
 import CardTitle from '../components/CardTitle.vue';
 import TaskItem from '../components/TaskItem.vue';
 import LogViewer from '../components/LogViewer.vue';
+import { OpenFileExplorer } from 'app/wailsjs/go/app/App';
 
 const props = defineProps<{
   instanceName: string;
@@ -202,4 +211,15 @@ const moveAllToStopped = () => {
     },
   });
 };
+
+const istStore = useIstStore();
+const workDir = computed(() => {
+  return istStore.layout[props.instanceName]?.Project?.General?._Base?.work_dir?.value as string || '';
+});
+const logPath = computed(() => {
+  return istStore.layout[props.instanceName]?.Project?.General?._Base?.log_path?.value as string || '';
+});
+const openLog = async () => {
+  await OpenFileExplorer(workDir.value, logPath.value)
+}
 </script>

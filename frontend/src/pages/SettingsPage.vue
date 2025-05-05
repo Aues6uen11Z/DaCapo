@@ -169,20 +169,42 @@
 
           <!-- General Settings Panel -->
           <q-tab-panel name="general">
-            <div class="tw-grid tw-grid-cols-2 tw-gap-4 tw-place-items-center">
-              <div class="tw-flex tw-items-center">
-                <q-icon name="g_translate" size="md" class="tw-mr-2" />
-                <span class="tw-text-xl tw-font-bold">{{
-                  t('settings.language')
-                }}</span>
+            <div class="my-column tw-gap-4">
+              <div
+                class="tw-grid tw-grid-cols-2 tw-gap-4 tw-place-items-center tw-w-full"
+              >
+                <div class="tw-flex tw-items-center">
+                  <q-icon name="g_translate" size="md" class="tw-mr-2" />
+                  <span class="tw-text-xl tw-font-bold">{{
+                    t('settings.language')
+                  }}</span>
+                </div>
+                <q-select
+                  dense
+                  outlined
+                  v-model="language"
+                  :options="['zh-CN', 'en-US']"
+                  @update:model-value="onLanguageChange"
+                />
               </div>
-              <q-select
-                dense
-                outlined
-                v-model="language"
-                :options="['zh-CN', 'en-US']"
-                @update:model-value="onLanguageChange"
-              />
+
+              <div
+                class="tw-grid tw-grid-cols-2 tw-gap-4 tw-place-items-center tw-w-full"
+              >
+                <div class="tw-flex tw-items-center">
+                  <q-icon name="article" size="md" class="tw-mr-2" />
+                  <span class="tw-text-xl tw-font-bold">{{
+                    t('settings.log')
+                  }}</span>
+                </div>
+                <q-btn
+                  outline
+                  color="primary"
+                  :label="t('settings.openLog')"
+                  no-caps
+                  @click="openLog"
+                />
+              </div>
             </div>
           </q-tab-panel>
 
@@ -236,6 +258,7 @@ import {
 import { useI18n } from 'vue-i18n';
 import type { MessageLanguages } from 'src/boot/i18n';
 import { GetVersion } from 'app/wailsjs/go/app/App';
+import { OpenFileExplorer } from 'app/wailsjs/go/app/App';
 
 const $q = useQuasar();
 const istStore = useIstStore();
@@ -451,5 +474,8 @@ const toggleAll = async () => {
 const language = ref(settingsStore.language);
 const onLanguageChange = (newLang: MessageLanguages) => {
   settingsStore.setLanguage(newLang, i18n);
+};
+const openLog = async () => {
+  await OpenFileExplorer('.', 'logs');
 };
 </script>

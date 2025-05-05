@@ -21,11 +21,13 @@ export default {
     workDir: '工作目录',
     background: '后台程序',
     configPath: '配置路径',
+    logPath: '日志路径',
     help: {
       language: '此实例显示的语言',
       workDir: '程序的工作目录，通常应该是项目根目录',
       background: '是否为完全的后台程序，不占用屏幕、键盘、鼠标等设备',
       configPath: '程序访问JSON配置文件的位置，具体到文件名',
+      logPath: '日志所在目录的绝对路径，或相对于项目根目录的路径',
     },
   },
   update: {
@@ -87,6 +89,8 @@ export default {
     selectAll: '全选',
 
     language: '语言',
+    log: '日志',
+    openLog: '打开目录',
 
     homepage: '主页',
     version: '版本',

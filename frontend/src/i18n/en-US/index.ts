@@ -22,6 +22,7 @@ export default {
     workDir: 'Working Directory',
     background: 'Background',
     configPath: 'Config Path',
+    logPath: 'Log Path',
     help: {
       language: 'The language displayed in this instance',
       workDir:
@@ -30,6 +31,8 @@ export default {
         'Whether it is a complete background program, not occupying screen, keyboard, mouse and other devices',
       configPath:
         'Where your program accesses the JSON configuration file, specific to the file name',
+      logPath:
+        'Absolute path(or path relative to the project root) of the log directory'
     },
   },
   update: {
@@ -94,6 +97,8 @@ export default {
     selectAll: 'Select all',
 
     language: 'Language',
+    log: 'Log',
+    openLog: 'Open directory',
 
     homepage: 'Homepage',
     version: 'Version',

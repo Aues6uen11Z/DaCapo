@@ -35,7 +35,6 @@ func main() {
 	paths, err := model.GetConfigPaths()
 	if err == nil {
 		for _, path := range paths {
-			utils.Logger.Debugf("Checking link %s -> %s", path[0], path[1])
 			utils.CheckLink(path[0], path[1])
 		}
 	}

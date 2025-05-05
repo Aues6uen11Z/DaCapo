@@ -41,6 +41,8 @@ type InstanceInfo struct {
 	BackgroundDisabled bool
 	ConfigPath         string
 	ConfigPathDisabled bool
+	LogPath            string
+	LogPathDisabled    bool
 
 	// auto-generated during instance creation, read-only
 	RepoURL         string
@@ -145,6 +147,12 @@ func (i *InstanceInfo) Create(istName, tplName string, tpl *TemplateConf) error 
 				if v, ok := item.Value.(string); ok {
 					i.ConfigPath = v
 					i.ConfigPathDisabled = item.Disabled
+				}
+			},
+			"log_path": func(item ItemConf) {
+				if v, ok := item.Value.(string); ok {
+					i.LogPath = v
+					i.LogPathDisabled = item.Disabled
 				}
 			},
 		},

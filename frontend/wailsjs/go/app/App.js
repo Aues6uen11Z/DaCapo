@@ -14,8 +14,8 @@ export function OnSecondInstanceLaunch(arg1) {
   return window['go']['app']['App']['OnSecondInstanceLaunch'](arg1);
 }
 
-export function ReadFile(arg1) {
-  return window['go']['app']['App']['ReadFile'](arg1);
+export function OpenFileExplorer(arg1, arg2) {
+  return window['go']['app']['App']['OpenFileExplorer'](arg1, arg2);
 }
 
 export function SelectDir() {

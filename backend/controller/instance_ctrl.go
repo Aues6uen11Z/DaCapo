@@ -454,6 +454,13 @@ func makeupLayout(istInfo *model.InstanceInfo, istConf *model.InstanceConf, tplC
 	}
 	groupGeneralBase.Set("config_path", itemConfigPath)
 
+	itemLogPath := model.ItemConf{
+		Type:     "input",
+		Value:    istInfo.LogPath,
+		Disabled: istInfo.LogPathDisabled,
+	}
+	groupGeneralBase.Set("log_path", itemLogPath)
+
 	// Custom settings from template configuration file
 	if tplMenuProject, ok := tplConf.OM.Get("Project"); ok {
 		if tplTaskGeneral, ok := tplMenuProject.Get("General"); ok {

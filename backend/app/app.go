@@ -3,7 +3,8 @@ package app
 import (
 	"context"
 	"dacapo/backend/utils"
-	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -86,12 +87,18 @@ func (a *App) SelectFile() string {
 	return path
 }
 
-// ReadFile reads the content of a file
-func (a *App) ReadFile(filePath string) (string, error) {
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		utils.Logger.Errorf("Failed to read file %s: %v", filePath, err)
-		return "", err
+// OpenFileExplorer opens the file explorer at the specified directory path
+func (a *App) OpenFileExplorer(workDir, logPath string) {
+	var absPath string
+	if filepath.IsAbs(logPath) {
+		absPath = logPath
+	} else {
+		absPath = filepath.Join(workDir, logPath)
 	}
-	return string(content), nil
+
+	cmd := exec.Command("explorer.exe", absPath)
+	err := cmd.Start()
+	if err != nil {
+		utils.Logger.Error(err.Error())
+	}
 }

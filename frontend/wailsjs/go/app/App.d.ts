@@ -9,7 +9,7 @@ export function GetVersion():Promise<string>;
 
 export function OnSecondInstanceLaunch(arg1:options.SecondInstanceData):Promise<void>;
 
-export function ReadFile(arg1:string):Promise<string>;
+export function OpenFileExplorer(arg1:string,arg2:string):Promise<void>;
 
 export function SelectDir():Promise<string>;
 

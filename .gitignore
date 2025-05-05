@@ -5,9 +5,8 @@ instances
 envs
 repos/*
 !repos/DaCapoExample
-server.go
 build/bin
-
+todo.txt
 
 
 # Binaries for programs and plugins
