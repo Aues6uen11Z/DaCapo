@@ -96,6 +96,64 @@ func (i *InstanceConf) Create(istName string, tpl *TemplateConf) (err error) {
 	return nil
 }
 
+func (i *InstanceConf) Update(tpl *TemplateConf) (err error) {
+	updatedOM := orderedmap.New[string, *orderedmap.OrderedMap[string, *orderedmap.OrderedMap[string, *orderedmap.OrderedMap[string, any]]]]()
+
+	// Iterate through Template, maintaining order
+	for pair := tpl.OM.Oldest(); pair != nil; pair = pair.Next() {
+		menuName := pair.Key
+		menuConf := pair.Value
+
+		// Initialize menu layer
+		menuMap := orderedmap.New[string, *orderedmap.OrderedMap[string, *orderedmap.OrderedMap[string, any]]]()
+		updatedOM.Set(menuName, menuMap)
+
+		for pair := menuConf.Oldest(); pair != nil; pair = pair.Next() {
+			taskName := pair.Key
+			taskConf := pair.Value
+
+			// Initialize task layer
+			taskMap := orderedmap.New[string, *orderedmap.OrderedMap[string, any]]()
+			menuMap.Set(taskName, taskMap)
+
+			for pair := taskConf.Oldest(); pair != nil; pair = pair.Next() {
+				groupName := pair.Key
+				groupConf := pair.Value
+				if groupName != "_Base" {
+					// Initialize group layer
+					groupMap := orderedmap.New[string, any]()
+					taskMap.Set(groupName, groupMap)
+
+					for pair := groupConf.Oldest(); pair != nil; pair = pair.Next() {
+						itemName := pair.Key
+						itemConf := pair.Value
+						if itemName != "_help" {
+							// Check if the value exists in the current instance
+							existingValue := i.GetValue(menuName, taskName, groupName, itemName)
+							if existingValue != nil {
+								// Keep existing value
+								groupMap.Set(itemName, existingValue)
+							} else {
+								// Use template default value for new items
+								groupMap.Set(itemName, itemConf.Value)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Replace the current ordered map with the updated one
+	i.OM = updatedOM
+
+	if err = i.save(); err != nil {
+		return
+	}
+
+	return nil
+}
+
 func (i *InstanceConf) Load(istName string) (err error) {
 	i.Name = istName
 	filePath := filepath.Join("instances", istName+".json")

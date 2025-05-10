@@ -74,8 +74,14 @@ func UpdateRepo(c *gin.Context) {
 		return
 	}
 	if tplFile.ModTime().After(istInfo.LayoutLastUpdate) {
-		utils.Logger.Infof("[%s]: Template file changed, updating layout", instanceName)
+		utils.Logger.Infof("[%s]: Template file changed, updating layout and instance config", instanceName)
 		istInfo.UpdateField("layout_last_update", time.Now())
+
+		if err = syncIstConf(instanceName, tplInfo.Path); err != nil {
+			quickResponse(c, model.StatusFile, instanceName, err.Error())
+			return
+		}
+
 		c.JSON(http.StatusOK, model.RspUpdateRepo{
 			Code:      model.StatusSuccess.Code,
 			Message:   model.StatusSuccess.Message,
@@ -165,6 +171,24 @@ func installDeps(tm *model.TaskManager, envPath, depsPath string, envLastUpdate 
 	utils.Logger.Infof("[%s]: Installing dependencies: %s", tm.InstanceName, cmd)
 	if err = runCommand(tm, cmd, ""); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func syncIstConf(istName, tplPath string) (err error) {
+	istConf := model.NewIstConf()
+	tplConf := model.NewTplConf()
+
+	if err = istConf.Load(istName); err != nil {
+		return
+	}
+	if err = tplConf.Load(tplPath); err != nil {
+		return
+	}
+
+	if err = istConf.Update(tplConf); err != nil {
+		return
 	}
 
 	return nil
