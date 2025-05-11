@@ -32,6 +32,32 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+        
+      - name: Get version from tag
+        id: get_version
+        shell: bash
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          elif [[ -n "${{ github.event.inputs.tag }}" ]]; then
+            VERSION=${{ github.event.inputs.tag }}
+            VERSION=${VERSION#v}
+            echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          else
+            echo "VERSION=dev" >> $GITHUB_ENV
+          fi
+          echo "Version: ${VERSION}"
+      
+      - name: Update version in files
+        shell: bash
+        run: |
+          sed -i "s/const Version = \".*\"/const Version = \"${{ env.VERSION }}\"/" backend/app/app.go
+          sed -i "s/\"productVersion\": \".*\"/\"productVersion\": \"${{ env.VERSION }}\"/" wails.json
+          
+          echo "Updated version to ${{ env.VERSION }} in files:"
+          grep "const Version" backend/app/app.go
+          grep "productVersion" wails.json
 
       - name: Build Wails app
         uses: dAppServer/wails-build-action@main
@@ -48,25 +74,13 @@ jobs:
         run: |
           dir build/bin
 
-      - name: Get version from tag
-        id: get_version
-        shell: bash
-        run: |
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          elif [[ -n "${{ github.event.inputs.tag }}" ]]; then
-            echo "VERSION=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
-          else
-            echo "VERSION=dev" >> $GITHUB_ENV
-          fi
-
       - name: Prepare release
         run: |
           mkdir -p DaCapo
           mv build/bin/DaCapo.exe DaCapo/
-          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo-${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
+          powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
 
-          mv build/bin/DaCapo-amd64-installer.exe DaCapo-${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
+          mv build/bin/DaCapo-amd64-installer.exe DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -78,5 +92,5 @@ jobs:
 
             Only supports Windows 10/11. Python environment needs to be installed separately.
           files: |
-            DaCapo-${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
-            DaCapo-${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
+            DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
+            DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
