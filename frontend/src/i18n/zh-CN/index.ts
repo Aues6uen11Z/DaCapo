@@ -1,4 +1,7 @@
 export default {
+  item: {
+    cronHelp:'请输入有效的cron表达式 (分 时 日 月 星期)'
+  },
   welcome: {
     title: '欢迎',
     description: '点击左下角的设置按钮开始创建您的第一个实例',
@@ -22,12 +25,15 @@ export default {
     background: '后台程序',
     configPath: '配置路径',
     logPath: '日志路径',
+    cronExpr: 'Cron表达式',
     help: {
       language: '此实例显示的语言',
       workDir: '程序的工作目录，通常应该是项目根目录',
       background: '是否为完全的后台程序，不占用屏幕、键盘、鼠标等设备',
       configPath: '程序访问JSON配置文件的位置，具体到文件名',
       logPath: '日志所在目录的绝对路径，或相对于项目根目录的路径',
+      cronExpr:
+        '定时任务Cron表达式，留空不自动运行\n规则见https://help.aliyun.com/zh/ecs/use-cases/cron-scheduled-tasks\n例如每天18点执行任务，填写“0 18 * * *”',
     },
   },
   update: {
@@ -87,6 +93,7 @@ export default {
     create: '创建',
     manage: '管理',
     selectAll: '全选',
+    runOnStartup: '启动时运行',
 
     language: '语言',
     log: '日志',

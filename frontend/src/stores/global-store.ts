@@ -331,12 +331,22 @@ export const useSchedulerStore = defineStore('scheduler', {
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     language: 'en-US' as MessageLanguages,
+    runOnStartup: localStorage.getItem('runOnStartup') === 'true',
+    schedulerCron: localStorage.getItem('schedulerCron') || '',
   }),
   actions: {
     setLanguage(lang: MessageLanguages, i18n: Composer) {
       this.language = lang;
       i18n.locale.value = lang;
       localStorage.setItem('language', lang);
+    },
+    setRunOnStartup(value: boolean) {
+      this.runOnStartup = value;
+      localStorage.setItem('runOnStartup', String(value));
+    },
+    setSchedulerCron(value: string) {
+      this.schedulerCron = value;
+      localStorage.setItem('schedulerCron', value);
     },
     loadSettings(i18n: Composer, quasar: QVueGlobals) {
       // Check for saved language settings

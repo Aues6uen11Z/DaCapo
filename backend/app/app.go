@@ -2,11 +2,15 @@ package app
 
 import (
 	"context"
+	"dacapo/backend/controller"
+	"dacapo/backend/model"
 	"dacapo/backend/utils"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/robfig/cron/v3"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -50,7 +54,40 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 
 // domReady is called after front-end resources have been loaded
 func (a App) DomReady(ctx context.Context) {
-	// Add your action here
+	var instances []model.InstanceInfo
+	if err := model.GetAllInstances(&instances); err != nil {
+		utils.Logger.Error("Failed to get all instances:", err)
+		return
+	}
+
+	c := cron.New()
+	for _, instance := range instances {
+		if !instance.Ready && instance.CronExpr != "" {
+			entryID, err := c.AddFunc(instance.CronExpr, func() { controller.StartOne(instance.Name) })
+			if err != nil {
+				utils.Logger.Errorf("[%s]: Failed to add cron job: %v", instance.Name, err)
+			} else {
+				entry := c.Entry(entryID)
+				nextRun := entry.Schedule.Next(time.Now()).Format("2006-01-02 15:04:05")
+				utils.Logger.Infof("[%s]: Cron job added: %s, next run at %s", instance.Name, instance.CronExpr, nextRun)
+			}
+		}
+	}
+
+	time.Sleep(3 * time.Second)
+	scheduler := model.GetScheduler()
+	if scheduler.CronExpr != "" {
+		entryID, err := c.AddFunc(scheduler.CronExpr, func() { controller.StartAll() })
+		if err != nil {
+			utils.Logger.Errorf("Scheduler failed to add cron job: %v", err)
+		} else {
+			entry := c.Entry(entryID)
+			nextRun := entry.Schedule.Next(time.Now()).Format("2006-01-02 15:04:05")
+			utils.Logger.Infof("Scheduler cron job added: %s, next run at %s", scheduler.CronExpr, nextRun)
+		}
+	}
+
+	c.Start()
 }
 
 // beforeClose is called when the application is about to quit,

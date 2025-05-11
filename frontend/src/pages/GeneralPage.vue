@@ -59,6 +59,16 @@
             :display-name="t('general.logPath')"
             :help="t('general.help.logPath')"
           />
+          <item-line
+            :ist-name="istName"
+            menu-name="Project"
+            task-name="General"
+            group-name="_Base"
+            item-name="cron_expr"
+            :item-conf="baseGroup.cron_expr!"
+            :display-name="t('general.cronExpr')"
+            :help="t('general.help.cronExpr')"
+          />
         </div>
       </q-card-section>
     </q-card>

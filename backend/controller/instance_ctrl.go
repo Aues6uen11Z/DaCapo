@@ -461,6 +461,12 @@ func makeupLayout(istInfo *model.InstanceInfo, istConf *model.InstanceConf, tplC
 	}
 	groupGeneralBase.Set("log_path", itemLogPath)
 
+	itemCronExpr := model.ItemConf{
+		Type:  "cron",
+		Value: istInfo.CronExpr,
+	}
+	groupGeneralBase.Set("cron_expr", itemCronExpr)
+
 	// Custom settings from template configuration file
 	if tplMenuProject, ok := tplConf.OM.Get("Project"); ok {
 		if tplTaskGeneral, ok := tplMenuProject.Get("General"); ok {

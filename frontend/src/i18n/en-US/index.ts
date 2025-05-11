@@ -1,4 +1,7 @@
 export default {
+  item: {
+    cronHelp:'Please enter a valid cron expression (minute hour day month week)',
+  },
   welcome: {
     title: 'Welcome',
     description:
@@ -23,6 +26,7 @@ export default {
     background: 'Background',
     configPath: 'Config Path',
     logPath: 'Log Path',
+    cronExpr: 'Cron Expression',
     help: {
       language: 'The language displayed in this instance',
       workDir:
@@ -32,7 +36,9 @@ export default {
       configPath:
         'Where your program accesses the JSON configuration file, specific to the file name',
       logPath:
-        'Absolute path(or path relative to the project root) of the log directory'
+        'Absolute path(or path relative to the project root) of the log directory',
+      cronExpr:
+        'Cron expression for scheduled tasks, leave empty to disable automatic execution\nSee rules at https://en.wikipedia.org/wiki/Cron\nFor example, to run a task daily at 6 PM, enter "0 18 * * *"'
     },
   },
   update: {
@@ -95,6 +101,7 @@ export default {
     create: 'Create',
     manage: 'Manage',
     selectAll: 'Select all',
+    runOnStartup: 'Run on startup',
 
     language: 'Language',
     log: 'Log',

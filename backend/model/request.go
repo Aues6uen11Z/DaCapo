@@ -42,3 +42,7 @@ type ReqSchedulerState struct {
 	Type         string `json:"type" binding:"required"`
 	InstanceName string `json:"instance_name"`
 }
+
+type ReqSchedulerCron struct {
+	CronExpr string `json:"cron_expr" binding:"required"`
+}

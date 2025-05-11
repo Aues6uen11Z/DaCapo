@@ -71,9 +71,9 @@ func UpdateSchedulerState(c *gin.Context) {
 
 	if req.Type == "start" {
 		if req.InstanceName == "" {
-			go startAll()
+			go StartAll()
 		} else {
-			go startOne(req.InstanceName)
+			go StartOne(req.InstanceName)
 		}
 	} else if req.Type == "stop" {
 		if req.InstanceName == "" {
@@ -93,6 +93,24 @@ func UpdateSchedulerState(c *gin.Context) {
 func GetTaskQueue(c *gin.Context) {
 	instanceName := c.Param("instance_name")
 	broadcastQueue(instanceName)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    model.StatusSuccess.Code,
+		"message": model.StatusSuccess.Message,
+		"detail":  "",
+	})
+}
+
+func SetSchedulerCron(c *gin.Context) {
+	var req model.ReqSchedulerCron
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		utils.Logger.Error("Invalid request format\n", err)
+		return
+	}
+
+	scheduler := model.GetScheduler()
+	scheduler.CronExpr = req.CronExpr
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    model.StatusSuccess.Code,
@@ -224,6 +242,9 @@ func stopOne(instanceName string, err error) {
 func runCommand(tm *model.TaskManager, command string, workDir string) error {
 	// Create command
 	args, err := shellwords.Parse(command)
+	if len(args) == 0 {
+		return fmt.Errorf("empty command after parsing")
+	}
 	if err != nil {
 		return fmt.Errorf("failed to parse command: %w", err)
 	}
@@ -299,8 +320,8 @@ func runCommand(tm *model.TaskManager, command string, workDir string) error {
 	return nil
 }
 
-// startOne runs tasks for a single instance
-func startOne(instanceName string) {
+// StartOne runs tasks for a single instance
+func StartOne(instanceName string) {
 	utils.Logger.Infof("Starting tasks for instance: %s", instanceName)
 
 	scheduler := model.GetScheduler()
@@ -364,8 +385,8 @@ func startOne(instanceName string) {
 	broadcastQueue(instanceName)
 }
 
-// startAll starts tasks for all instances
-func startAll() {
+// StartAll starts tasks for all instances
+func StartAll() {
 	scheduler := model.GetScheduler()
 	scheduler.Start()
 	broadcastState("", model.StatusRunning)
@@ -455,7 +476,7 @@ func runWithCheck(istName string) {
 		}
 
 		if tm.Status == model.StatusPending {
-			startOne(istName)
+			StartOne(istName)
 		}
 		return
 	}
@@ -508,7 +529,7 @@ func runForegroundTasks(tasks []string) {
 				utils.Logger.Warnf("Skip failed instance: %s", istName)
 			default:
 				allUpdating = false
-				startOne(istName)
+				StartOne(istName)
 			}
 		}
 

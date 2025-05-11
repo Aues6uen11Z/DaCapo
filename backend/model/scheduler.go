@@ -66,6 +66,7 @@ func (tm *TaskManager) Cancel() {
 type Scheduler struct {
 	TaskManagers map[string]*TaskManager
 	IsRunning    bool
+	CronExpr     string
 	mu           sync.Mutex // Used only when updating queues and switching tasks
 }
 

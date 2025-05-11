@@ -138,11 +138,28 @@
               <div class="tw-text-xl tw-font-bold">
                 {{ t('settings.manage') }}
               </div>
-              <q-toggle
-                v-model="selectAll"
-                :label="t('settings.selectAll')"
-                @update:model-value="toggleAll"
-              />
+              <div class="my-row tw-w-full tw-justify-between">
+                <q-toggle
+                  v-model="selectAll"
+                  :label="t('settings.selectAll')"
+                  @update:model-value="toggleAll"
+                />
+
+                <q-checkbox
+                  v-model="runOnStartup"
+                  :label="t('settings.runOnStartup')"
+                />
+
+                <q-input
+                  v-model="schedulerCron"
+                  label="Cron"
+                  :disable="runOnStartup"
+                  dense
+                  :rules="[(val) => validateCron(val) || t('item.cronHelp')]"
+                  @blur="handleCronBlur"
+                />
+              </div>
+
               <q-scroll-area class="tw-w-full tw-h-2/5 tw-border">
                 <div class="tw-grid tw-grid-cols-2 tw-gap-4">
                   <div v-for="instance in instances" :key="instance">
@@ -259,6 +276,7 @@ import { useI18n } from 'vue-i18n';
 import type { MessageLanguages } from 'src/boot/i18n';
 import { GetVersion } from 'app/wailsjs/go/app/App';
 import { OpenFileExplorer } from 'app/wailsjs/go/app/App';
+import { validateCron } from '../utils/cron';
 
 const $q = useQuasar();
 const istStore = useIstStore();
@@ -472,6 +490,18 @@ const toggleAll = async () => {
 
 // General settings
 const language = ref(settingsStore.language);
+const runOnStartup = computed({
+  get: () => settingsStore.runOnStartup,
+  set: (value) => settingsStore.setRunOnStartup(value),
+});
+const schedulerCron = ref(settingsStore.schedulerCron);
+
+const handleCronBlur = () => {
+  if (validateCron(schedulerCron.value)) {
+    settingsStore.setSchedulerCron(schedulerCron.value);
+  }
+};
+
 const onLanguageChange = (newLang: MessageLanguages) => {
   settingsStore.setLanguage(newLang, i18n);
 };

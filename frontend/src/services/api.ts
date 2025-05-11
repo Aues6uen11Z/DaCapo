@@ -176,6 +176,18 @@ export async function updateSchedulerState(
   }
 }
 
+// POST /api/scheduler/cron
+export async function sendSchedulerCron(cronExpr: string) {
+  const response = await api.post<RspApi>('/scheduler/cron', {
+    cron_expr: cronExpr,
+  });
+
+  if (response.data.code !== 0) {
+    console.error(response.data.detail);
+    throw new Error(response.data.detail);
+  }
+}
+
 // GET /api/updater/{instanceName}
 export async function updateRepo(instanceName: string): Promise<boolean> {
   const response = await api.get<RspApi & RspUpdateRepo>(

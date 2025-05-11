@@ -54,6 +54,16 @@
       />
     </template>
 
+    <template v-else-if="itemConf.type === 'cron'">
+      <q-input
+        v-model="inputValue"
+        :disable="itemConf.disabled"
+        dense
+        :rules="[(val) => validateCron(val) || t('item.cronHelp')]"
+        @blur="handleCronBlur"
+      />
+    </template>
+
     <template v-else>
       <q-input
         v-model="inputValue"
@@ -82,6 +92,10 @@ import FileInput from './FileInput.vue';
 import { useIstStore } from '../stores/global-store';
 import { useQuasar } from 'quasar';
 import { useTranslation } from '../i18n/index';
+import { useI18n } from 'vue-i18n';
+import { validateCron } from '../utils/cron';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   istName: string;
@@ -185,6 +199,12 @@ const update = async (value: unknown) => {
       html: true,
       message: `Failed to update ${props.itemName}:<br> ${err instanceof Error ? err.message : 'Unknown error'}`,
     });
+  }
+};
+
+const handleCronBlur = () => {
+  if (validateCron(inputValue.value)) {
+    update(inputValue.value);
   }
 };
 </script>

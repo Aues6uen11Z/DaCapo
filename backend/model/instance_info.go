@@ -43,6 +43,7 @@ type InstanceInfo struct {
 	ConfigPathDisabled bool
 	LogPath            string
 	LogPathDisabled    bool
+	CronExpr           string
 
 	// auto-generated during instance creation, read-only
 	RepoURL         string
@@ -153,6 +154,11 @@ func (i *InstanceInfo) Create(istName, tplName string, tpl *TemplateConf) error 
 				if v, ok := item.Value.(string); ok {
 					i.LogPath = v
 					i.LogPathDisabled = item.Disabled
+				}
+			},
+			"cron_expr": func(item ItemConf) {
+				if v, ok := item.Value.(string); ok {
+					i.CronExpr = v
 				}
 			},
 		},

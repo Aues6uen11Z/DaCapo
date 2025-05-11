@@ -10,6 +10,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/ncruces/go-sqlite3 v0.21.3
 	github.com/ncruces/go-sqlite3/gormlite v0.21.0
+	github.com/robfig/cron/v3 v3.0.0
 	github.com/wailsapp/wails/v2 v2.10.1
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	go.uber.org/zap v1.27.0

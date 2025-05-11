@@ -85,6 +85,7 @@ func SetupRouter() *gin.Engine {
 			scheduler.PATCH("/queue", controller.UpdateTaskQueue)
 			scheduler.PATCH("/state", controller.UpdateSchedulerState)
 			scheduler.GET("/queue/:instance_name", controller.GetTaskQueue)
+			scheduler.POST("/cron", controller.SetSchedulerCron)
 		}
 
 		api.GET("/updater/:instance_name", controller.UpdateRepo)
