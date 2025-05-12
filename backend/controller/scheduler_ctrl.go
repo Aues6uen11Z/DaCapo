@@ -6,6 +6,7 @@ import (
 	"dacapo/backend/utils"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -271,12 +272,15 @@ func runCommand(tm *model.TaskManager, command string, workDir string) error {
 		cmd.Dir = workDir
 	}
 
-	// Create pipe to get output
-	pipe, err := cmd.StdoutPipe()
+	// Create pipes for stdout and stderr
+	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return fmt.Errorf("failed to create pipe: %w", err)
+		return fmt.Errorf("failed to create stdout pipe: %w", err)
 	}
-	cmd.Stderr = cmd.Stdout
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("failed to create stderr pipe: %w", err)
+	}
 
 	// Start command
 	if err := cmd.Start(); err != nil {
@@ -285,31 +289,23 @@ func runCommand(tm *model.TaskManager, command string, workDir string) error {
 
 	tm.Cmd = cmd
 
-	// Read logs in a separate goroutine
+	// Create wait group to ensure both goroutines complete
+	var wg sync.WaitGroup
+	wg.Add(2)
 	go func() {
-		var scanner *bufio.Scanner
-
-		if runtime.GOOS == "windows" {
-			// Convert GBK encoding to UTF-8
-			gbkDecoder := simplifiedchinese.GBK.NewDecoder()
-			transformedReader := transform.NewReader(pipe, gbkDecoder)
-			scanner = bufio.NewScanner(transformedReader)
-		} else {
-			scanner = bufio.NewScanner(pipe)
-		}
-
-		const maxCapacity = 1024 * 1024
-		buf := make([]byte, maxCapacity)
-		scanner.Buffer(buf, maxCapacity)
-
-		for scanner.Scan() {
-			line := scanner.Text()
-			broadcastLog(tm.InstanceName, line)
-		}
+		defer wg.Done()
+		processOutput(stdoutPipe, tm.InstanceName, false)
+	}()
+	go func() {
+		defer wg.Done()
+		processOutput(stderrPipe, tm.InstanceName, true)
 	}()
 
 	// Wait for command to complete
-	if err := cmd.Wait(); err != nil {
+	err = cmd.Wait()
+	wg.Wait()
+
+	if err != nil {
 		if tm.ManualStop {
 			tm.ManualStop = false
 			return ErrManualStop
@@ -320,10 +316,39 @@ func runCommand(tm *model.TaskManager, command string, workDir string) error {
 	return nil
 }
 
+// processOutput handles reading from a pipe and broadcasting/logging the output
+func processOutput(pipe io.ReadCloser, instanceName string, isError bool) {
+	var scanner *bufio.Scanner
+
+	if runtime.GOOS == "windows" {
+		// Convert GBK encoding to UTF-8
+		gbkDecoder := simplifiedchinese.GBK.NewDecoder()
+		transformedReader := transform.NewReader(pipe, gbkDecoder)
+		scanner = bufio.NewScanner(transformedReader)
+	} else {
+		scanner = bufio.NewScanner(pipe)
+	}
+
+	const maxCapacity = 1024 * 1024
+	buf := make([]byte, maxCapacity)
+	scanner.Buffer(buf, maxCapacity)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		broadcastLog(instanceName, line)
+
+		if isError {
+			utils.Logger.Errorf("[%s]: %s", instanceName, line)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		utils.Logger.Errorf("[%s]: Error reading output: %v", instanceName, err)
+	}
+}
+
 // StartOne runs tasks for a single instance
 func StartOne(instanceName string) {
-	utils.Logger.Infof("Starting tasks for instance: %s", instanceName)
-
 	scheduler := model.GetScheduler()
 	tm := scheduler.GetTaskManager(instanceName)
 	if tm == nil {
