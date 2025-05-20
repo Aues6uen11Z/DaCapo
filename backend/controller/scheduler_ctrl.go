@@ -252,7 +252,6 @@ func runCommand(tm *model.TaskManager, command string, workDir string) error {
 	cmd := exec.Command(args[0], args[1:]...)
 	if runtime.GOOS == "windows" {
 		cmd.SysProcAttr = &syscall.SysProcAttr{
-			HideWindow:    true,
 			CreationFlags: 0x08000000,
 		}
 	}
