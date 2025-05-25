@@ -576,15 +576,6 @@ func runForegroundTasks(tasks []string) {
 // StopAll stops the scheduler and all tasks
 func StopAll() {
 	utils.Logger.Info("Stopping all running instances...")
-	scheduler := model.GetScheduler()
-	if !scheduler.IsRunning {
-		utils.Logger.Info("Scheduler is not running")
-		return
-	}
-
-	// Stop the scheduler
-	scheduler.Stop()
-	broadcastState("", model.StatusPending)
 
 	// Get all instances
 	var instances []model.InstanceInfo
@@ -594,10 +585,21 @@ func StopAll() {
 	}
 
 	// Stop all running instances
+	scheduler := model.GetScheduler()
 	for _, ist := range instances {
 		tm := scheduler.GetTaskManager(ist.Name)
 		if tm != nil && tm.Status == model.StatusRunning {
 			stopOne(ist.Name, nil)
 		}
 	}
+
+	// Prevent loop calls in CloseApp
+	if !scheduler.IsRunning {
+		utils.Logger.Info("Scheduler is not running")
+		return
+	}
+
+	// Stop the scheduler
+	scheduler.Stop()
+	broadcastState("", model.StatusPending)
 }
