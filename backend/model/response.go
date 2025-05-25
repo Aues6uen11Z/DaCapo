@@ -59,3 +59,13 @@ type RspSchedulerState struct {
 	InstanceName string `json:"instance_name"`
 	State        string `json:"state"`
 }
+
+// Settings response
+type RspSettings struct {
+	Language          string `json:"language"`
+	RunOnStartup      bool   `json:"runOnStartup"`
+	SchedulerCron     string `json:"schedulerCron"`
+	AutoActionTrigger string `json:"autoActionTrigger"`
+	AutoActionCron    string `json:"autoActionCron"`
+	AutoActionType    string `json:"autoActionType"`
+}

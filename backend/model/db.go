@@ -28,3 +28,21 @@ func InitDB() {
 
 	utils.Logger.Info("Database initialized")
 }
+
+// CloseDB closes the database connection
+func CloseDB() {
+	if db != nil {
+		sqlDB, err := db.DB()
+		if err != nil {
+			utils.Logger.Errorf("Failed to get underlying sql.DB: %v", err)
+			return
+		}
+
+		err = sqlDB.Close()
+		if err != nil {
+			utils.Logger.Errorf("Failed to close database: %v", err)
+		} else {
+			utils.Logger.Info("Database connection closed")
+		}
+	}
+}

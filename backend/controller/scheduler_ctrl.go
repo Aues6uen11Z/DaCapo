@@ -72,13 +72,19 @@ func UpdateSchedulerState(c *gin.Context) {
 
 	if req.Type == "start" {
 		if req.InstanceName == "" {
+			if req.AutoClose {
+				scheduler := model.GetScheduler()
+				scheduler.AutoClose = true
+			}
 			go StartAll()
 		} else {
 			go StartOne(req.InstanceName)
 		}
 	} else if req.Type == "stop" {
 		if req.InstanceName == "" {
-			stopAll()
+			scheduler := model.GetScheduler()
+			scheduler.AutoClose = false
+			StopAll()
 		} else {
 			stopOne(req.InstanceName, nil)
 		}
@@ -567,10 +573,14 @@ func runForegroundTasks(tasks []string) {
 	utils.Logger.Info("All foreground tasks completed")
 }
 
-// stopAll stops the scheduler and all tasks
-func stopAll() {
+// StopAll stops the scheduler and all tasks
+func StopAll() {
 	utils.Logger.Info("Stopping all running instances...")
 	scheduler := model.GetScheduler()
+	if !scheduler.IsRunning {
+		utils.Logger.Info("Scheduler is not running")
+		return
+	}
 
 	// Stop the scheduler
 	scheduler.Stop()

@@ -6,6 +6,7 @@ import type {
   RspWSMessage,
   RspUpdateRepo,
   Translation,
+  RspSettings,
 } from './response';
 import type {
   ReqFromLocal,
@@ -164,10 +165,12 @@ export async function getTaskQueue(instanceName: string) {
 export async function updateSchedulerState(
   type: 'start' | 'stop',
   instanceName?: string,
+  autoClose?: boolean,
 ) {
   const response = await api.patch<RspApi>('/scheduler/state', {
     type,
     instance_name: instanceName,
+    auto_close: autoClose,
   });
 
   if (response.data.code !== 0) {
@@ -200,4 +203,27 @@ export async function updateRepo(instanceName: string): Promise<boolean> {
 
   console.error(response.data.detail);
   throw new Error(response.data.detail);
+}
+
+// GET /api/settings
+export async function fetchSettings() {
+  const response = await api.get<RspSettings>('/settings');
+  return response.data;
+}
+
+// PATCH /api/settings
+export async function updateSettings(settings: {
+  language?: string;
+  runOnStartup?: boolean;
+  schedulerCron?: string;
+  autoActionTrigger?: string;
+  autoActionCron?: string;
+  autoActionType?: string;
+}) {
+  const response = await api.patch<RspApi>('/settings', settings);
+
+  if (response.data.code !== 0) {
+    console.error(response.data.detail);
+    throw new Error(response.data.detail);
+  }
 }

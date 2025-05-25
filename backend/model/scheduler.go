@@ -67,6 +67,8 @@ type Scheduler struct {
 	TaskManagers map[string]*TaskManager
 	IsRunning    bool
 	CronExpr     string
+	AutoClose    bool
+	CloseFunc    func()
 	mu           sync.Mutex // Used only when updating queues and switching tasks
 }
 
@@ -90,6 +92,10 @@ func (s *Scheduler) Stop() {
 	s.mu.Lock()
 	s.IsRunning = false
 	s.mu.Unlock()
+
+	if s.AutoClose && s.CloseFunc != nil {
+		s.CloseFunc()
+	}
 }
 
 // Start activates the scheduler

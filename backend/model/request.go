@@ -41,8 +41,19 @@ type ReqUpdateQueue struct {
 type ReqSchedulerState struct {
 	Type         string `json:"type" binding:"required"`
 	InstanceName string `json:"instance_name"`
+	AutoClose    bool   `json:"auto_close"`
 }
 
 type ReqSchedulerCron struct {
 	CronExpr string `json:"cron_expr" binding:"required"`
+}
+
+// Settings related requests
+type ReqUpdateSettings struct {
+	Language          string  `json:"language"`
+	RunOnStartup      *bool   `json:"runOnStartup"`
+	SchedulerCron     *string `json:"schedulerCron"`
+	AutoActionTrigger string  `json:"autoActionTrigger"`
+	AutoActionCron    *string `json:"autoActionCron"`
+	AutoActionType    string  `json:"autoActionType"`
 }

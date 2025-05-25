@@ -94,6 +94,13 @@ export default {
     manage: '管理',
     selectAll: '全选',
     runOnStartup: '启动时运行',
+    schedulerEnd: '调度器结束时',
+    scheduled: '在指定时间',
+    autoAction: '动作',
+    noAction: '无动作',
+    closeApp: '关闭DaCapo',
+    hibernate: '休眠',
+    shutdown: '关机',
 
     language: '语言',
     log: '日志',

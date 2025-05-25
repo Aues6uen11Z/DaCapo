@@ -73,12 +73,9 @@ onMounted(async () => {
     await istStore.loadInstance();
     unsubscribe = taskStore.initWebSocket();
 
-    // Execute auto-update
-    await autoUpdateInstances();
-
     if (settingsStore.runOnStartup) {
       // if runOnStartup is true, start all instances
-      await updateSchedulerState('start');
+      await updateSchedulerState('start', '', true);
     } else if (settingsStore.schedulerCron) {
       // if runOnStartup is false, set the cron expression
       await sendSchedulerCron(settingsStore.schedulerCron);
@@ -87,6 +84,11 @@ onMounted(async () => {
     console.error('Failed to initialize app:', err);
   } finally {
     loading.value = false;
+
+    // Execute auto-update asynchronously after loading is complete
+    autoUpdateInstances().catch((err) => {
+      console.error('Auto update failed:', err);
+    });
   }
 });
 

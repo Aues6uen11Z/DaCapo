@@ -14,6 +14,8 @@ import {
   updateInstance,
   connectWebSocket,
   updateTaskQueue,
+  fetchSettings,
+  updateSettings,
 } from '../services/api';
 import type { MessageLanguages } from 'src/boot/i18n';
 import type { Composer } from 'vue-i18n';
@@ -331,37 +333,97 @@ export const useSchedulerStore = defineStore('scheduler', {
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     language: 'en-US' as MessageLanguages,
-    runOnStartup: localStorage.getItem('runOnStartup') === 'true',
-    schedulerCron: localStorage.getItem('schedulerCron') || '',
+    runOnStartup: false,
+    schedulerCron: '',
+    autoActionTrigger: 'scheduler_end', // 'scheduler_end' | 'scheduled'
+    autoActionCron: '',
+    autoActionType: 'none', // 'none' | 'close_app' | 'hibernate' | 'shutdown'
   }),
   actions: {
-    setLanguage(lang: MessageLanguages, i18n: Composer) {
+    async setLanguage(lang: MessageLanguages, i18n: Composer) {
       this.language = lang;
       i18n.locale.value = lang;
-      localStorage.setItem('language', lang);
+      await this.saveSettings();
     },
-    setRunOnStartup(value: boolean) {
+    async setRunOnStartup(value: boolean) {
       this.runOnStartup = value;
-      localStorage.setItem('runOnStartup', String(value));
+      await this.saveSettings();
     },
-    setSchedulerCron(value: string) {
+    async setSchedulerCron(value: string) {
       this.schedulerCron = value;
-      localStorage.setItem('schedulerCron', value);
+      await this.saveSettings();
     },
-    loadSettings(i18n: Composer, quasar: QVueGlobals) {
-      // Check for saved language settings
-      const savedLang = localStorage.getItem(
-        'language',
-      ) as MessageLanguages | null;
+    async setAutoActionTrigger(value: string) {
+      this.autoActionTrigger = value;
+      await this.saveSettings();
+    },
+    async setAutoActionCron(value: string) {
+      this.autoActionCron = value;
+      await this.saveSettings();
+    },
+    async setAutoActionType(value: string) {
+      this.autoActionType = value;
+      await this.saveSettings();
+    },
+    async loadSettings(i18n: Composer, quasar: QVueGlobals) {
+      try {
+        const settings = await fetchSettings();
+        
+        // If language is empty/null, auto-detect language based on system
+        if (!settings.language) {
+          const locale = quasar.lang.getLocale() || 'en-US';
+          const lang = locale.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en-US';
+          this.language = lang as MessageLanguages;
+          // Save the auto-detected language
+          await this.setLanguage(this.language, i18n);
+        } else {
+          // Use saved language setting with type validation
+          const validLanguages = ['zh-CN', 'en-US'];
+          const savedLang = validLanguages.includes(settings.language) 
+            ? settings.language as MessageLanguages 
+            : 'en-US';
+          this.language = savedLang;
+          i18n.locale.value = savedLang;
+        }
 
-      if (savedLang) {
-        // If there are saved settings, use them
-        this.setLanguage(savedLang, i18n);
-      } else {
-        // If no saved settings, choose based on system language
+        // Load other settings with defaults
+        this.runOnStartup = settings.runOnStartup ?? false;
+        this.schedulerCron = settings.schedulerCron || '';
+        this.autoActionTrigger = settings.autoActionTrigger || 'scheduler_end';
+        this.autoActionCron = settings.autoActionCron || '';
+        this.autoActionType = settings.autoActionType || 'none';
+
+        // Validate settings
+        const validTriggers = ['scheduler_end', 'scheduled'];
+        const validTypes = ['none', 'close_app', 'hibernate', 'shutdown'];
+        
+        if (!validTriggers.includes(this.autoActionTrigger)) {
+          await this.setAutoActionTrigger('scheduler_end');
+        }
+        
+        if (!validTypes.includes(this.autoActionType)) {
+          await this.setAutoActionType('none');
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+        // Fallback to auto-detection if loading fails
         const locale = quasar.lang.getLocale() || 'en-US';
         const lang = locale.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en-US';
         this.setLanguage(lang as MessageLanguages, i18n);
+      }
+    },
+    async saveSettings() {
+      try {
+        await updateSettings({
+          language: this.language,
+          runOnStartup: this.runOnStartup,
+          schedulerCron: this.schedulerCron,
+          autoActionTrigger: this.autoActionTrigger,
+          autoActionCron: this.autoActionCron,
+          autoActionType: this.autoActionType,
+        });
+      } catch (error) {
+        console.error('Failed to save settings:', error);
       }
     },
   },

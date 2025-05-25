@@ -83,3 +83,12 @@ export interface RspWSMessage {
   queue?: TaskQueue;
   state?: string;
 }
+
+export interface RspSettings {
+  language: string;
+  runOnStartup: boolean;
+  schedulerCron: string;
+  autoActionTrigger: string;
+  autoActionCron: string;
+  autoActionType: string;
+}

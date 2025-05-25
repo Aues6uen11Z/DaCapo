@@ -89,6 +89,8 @@ func SetupRouter() *gin.Engine {
 		}
 
 		api.GET("/updater/:instance_name", controller.UpdateRepo)
+		api.GET("/settings", controller.GetSettings)
+		api.PATCH("/settings", controller.UpdateSettings)
 	}
 
 	return r

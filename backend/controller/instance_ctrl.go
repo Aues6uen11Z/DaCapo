@@ -348,7 +348,7 @@ func getRepoName(url string) string {
 }
 
 func fromRemote(req model.ReqFromRemote) (model.Status, error) {
-	// 1. Clone the repository
+	// 1. Clone the repository, TODO: check if the repository already exists
 	cmdLog, err := utils.GitClone(req.URL, req.LocalPath, req.Branch)
 	utils.Logger.Infof("[%s]: %s", req.InstanceName, cmdLog)
 	if err != nil {

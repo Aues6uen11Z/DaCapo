@@ -39,6 +39,7 @@ func (a *App) GetVersion() string {
 func (a *App) Startup(ctx context.Context) {
 	utils.Logger.Info("Application is starting up")
 	a.ctx = ctx
+	utils.SetAppContext(ctx)
 }
 
 // OnSecondInstanceLaunch handles when a second instance of the app is launched
@@ -54,6 +55,12 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 
 // domReady is called after front-end resources have been loaded
 func (a App) DomReady(ctx context.Context) {
+	// Load settings from settings file
+	settings, err := model.LoadSettings()
+	if err != nil {
+		utils.Logger.Error("Failed to load settings:", err)
+	}
+
 	var instances []model.InstanceInfo
 	if err := model.GetAllInstances(&instances); err != nil {
 		utils.Logger.Error("Failed to get all instances:", err)
@@ -62,7 +69,7 @@ func (a App) DomReady(ctx context.Context) {
 
 	c := cron.New()
 	for _, instance := range instances {
-		if !instance.Ready && instance.CronExpr != "" {
+		if instance.Ready && instance.CronExpr != "" {
 			entryID, err := c.AddFunc(instance.CronExpr, func() { controller.StartOne(instance.Name) })
 			if err != nil {
 				utils.Logger.Errorf("[%s]: Failed to add cron job: %v", instance.Name, err)
@@ -76,8 +83,14 @@ func (a App) DomReady(ctx context.Context) {
 
 	time.Sleep(3 * time.Second)
 	scheduler := model.GetScheduler()
+
+	// Scheduler start
+	scheduler.CronExpr = settings.SchedulerCron
 	if scheduler.CronExpr != "" {
-		entryID, err := c.AddFunc(scheduler.CronExpr, func() { controller.StartAll() })
+		entryID, err := c.AddFunc(scheduler.CronExpr, func() {
+			scheduler.AutoClose = true
+			controller.StartAll()
+		})
 		if err != nil {
 			utils.Logger.Errorf("Scheduler failed to add cron job: %v", err)
 		} else {
@@ -87,6 +100,34 @@ func (a App) DomReady(ctx context.Context) {
 		}
 	}
 
+	// Auto close
+	var closeFunc func()
+	switch settings.AutoActionType {
+	case "close_app":
+		closeFunc = utils.CloseApp
+	case "hibernate":
+		closeFunc = utils.Hibernate
+	case "shutdown":
+		closeFunc = utils.Shutdown
+	}
+
+	if settings.AutoActionTrigger == "scheduled" && settings.AutoActionCron != "" && closeFunc != nil {
+		entryID, err := c.AddFunc(settings.AutoActionCron, func() {
+			if scheduler.AutoClose {
+				closeFunc()
+			}
+		})
+		if err != nil {
+			utils.Logger.Errorf("Failed to add auto close cron job: %v", err)
+		} else {
+			entry := c.Entry(entryID)
+			nextRun := entry.Schedule.Next(time.Now()).Format("2006-01-02 15:04:05")
+			utils.Logger.Infof("Auto close cron job added: %s, next run at %s", settings.AutoActionCron, nextRun)
+		}
+	} else if settings.AutoActionTrigger == "scheduler_end" {
+		scheduler.CloseFunc = closeFunc
+	}
+
 	c.Start()
 }
 
@@ -94,6 +135,8 @@ func (a App) DomReady(ctx context.Context) {
 // either by clicking the window close button or calling runtime.Quit.
 // Returning true will cause the application to continue, false will continue shutdown as normal.
 func (a *App) BeforeClose(ctx context.Context) (prevent bool) {
+	controller.StopAll()
+	model.CloseDB()
 	return false
 }
 

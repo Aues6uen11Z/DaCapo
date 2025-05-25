@@ -102,6 +102,13 @@ export default {
     manage: 'Manage',
     selectAll: 'Select all',
     runOnStartup: 'Run on startup',
+    schedulerEnd: 'On scheduler end',
+    scheduled: 'Scheduled',
+    autoAction: 'Action',
+    noAction: 'No action',
+    closeApp: 'Close app',
+    hibernate: 'Hibernate',
+    shutdown: 'Shutdown',
 
     language: 'Language',
     log: 'Log',

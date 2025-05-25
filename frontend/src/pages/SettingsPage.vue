@@ -135,10 +135,47 @@
               </div>
 
               <!-- Manage instances -->
-              <div class="tw-text-xl tw-font-bold">
+              <div class="tw-text-xl tw-font-bold tw--mt-8">
                 {{ t('settings.manage') }}
               </div>
-              <div class="my-row tw-w-full tw-justify-between">
+
+              <!-- Auto Action Settings -->
+              <div class="my-row tw-w-full tw-justify-between tw--mb-4">
+                <q-select
+                  dense
+                  v-model="autoActionTrigger"
+                  :options="autoActionTriggerOptions"
+                  option-value="value"
+                  option-label="label"
+                  emit-value
+                  map-options
+                  class="tw-w-1/3"
+                />
+                <q-input
+                  dense
+                  v-model="autoActionCron"
+                  label="Cron"
+                  :disable="autoActionTrigger !== 'scheduled'"
+                  :rules="[
+                    (val) => !val || validateCron(val) || t('item.cronHelp'),
+                  ]"
+                  @blur="handleAutoActionCronBlur"
+                  class="tw-w-1/3"
+                />
+                <q-select
+                  dense
+                  v-model="autoActionType"
+                  :options="autoActionTypeOptions"
+                  :label="t('settings.autoAction')"
+                  option-value="value"
+                  option-label="label"
+                  emit-value
+                  map-options
+                  class="tw-w-1/3"
+                />
+              </div>
+
+              <div class="my-row tw-w-full tw-justify-between tw--mb-4">
                 <q-toggle
                   v-model="selectAll"
                   :label="t('settings.selectAll')"
@@ -151,10 +188,10 @@
                 />
 
                 <q-input
+                  dense
                   v-model="schedulerCron"
                   label="Cron"
                   :disable="runOnStartup"
-                  dense
                   :rules="[(val) => validateCron(val) || t('item.cronHelp')]"
                   @blur="handleCronBlur"
                 />
@@ -478,6 +515,48 @@ const createInstance = async () => {
   }
 };
 
+// Auto action settings
+const autoActionTrigger = computed({
+  get: () => settingsStore.autoActionTrigger,
+  set: (value) => settingsStore.setAutoActionTrigger(value),
+});
+
+const autoActionType = computed({
+  get: () => settingsStore.autoActionType,
+  set: (value) => settingsStore.setAutoActionType(value),
+});
+
+const autoActionTriggerOptions = computed(() => [
+  { label: t('settings.schedulerEnd'), value: 'scheduler_end' },
+  { label: t('settings.scheduled'), value: 'scheduled' },
+]);
+
+const autoActionTypeOptions = computed(() => [
+  { label: t('settings.noAction'), value: 'none' },
+  { label: t('settings.closeApp'), value: 'close_app' },
+  { label: t('settings.hibernate'), value: 'hibernate' },
+  { label: t('settings.shutdown'), value: 'shutdown' },
+]);
+
+const autoActionCron = ref(settingsStore.autoActionCron);
+const handleAutoActionCronBlur = () => {
+  if (validateCron(autoActionCron.value)) {
+    settingsStore.setAutoActionCron(autoActionCron.value);
+  }
+};
+
+const runOnStartup = computed({
+  get: () => settingsStore.runOnStartup,
+  set: (value) => settingsStore.setRunOnStartup(value),
+});
+
+const schedulerCron = ref(settingsStore.schedulerCron);
+const handleCronBlur = () => {
+  if (validateCron(schedulerCron.value)) {
+    settingsStore.setSchedulerCron(schedulerCron.value);
+  }
+};
+
 // Instance management
 const instances = computed(() => istStore.instanceNames);
 const selectAll = ref(false);
@@ -490,18 +569,6 @@ const toggleAll = async () => {
 
 // General settings
 const language = ref(settingsStore.language);
-const runOnStartup = computed({
-  get: () => settingsStore.runOnStartup,
-  set: (value) => settingsStore.setRunOnStartup(value),
-});
-const schedulerCron = ref(settingsStore.schedulerCron);
-
-const handleCronBlur = () => {
-  if (validateCron(schedulerCron.value)) {
-    settingsStore.setSchedulerCron(schedulerCron.value);
-  }
-};
-
 const onLanguageChange = (newLang: MessageLanguages) => {
   settingsStore.setLanguage(newLang, i18n);
 };
