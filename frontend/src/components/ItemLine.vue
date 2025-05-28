@@ -118,10 +118,33 @@ const helpText = computed(() => props.help || props.itemConf.help);
 // Store original value for comparison
 const originalValue = ref(props.itemConf.value);
 
-// Use different refs based on parameter type
-const selectValue = ref(
+// Store the raw value separately
+const rawSelectValue = ref(
   props.itemConf.type === 'select' ? props.itemConf.value : null,
 );
+
+// Use computed for selectValue to automatically update with translations
+const selectValue = computed({
+  get() {
+    if (props.itemConf.type !== 'select' || rawSelectValue.value === null) {
+      return null;
+    }
+    // Return the matching translated option
+    return (
+      translatedOptions.value.find(
+        (opt) => opt.value === rawSelectValue.value,
+      ) || rawSelectValue.value
+    );
+  },
+  set(newValue) {
+    // Extract the original value when setting
+    rawSelectValue.value =
+      typeof newValue === 'object' && newValue !== null
+        ? (newValue as { value: unknown }).value
+        : newValue;
+  },
+});
+
 const checkboxValue = ref(
   props.itemConf.type === 'checkbox' ? Boolean(props.itemConf.value) : false,
 );
@@ -183,6 +206,11 @@ const update = async (value: unknown) => {
       actualValue,
     );
     originalValue.value = actualValue;
+
+    // Update raw value for select type
+    if (props.itemConf.type === 'select') {
+      rawSelectValue.value = actualValue;
+    }
 
     // If language setting changes, Vue will automatically recompute all translation-dependent computed properties
     if (
