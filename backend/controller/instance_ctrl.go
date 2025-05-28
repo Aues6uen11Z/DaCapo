@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-git/go-git/v5"
 	"github.com/ncruces/go-sqlite3"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
@@ -351,7 +352,7 @@ func fromRemote(req model.ReqFromRemote) (model.Status, error) {
 	// 1. Clone the repository, TODO: check if the repository already exists
 	cmdLog, err := utils.GitClone(req.URL, req.LocalPath, req.Branch)
 	utils.Logger.Infof("[%s]: %s", req.InstanceName, cmdLog)
-	if err != nil {
+	if err != nil && !errors.Is(err, git.ErrRepositoryAlreadyExists) {
 		return model.StatusGit, err
 	}
 
