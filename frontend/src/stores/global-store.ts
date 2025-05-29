@@ -21,6 +21,53 @@ import type { MessageLanguages } from 'src/boot/i18n';
 import type { Composer } from 'vue-i18n';
 import type { QVueGlobals } from 'quasar';
 
+const isTranslationMenu = (obj: unknown): obj is TranslationMenu => {
+  if (!obj || typeof obj !== 'object') return false;
+  const candidate = obj as Record<string, unknown>;
+  return (
+    'name' in candidate &&
+    typeof candidate.name === 'string' &&
+    'tasks' in candidate &&
+    typeof candidate.tasks === 'object'
+  );
+};
+
+const isTranslationTask = (obj: unknown): obj is TranslationTask => {
+  if (!obj || typeof obj !== 'object') return false;
+  const candidate = obj as Record<string, unknown>;
+  return (
+    'name' in candidate &&
+    typeof candidate.name === 'string' &&
+    'groups' in candidate &&
+    typeof candidate.groups === 'object'
+  );
+};
+
+const isTranslationGroup = (obj: unknown): obj is TranslationGroup => {
+  if (!obj || typeof obj !== 'object') return false;
+  const candidate = obj as Record<string, unknown>;
+  return (
+    'name' in candidate &&
+    typeof candidate.name === 'string' &&
+    'items' in candidate &&
+    typeof candidate.items === 'object' &&
+    (!('help' in candidate) || typeof candidate.help === 'string')
+  );
+};
+
+const isTranslationItem = (obj: unknown): obj is TranslationItem => {
+  if (!obj || typeof obj !== 'object') return false;
+  const candidate = obj as Record<string, unknown>;
+  const keys = Object.keys(candidate);
+  return (
+    keys.length >= 1 &&
+    keys.length <= 3 &&
+    'name' in candidate &&
+    typeof candidate.name === 'string' &&
+    keys.every((key) => ['name', 'help', 'options'].includes(key))
+  );
+};
+
 export const useIstStore = defineStore('instance', {
   state: () => ({
     layout: {} as Layout,
@@ -53,18 +100,6 @@ export const useIstStore = defineStore('instance', {
           if (!current || typeof current === 'string') {
             return null;
           }
-
-          // Type guard functions for translation interfaces
-          const isTranslationMenu = (obj: unknown): obj is TranslationMenu =>
-            obj !== null && typeof obj === 'object' && 'tasks' in obj;
-          const isTranslationTask = (obj: unknown): obj is TranslationTask =>
-            obj !== null && typeof obj === 'object' && 'groups' in obj;
-          const isTranslationGroup = (obj: unknown): obj is TranslationGroup =>
-            obj !== null && typeof obj === 'object' && 'items' in obj;
-          const isTranslationItem = (obj: unknown): obj is TranslationItem =>
-            obj !== null &&
-            typeof obj === 'object' &&
-            ('name' in obj || 'options' in obj);
 
           if (isTranslationMenu(current)) {
             if (key === 'name') {
@@ -368,19 +403,21 @@ export const useSettingsStore = defineStore('settings', {
     async loadSettings(i18n: Composer, quasar: QVueGlobals) {
       try {
         const settings = await fetchSettings();
-        
+
         // If language is empty/null, auto-detect language based on system
         if (!settings.language) {
           const locale = quasar.lang.getLocale() || 'en-US';
-          const lang = locale.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en-US';
+          const lang = locale.toLowerCase().startsWith('zh')
+            ? 'zh-CN'
+            : 'en-US';
           this.language = lang as MessageLanguages;
           // Save the auto-detected language
           await this.setLanguage(this.language, i18n);
         } else {
           // Use saved language setting with type validation
           const validLanguages = ['zh-CN', 'en-US'];
-          const savedLang = validLanguages.includes(settings.language) 
-            ? settings.language as MessageLanguages 
+          const savedLang = validLanguages.includes(settings.language)
+            ? (settings.language as MessageLanguages)
             : 'en-US';
           this.language = savedLang;
           i18n.locale.value = savedLang;
@@ -396,11 +433,11 @@ export const useSettingsStore = defineStore('settings', {
         // Validate settings
         const validTriggers = ['scheduler_end', 'scheduled'];
         const validTypes = ['none', 'close_app', 'hibernate', 'shutdown'];
-        
+
         if (!validTriggers.includes(this.autoActionTrigger)) {
           await this.setAutoActionTrigger('scheduler_end');
         }
-        
+
         if (!validTypes.includes(this.autoActionType)) {
           await this.setAutoActionType('none');
         }
