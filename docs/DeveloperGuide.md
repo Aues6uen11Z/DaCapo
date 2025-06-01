@@ -41,12 +41,12 @@ Project:
 
 To generate a setting, just fill in its information in the template file, including:
 
-- type: One of the 5 types - input box, select dropdown, checkbox, folder input, file input
-- value: Default value
-- help: Help information
-- option: Options, only effective when type is select
-- hidden: Whether to hide this setting item, when all Items in a Group are hidden, the Group will also be hidden
-- disabled: Whether it is non-editable
+- type: One of the 5 types - input box, select dropdown, checkbox, folder input, file input, **Required**
+- value: Default value, **Required**
+- help: Help information, Optional
+- option: Options, only effective when type is select, Optional
+- hidden: Whether to hide this setting item, when all Items in a Group are hidden, the Group will also be hidden, Optional
+- disabled: Whether it is non-editable, Optional
 
 > Note that DaCapo does not provide validation for input content, you need to handle possible exceptions in your own program.
 
@@ -172,6 +172,7 @@ Currently, the basic options are:
     - work_dir: Working directory
     - background: Whether it is a background task
     - config_path: Configuration file path, the specific settings of the instance are saved in the root directory's instances directory, modifying this item will create a symbolic link to config_path
+    - log_path: The project log path, can be filled in to quickly open the File Explorer.
   - Update
     - auto_update: Whether to enable automatic updates
     - env_name: Virtual environment name
