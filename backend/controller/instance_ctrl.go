@@ -574,7 +574,7 @@ func makeupLayout(istInfo *model.InstanceInfo, istConf *model.InstanceConf, tplC
 
 			itemActive := model.ItemConf{
 				Type:     "checkbox",
-				Value:    taskInfo.Active,
+				Value:    *taskInfo.Active,
 				Disabled: taskInfo.ActiveDisabled,
 			}
 			newGroupBase.Set("active", itemActive)

@@ -15,7 +15,7 @@ type TaskInfo struct {
 	InstanceID uint `gorm:"index"`
 
 	Name             string
-	Active           bool `gorm:"default:true"`
+	Active           *bool `gorm:"default:true"`
 	ActiveDisabled   bool
 	Priority         uint
 	PriorityDisabled bool
@@ -225,7 +225,7 @@ func (i *InstanceInfo) Create(istName, tplName string, tpl *TemplateConf) error 
 				if baseGroup, ok := taskConf.Get("_Base"); ok {
 					if activeConf, exists := baseGroup.Get("active"); exists {
 						if v, ok := activeConf.Value.(bool); ok {
-							task.Active = v
+							task.Active = &v
 							task.ActiveDisabled = activeConf.Disabled
 						}
 					}
@@ -312,7 +312,7 @@ func (i *InstanceInfo) GetTaskQueue() (waiting []string, stopped []string) {
 
 	for _, task := range i.Tasks {
 		priorityMap[task.Name] = int(task.Priority)
-		if task.Active {
+		if *task.Active {
 			waiting = append(waiting, task.Name)
 		} else {
 			stopped = append(stopped, task.Name)
