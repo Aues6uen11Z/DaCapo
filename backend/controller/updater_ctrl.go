@@ -43,7 +43,7 @@ func UpdateRepo(c *gin.Context) {
 			return
 		}
 
-		if err = createEnv(tm, envPath, istInfo.PythonExec); err != nil {
+		if err = createEnv(tm, envPath, istInfo.PythonVersion); err != nil {
 			quickResponse(c, model.StatusPython, instanceName, err.Error())
 			return
 		}
@@ -114,15 +114,21 @@ func quickResponse(c *gin.Context, status model.Status, instanceName string, err
 	broadcastState(instanceName, model.StatusPending)
 }
 
-func createEnv(tm *model.TaskManager, path string, pythonExec string) error {
-	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
-		if pythonExec == "" {
-			pythonExec = "python"
+func createEnv(tm *model.TaskManager, envPath string, pythonVersion string) error {
+	if _, err := os.Stat(envPath); errors.Is(err, fs.ErrNotExist) {
+		uvPath := "./tools/uv.exe"
+		var cmd string
+
+		// Check if uv exists
+		if _, err := os.Stat(uvPath); err == nil && pythonVersion != "" {
+			cmd = fmt.Sprintf("%s venv --python %s %s", uvPath, pythonVersion, envPath)
+			utils.Logger.Infof("[%s]: Creating venv with uv: %s", tm.InstanceName, cmd)
+		} else {
+			cmd = fmt.Sprintf("python -m venv %s", envPath)
+			utils.Logger.Warn("[%s]: uv not found or python version not set, using default python command to create venv: %s", tm.InstanceName, cmd)
 		}
 
-		cmd := pythonExec + " -m venv " + filepath.Base(path)
-		utils.Logger.Infof("[%s]: Creating venv: %s", tm.InstanceName, cmd)
-		if err := runCommand(tm, cmd, filepath.Dir(path)); err != nil {
+		if err := runCommand(tm, cmd, ""); err != nil {
 			return err
 		}
 	}
@@ -162,13 +168,22 @@ func installDeps(tm *model.TaskManager, envPath, depsPath string, envLastUpdate 
 		return nil
 	}
 
-	// Run install command
-	pythonExec := getVenvPython(filepath.Base(envPath))
-	if pythonExec == "" {
-		return fmt.Errorf("python not found in %s", envPath)
+	uvPath := "./tools/uv.exe"
+	var cmd string
+
+	if _, err := os.Stat(uvPath); err == nil {
+		cmd = fmt.Sprintf("%s pip install -r %s --python %s -i https://pypi.tuna.tsinghua.edu.cn/simple/",
+			uvPath, depsPath, envPath)
+		utils.Logger.Infof("[%s]: Installing dependencies with uv: %s", tm.InstanceName, cmd)
+	} else {
+		pythonExec := getVenvPython(filepath.Base(envPath))
+		if pythonExec == "" {
+			return fmt.Errorf("python not found in %s", envPath)
+		}
+		cmd = pythonExec + " -m pip install -r " + depsPath + " -i https://pypi.tuna.tsinghua.edu.cn/simple/"
+		utils.Logger.Infof("[%s]: Installing dependencies with pip: %s", tm.InstanceName, cmd)
 	}
-	cmd := pythonExec + " -m pip install -r " + depsPath + " -i https://pypi.tuna.tsinghua.edu.cn/simple/"
-	utils.Logger.Infof("[%s]: Installing dependencies: %s", tm.InstanceName, cmd)
+
 	if err = runCommand(tm, cmd, ""); err != nil {
 		return err
 	}

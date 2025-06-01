@@ -1,6 +1,6 @@
 export default {
   item: {
-    cronHelp:'请输入有效的cron表达式 (分 时 日 月 星期)'
+    cronHelp: '请输入有效的cron表达式 (分 时 日 月 星期)',
   },
   welcome: {
     title: '欢迎',
@@ -48,7 +48,7 @@ export default {
     advancedSettings: 'Python相关',
     envName: '环境名称',
     depsPath: '依赖文件路径',
-    pythonExec: 'Python可执行文件',
+    pythonVersion: 'Python版本',
     help: {
       repoUrl: '例如：https://github.com/OwnerName/RepoName',
       branch: '留空使用默认分支',
@@ -58,7 +58,7 @@ export default {
       envName:
         "首次填写后，点击更新将创建新的Python虚拟环境并安装依赖\n使用此虚拟环境时，将命令中的'python'替换为'py'，例如：'py main.py'",
       depsPath: 'requirements.txt文件的位置，默认：./requirements.txt',
-      pythonExec: '覆盖PATH中的默认Python可执行文件，留空使用系统默认值',
+      pythonVersion: '留空使用系统默认Python版本',
     },
   },
   custom: {

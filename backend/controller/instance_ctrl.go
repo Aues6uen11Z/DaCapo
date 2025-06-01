@@ -545,11 +545,21 @@ func makeupLayout(istInfo *model.InstanceInfo, istConf *model.InstanceConf, tplC
 		}
 		gourpUpdateBase.Set("deps_path", itemDepsPath)
 
-		itemPythonExec := model.ItemConf{
-			Type:  "file",
-			Value: istInfo.PythonExec,
+		itemPythonVersion := model.ItemConf{
+			Type:  "select",
+			Value: istInfo.PythonVersion,
+			Option: []any{
+				"3.8",
+				"3.9",
+				"3.10",
+				"3.11",
+				"3.12",
+				"3.13",
+				"3.14",
+				"",
+			},
 		}
-		gourpUpdateBase.Set("python_exec", itemPythonExec)
+		gourpUpdateBase.Set("python_version", itemPythonVersion)
 	}
 
 	// Other custom settings

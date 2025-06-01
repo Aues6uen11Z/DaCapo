@@ -177,7 +177,7 @@ Currently, the basic options are:
     - auto_update: Whether to enable automatic updates
     - env_name: Virtual environment name
     - deps_path: Path of the Python dependency file relative to the repository root directory
-    - python_exec: Python executable file used to create the virtual environment, mainly used when there are requirements for Python version
+    - python_version: Python version used to create the virtual environment
 
 - Menu (other actual task groups)
 

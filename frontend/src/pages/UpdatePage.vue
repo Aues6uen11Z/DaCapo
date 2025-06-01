@@ -105,10 +105,10 @@
               menu-name="Project"
               task-name="Update"
               group-name="_Base"
-              item-name="python_exec"
-              :item-conf="updateGroup.python_exec!"
-              :display-name="t('update.pythonExec')"
-              :help="t('update.help.pythonExec')"
+              item-name="python_version"
+              :item-conf="updateGroup.python_version!"
+              :display-name="t('update.pythonVersion')"
+              :help="t('update.help.pythonVersion')"
             />
           </div>
         </q-expansion-item>

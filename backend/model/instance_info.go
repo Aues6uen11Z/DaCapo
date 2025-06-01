@@ -57,7 +57,7 @@ type InstanceInfo struct {
 	EnvName          string
 	DepsPath         string `gorm:"default:'requirements.txt'"`
 	DepsPathDisabled bool
-	PythonExec       string
+	PythonVersion    string `gorm:"default:'3.13'"`
 
 	Tasks []TaskInfo `gorm:"foreignKey:InstanceID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE"`
 }
@@ -185,9 +185,9 @@ func (i *InstanceInfo) Create(istName, tplName string, tpl *TemplateConf) error 
 					i.DepsPathDisabled = item.Disabled
 				}
 			},
-			"python_exec": func(item ItemConf) {
+			"python_version": func(item ItemConf) {
 				if v, ok := item.Value.(string); ok {
-					i.PythonExec = v
+					i.PythonVersion = v
 				}
 			},
 		},

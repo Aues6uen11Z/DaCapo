@@ -1,6 +1,7 @@
 export default {
   item: {
-    cronHelp:'Please enter a valid cron expression (minute hour day month week)',
+    cronHelp:
+      'Please enter a valid cron expression (minute hour day month week)',
   },
   welcome: {
     title: 'Welcome',
@@ -38,7 +39,7 @@ export default {
       logPath:
         'Absolute path(or path relative to the project root) of the log directory',
       cronExpr:
-        'Cron expression for scheduled tasks, leave empty to disable automatic execution\nSee rules at https://en.wikipedia.org/wiki/Cron\nFor example, to run a task daily at 6 PM, enter "0 18 * * *"'
+        'Cron expression for scheduled tasks, leave empty to disable automatic execution\nSee rules at https://en.wikipedia.org/wiki/Cron\nFor example, to run a task daily at 6 PM, enter "0 18 * * *"',
     },
   },
   update: {
@@ -53,7 +54,7 @@ export default {
     advancedSettings: 'Advanced Settings',
     envName: 'Environment Name',
     depsPath: 'Dependencies Path',
-    pythonExec: 'Python Executable',
+    pythonVersion: 'Python Version',
     help: {
       repoUrl: 'e.g., https://github.com/OwnerName/RepoName',
       branch: 'Leave empty for default branch',
@@ -65,8 +66,7 @@ export default {
         "Fill this in for the first time, click update to create a new Python virtual environment and install dependencies\nTo use this virtual environment, replace 'python' with 'py' in your commands, e.g.,'py main.py'",
       depsPath:
         'Where the requirements.txt file is located, default: ./requirements.txt',
-      pythonExec:
-        'Override default Python executable in PATH, leave empty to use the system default',
+      pythonVersion: 'Leave empty to use the system default',
     },
   },
   custom: {
