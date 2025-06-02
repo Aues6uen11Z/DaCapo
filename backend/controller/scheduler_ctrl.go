@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bufio"
+	"bytes"
 	"dacapo/backend/model"
 	"dacapo/backend/utils"
 	"errors"
@@ -16,12 +17,12 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"unicode/utf8"
 
 	"github.com/autobrr/go-shellwords"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
 )
 
 var ErrManualStop = errors.New("task manually stopped")
@@ -321,34 +322,48 @@ func runCommand(tm *model.TaskManager, command string, workDir string) error {
 	return nil
 }
 
+// detectAndConvert detects encoding and converts to UTF-8
+func detectAndConvert(data []byte) string {
+	if utf8.Valid(data) {
+		return string(data)
+	}
+
+	// Try to decode using GBK encoding, which is common for Chinese text
+	if decoded, err := simplifiedchinese.GBK.NewDecoder().Bytes(data); err == nil && utf8.Valid(decoded) {
+		return string(decoded)
+	}
+
+	return string(bytes.ToValidUTF8(data, []byte("�")))
+}
+
 // processOutput handles reading from a pipe and broadcasting/logging the output
 func processOutput(pipe io.ReadCloser, instanceName string, isError bool) {
-	var scanner *bufio.Scanner
+	defer pipe.Close()
 
-	if runtime.GOOS == "windows" {
-		// Convert GBK encoding to UTF-8
-		gbkDecoder := simplifiedchinese.GBK.NewDecoder()
-		transformedReader := transform.NewReader(pipe, gbkDecoder)
-		scanner = bufio.NewScanner(transformedReader)
-	} else {
-		scanner = bufio.NewScanner(pipe)
-	}
+	reader := bufio.NewReader(pipe)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			if err != io.EOF {
+				utils.Logger.Errorf("[%s]: Error reading output: %v", instanceName, err)
+			}
+			break
+		}
 
-	const maxCapacity = 1024 * 1024
-	buf := make([]byte, maxCapacity)
-	scanner.Buffer(buf, maxCapacity)
+		// Remove line breaks and handle empty lines
+		line = bytes.TrimRight(line, "\r\n")
+		if len(line) == 0 {
+			broadcastLog(instanceName, "")
+			continue
+		}
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		broadcastLog(instanceName, line)
+		// Detect encoding and convert
+		text := detectAndConvert(line)
+		broadcastLog(instanceName, text)
 
 		if isError {
-			utils.Logger.Errorf("[%s]: %s", instanceName, line)
+			utils.Logger.Errorf("[%s]: %s", instanceName, text)
 		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		utils.Logger.Errorf("[%s]: Error reading output: %v", instanceName, err)
 	}
 }
 
