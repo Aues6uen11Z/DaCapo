@@ -34,6 +34,7 @@ func UpdateRepo(c *gin.Context) {
 		quickResponse(c, model.StatusGit, instanceName, err.Error())
 		return
 	}
+	utils.CheckLink(filepath.Join("instances", instanceName+".json"), istInfo.ConfigPath)
 
 	// Create/update Python environment
 	if istInfo.EnvName != "" {
