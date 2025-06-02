@@ -35,6 +35,8 @@
 
 1. [DaCapoDemo](https://github.com/Aues6uen11Z/DaCapoExample)：一个简单的入门示例
 2. [HonkaiHelper](https://github.com/Aues6uen11Z/HonkaiHelper)：崩坏3自动化脚本
+3. [DaCapo-SRC-Adapter](https://github.com/Aues6uen11Z/DaCapo-SRC-Adapter)：崩坏：星穹铁道自动化脚本，依赖StarRailCopilot但无需下载本体
+4. [GameSripts](https://github.com/Aues6uen11Z/GameScripts)：原神、绝区零自动化脚本，依赖BetterGI和ZenlessZoneZero-OneDragon，未适配需要下载本体
 
 ## 安装
 

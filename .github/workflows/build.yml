@@ -49,6 +49,21 @@ jobs:
           fi
           echo "Version: ${VERSION}"
       
+      - name: Download UV
+        shell: bash
+        run: |
+          echo "Downloading UV v0.7.9..."
+          mkdir -p tools
+          
+          curl -LsSf https://github.com/astral-sh/uv/releases/download/0.7.9/uv-x86_64-pc-windows-msvc.zip -o uv.zip
+          unzip uv.zip
+          mv uv.exe tools/
+          rm uv.zip
+
+          echo "UV downloaded successfully:"
+          ls -la tools/
+          ./tools/uv.exe --version
+      
       - name: Update version in files
         shell: bash
         run: |
@@ -73,14 +88,17 @@ jobs:
       - name: Debug
         run: |
           dir build/bin
+          dir tools
 
       - name: Prepare release
+        shell: bash
         run: |
           mkdir -p DaCapo
-          mv build/bin/DaCapo.exe DaCapo/
+          cp build/bin/DaCapo.exe DaCapo/
+          cp -r tools DaCapo/
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
 
-          mv build/bin/DaCapo-amd64-installer.exe DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
+          cp build/bin/DaCapo-amd64-installer.exe DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -88,9 +106,9 @@ jobs:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: ${{ github.event.inputs.tag || github.ref_name }}
           body: |
-            仅支持Windows10/11，需自行安装python环境。
-
-            Only supports Windows 10/11. Python environment needs to be installed separately.
+            仅支持Windows10/11
+            
+            Only supports Windows 10/11
           files: |
             DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
             DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
