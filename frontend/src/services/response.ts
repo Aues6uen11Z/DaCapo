@@ -77,11 +77,13 @@ export interface RspUpdateRepo {
 }
 
 export interface RspWSMessage {
-  type: 'queue' | 'log' | 'state';
+  type: 'queue' | 'log' | 'state' | 'file_change';
   instance_name: string;
   content?: string;
   queue?: TaskQueue;
   state?: string;
+  filename?: string;
+  timestamp?: number;
 }
 
 export interface RspSettings {

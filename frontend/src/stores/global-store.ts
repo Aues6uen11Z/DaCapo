@@ -325,7 +325,6 @@ export const useSchedulerStore = defineStore('scheduler', {
       return !!state.instanceUpdated[instanceName];
     },
   },
-
   actions: {
     // Initialize WebSocket connection
     initWebSocket() {
@@ -341,8 +340,27 @@ export const useSchedulerStore = defineStore('scheduler', {
           }
         } else if (data.type === 'log' && data.instance_name && data.content) {
           (this.logs[data.instance_name] ??= []).push(data.content);
+        } else if (data.type === 'file_change' && data.instance_name) {
+          // Handle file modification notifications
+          console.log(
+            `Configuration file modified for instance ${data.instance_name}: ${data.filename}`,
+          );
+
+          // Trigger a reload of the instance configuration
+          this.loadInstance(data.instance_name).catch((err) => {
+            console.error(
+              `Failed to reload instance ${data.instance_name} after file change:`,
+              err,
+            );
+          });
         }
       });
+    },
+
+    // Load instance configuration (delegated to instance store)
+    async loadInstance(instanceName: string) {
+      const istStore = useIstStore();
+      return await istStore.loadInstance(instanceName);
     },
 
     // Update task queue

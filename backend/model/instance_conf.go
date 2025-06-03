@@ -9,6 +9,9 @@ import (
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
+// FileWriteCallback is called before writing instance configuration files
+var FileWriteCallback func(instanceName string)
+
 // Stores actual user settings, can be read by other projects
 type InstanceConf struct {
 	Name string
@@ -31,6 +34,11 @@ func DeleteIstConfByName(istName string) (err error) {
 }
 
 func (i *InstanceConf) save() (err error) {
+	// Notify callback before writing file (to ignore this programmatic write)
+	if FileWriteCallback != nil {
+		FileWriteCallback(i.Name)
+	}
+
 	jsonData, err := json.MarshalIndent(i.OM, "", "  ")
 	if err != nil {
 		return

@@ -60,6 +60,13 @@ type RspSchedulerState struct {
 	State        string `json:"state"`
 }
 
+type RspFileChange struct {
+	Type         string `json:"type"`
+	InstanceName string `json:"instance_name"`
+	Filename     string `json:"filename"`
+	Timestamp    int64  `json:"timestamp"`
+}
+
 // Settings response
 type RspSettings struct {
 	Language          string `json:"language"`

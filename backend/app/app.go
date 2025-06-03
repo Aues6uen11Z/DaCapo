@@ -40,6 +40,22 @@ func (a *App) Startup(ctx context.Context) {
 	utils.Logger.Info("Application is starting up")
 	a.ctx = ctx
 	utils.SetAppContext(ctx)
+
+	// Check if the symlink is valid, if not, create it
+	paths, err := model.GetConfigPaths()
+	if err == nil {
+		for _, path := range paths {
+			utils.CheckLink(path[0], path[1])
+		}
+	}
+
+	// Start file watcher for instance configuration files
+	fileWatcher := controller.GetFileWatcher()
+	if fileWatcher != nil {
+		if err := fileWatcher.Start(); err != nil {
+			utils.Logger.Errorf("Failed to start file watcher: %v", err)
+		}
+	}
 }
 
 // OnSecondInstanceLaunch handles when a second instance of the app is launched
@@ -136,6 +152,13 @@ func (a App) DomReady(ctx context.Context) {
 // Returning true will cause the application to continue, false will continue shutdown as normal.
 func (a *App) BeforeClose(ctx context.Context) (prevent bool) {
 	controller.StopAll()
+
+	// Stop file watcher
+	fileWatcher := controller.GetFileWatcher()
+	if fileWatcher != nil && fileWatcher.IsRunning() {
+		fileWatcher.Stop()
+	}
+
 	model.CloseDB()
 	return false
 }
