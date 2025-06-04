@@ -14,11 +14,7 @@ import {
 } from './stores/global-store';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
-import {
-  updateRepo,
-  updateSchedulerState,
-  sendSchedulerCron,
-} from './services/api';
+import { updateRepo } from './services/api';
 
 const istStore = useIstStore();
 const taskStore = useSchedulerStore();
@@ -72,14 +68,6 @@ onMounted(async () => {
     // Load instance data
     await istStore.loadInstance();
     unsubscribe = taskStore.initWebSocket();
-
-    if (settingsStore.runOnStartup) {
-      // if runOnStartup is true, start all instances
-      await updateSchedulerState('start', '', true);
-    } else if (settingsStore.schedulerCron) {
-      // if runOnStartup is false, set the cron expression
-      await sendSchedulerCron(settingsStore.schedulerCron);
-    }
   } catch (err) {
     console.error('Failed to initialize app:', err);
   } finally {

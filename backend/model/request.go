@@ -41,7 +41,6 @@ type ReqUpdateQueue struct {
 type ReqSchedulerState struct {
 	Type         string `json:"type" binding:"required"`
 	InstanceName string `json:"instance_name"`
-	AutoClose    bool   `json:"auto_close"`
 }
 
 type ReqSchedulerCron struct {

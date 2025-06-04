@@ -165,24 +165,10 @@ export async function getTaskQueue(instanceName: string) {
 export async function updateSchedulerState(
   type: 'start' | 'stop',
   instanceName?: string,
-  autoClose?: boolean,
 ) {
   const response = await api.patch<RspApi>('/scheduler/state', {
     type,
     instance_name: instanceName,
-    auto_close: autoClose,
-  });
-
-  if (response.data.code !== 0) {
-    console.error(response.data.detail);
-    throw new Error(response.data.detail);
-  }
-}
-
-// POST /api/scheduler/cron
-export async function sendSchedulerCron(cronExpr: string) {
-  const response = await api.post<RspApi>('/scheduler/cron', {
-    cron_expr: cronExpr,
   });
 
   if (response.data.code !== 0) {

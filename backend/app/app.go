@@ -99,10 +99,14 @@ func (a App) DomReady(ctx context.Context) {
 
 	time.Sleep(3 * time.Second)
 	scheduler := model.GetScheduler()
-
-	// Scheduler start
-	scheduler.CronExpr = settings.SchedulerCron
-	if scheduler.CronExpr != "" {
+	// Handle runOnStartup setting
+	if settings.RunOnStartup {
+		utils.Logger.Info("Run on startup is enabled, starting scheduler")
+		scheduler.AutoClose = true
+		go controller.StartAll()
+	} else if settings.SchedulerCron != "" {
+		// If runOnStartup is false but schedulerCron is set, use cron scheduling
+		scheduler.CronExpr = settings.SchedulerCron
 		entryID, err := c.AddFunc(scheduler.CronExpr, func() {
 			scheduler.AutoClose = true
 			controller.StartAll()

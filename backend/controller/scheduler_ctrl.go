@@ -73,10 +73,6 @@ func UpdateSchedulerState(c *gin.Context) {
 
 	if req.Type == "start" {
 		if req.InstanceName == "" {
-			if req.AutoClose {
-				scheduler := model.GetScheduler()
-				scheduler.AutoClose = true
-			}
 			go StartAll()
 		} else {
 			go StartOne(req.InstanceName)
