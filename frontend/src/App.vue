@@ -33,6 +33,9 @@ const autoUpdateInstances = async () => {
       const autoUpdate = updateSettings?.auto_update?.value;
 
       if (autoUpdate) {
+        // Set updating status
+        taskStore.setInstanceUpdating(instanceName, true);
+
         try {
           const isUpdated = await updateRepo(instanceName);
           if (isUpdated) {
@@ -43,12 +46,22 @@ const autoUpdateInstances = async () => {
               message: `${instanceName}: Updated successfully`,
             });
           }
+          // Note: Don't show notification for "already up-to-date" during auto-update
+          // to avoid spam during app startup
+
+          // Set updated status to true (either updated or already up-to-date)
+          taskStore.setInstanceUpdated(instanceName, true);
         } catch (err) {
           console.error(`Failed to auto update ${instanceName}:`, err);
           $q.notify({
             type: 'negative',
             message: `${instanceName}: Failed to auto update`,
           });
+          // Reset updated status on failure to allow retry
+          taskStore.setInstanceUpdated(instanceName, false);
+        } finally {
+          // Always clear updating status
+          taskStore.setInstanceUpdating(instanceName, false);
         }
       }
     }
