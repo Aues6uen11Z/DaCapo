@@ -342,10 +342,6 @@ export const useSchedulerStore = defineStore('scheduler', {
           (this.logs[data.instance_name] ??= []).push(data.content);
         } else if (data.type === 'file_change' && data.instance_name) {
           // Handle file modification notifications
-          console.log(
-            `Configuration file modified for instance ${data.instance_name}: ${data.filename}`,
-          );
-
           // Trigger a reload of the instance configuration
           this.loadInstance(data.instance_name).catch((err) => {
             console.error(
@@ -391,7 +387,39 @@ export const useSettingsStore = defineStore('settings', {
     autoActionTrigger: 'scheduler_end', // 'scheduler_end' | 'scheduled'
     autoActionCron: '',
     autoActionType: 'none', // 'none' | 'close_app' | 'hibernate' | 'shutdown'
+    appUpdateStatus: 'unknown' as
+      | 'unknown'
+      | 'available'
+      | 'up-to-date'
+      | 'error',
+    appUpdateError: '',
+    lastUpdateCheck: null as Date | null,
+    currentVersion: '',
+    latestVersion: '',
+    showUpdateDialog: false,
+    updateAvailableConfirmed: false, // Track if update availability was confirmed
+    isManualUpdate: false, // Track if current update is manual
   }),
+  getters: {
+    isUpdateAvailable: (state) => state.appUpdateStatus === 'available',
+    isUpToDate: (state) => state.appUpdateStatus === 'up-to-date',
+    hasUpdateError: (state) => state.appUpdateStatus === 'error',
+    canCheckForUpdates: (state) =>
+      ['unknown', 'up-to-date', 'error'].includes(state.appUpdateStatus),
+    updateStatusMessage: (state) => {
+      switch (state.appUpdateStatus) {
+        case 'available':
+          return 'Update available';
+        case 'up-to-date':
+          return 'Up to date';
+        case 'error':
+          return `Error: ${state.appUpdateError}`;
+        default:
+          return 'Unknown';
+      }
+    },
+  },
+
   actions: {
     async setLanguage(lang: MessageLanguages, i18n: Composer) {
       this.language = lang;
@@ -467,6 +495,134 @@ export const useSettingsStore = defineStore('settings', {
         this.setLanguage(lang as MessageLanguages, i18n);
       }
     },
+
+    // App update management actions
+    setAppUpdateStatus(
+      status: 'unknown' | 'available' | 'up-to-date' | 'error',
+    ) {
+      // Implement status priority: if update was confirmed available,
+      // don't allow 'up-to-date' to override it unless explicitly reset
+      if (this.updateAvailableConfirmed && status === 'up-to-date') {
+        // Ignore up-to-date status if we already confirmed an update is available
+        return;
+      }
+
+      this.appUpdateStatus = status;
+
+      // Track when update availability is confirmed
+      if (status === 'available') {
+        this.updateAvailableConfirmed = true;
+      }
+
+      // Reset confirmation flag when explicitly setting to other states
+      if (status === 'unknown' || status === 'error') {
+        this.updateAvailableConfirmed = false;
+      }
+    },
+    setAppUpdateError(error: string) {
+      this.appUpdateError = error;
+      this.appUpdateStatus = 'error';
+      this.updateAvailableConfirmed = false; // Reset confirmation on error
+    },
+
+    setVersionInfo(current: string, latest?: string) {
+      this.currentVersion = current;
+      if (latest) {
+        this.latestVersion = latest;
+      }
+    },
+
+    setLastUpdateCheck() {
+      this.lastUpdateCheck = new Date();
+    },
+    setShowUpdateDialog(show: boolean) {
+      this.showUpdateDialog = show;
+      // Don't reset updateAvailableConfirmed when closing dialog
+      // Keep the "update available" status until user explicitly checks again
+
+      // Reset manual update flag when dialog is closed
+      if (!show) {
+        this.isManualUpdate = false;
+      }
+    },
+    async checkForAppUpdates(manual: boolean = false) {
+      // Reset confirmation flag when starting a new update check
+      this.updateAvailableConfirmed = false;
+      this.appUpdateError = '';
+      this.isManualUpdate = manual;
+
+      try {
+        const { startAppUpdate } = await import('../services/api');
+
+        // For manual updates, always show the dialog component (to handle progress/restart)
+        if (manual) {
+          this.setShowUpdateDialog(true);
+        }
+
+        await startAppUpdate(manual);
+        this.setLastUpdateCheck();
+      } catch (error) {
+        console.error('Failed to check for app updates:', error);
+        this.setAppUpdateError(
+          error instanceof Error ? error.message : 'Unknown error',
+        );
+      }
+    },
+    async initializeWebSocket() {
+      try {
+        const { connectWebSocket, onUpdateMessage } = await import(
+          '../services/api'
+        );
+        const { GetVersion } = await import('app/wailsjs/go/app/App');
+
+        // Get current version at startup
+        try {
+          this.currentVersion = await GetVersion();
+        } catch (err) {
+          console.error('Failed to get current version:', err);
+          this.currentVersion = 'Unknown';
+        }
+
+        // Register WebSocket connection (reuses existing connection if already connected)
+        // We don't need a specific callback here since we use onUpdateMessage for update events
+        connectWebSocket(() => {
+          // This is a placeholder callback that does nothing
+          // Update messages are handled by onUpdateMessage listeners below
+        });
+
+        // Set up update event listeners
+        onUpdateMessage('update_check_complete', (data: unknown) => {
+          const updateData = data as {
+            has_update: boolean;
+            current_version: string;
+            latest_version: string;
+          };
+          this.setVersionInfo(
+            updateData.current_version,
+            updateData.latest_version,
+          );
+          this.setAppUpdateStatus(
+            updateData.has_update ? 'available' : 'up-to-date',
+          );
+        });
+        onUpdateMessage('update_confirm_upgrade', () => {
+          this.setAppUpdateStatus('available');
+          this.setShowUpdateDialog(true);
+        });
+
+        onUpdateMessage('update_complete', () => {
+          this.setAppUpdateStatus('up-to-date');
+        });
+
+        onUpdateMessage('update_error', (data: unknown) => {
+          this.setAppUpdateError(String(data) || 'Update error');
+        });
+        onUpdateMessage('update_progress', () => {});
+      } catch (error) {
+        console.error('Failed to initialize WebSocket for updates:', error);
+      }
+    },
+
     async saveSettings() {
       try {
         await updateSettings({

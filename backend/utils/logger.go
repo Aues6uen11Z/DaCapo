@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fynelabs/selfupdate"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -59,6 +60,9 @@ func InitLogger() {
 	slogger := zap.New(core)
 	Logger = slogger.Sugar()
 	WailsLogger = &ZapAdapter{sugar: Logger}
+	selfupdate.LogError = Logger.Errorf
+	selfupdate.LogInfo = Logger.Infof
+	selfupdate.LogDebug = Logger.Debugf
 
 	Logger.Info("Logger initialized")
 }

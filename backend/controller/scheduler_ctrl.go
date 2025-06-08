@@ -27,7 +27,7 @@ import (
 
 var ErrManualStop = errors.New("task manually stopped")
 
-// CreateWS establishes a WebSocket connection
+// CreateWS establishes a unified WebSocket connection for all message types
 func CreateWS(c *gin.Context) {
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -123,7 +123,7 @@ func SetSchedulerCron(c *gin.Context) {
 	})
 }
 
-// handleConnection handles the WebSocket connection
+// handleConnection handles the unified WebSocket connection for all message types
 func handleConnection(conn *websocket.Conn) {
 	defer conn.Close()
 
@@ -135,10 +135,20 @@ func handleConnection(conn *websocket.Conn) {
 	sendQueue(conn)
 	sendState(conn)
 
-	// Listen for connection
+	// Listen for messages from client
 	for {
-		if _, _, err := conn.ReadMessage(); err != nil {
+		var msg map[string]any
+		if err := conn.ReadJSON(&msg); err != nil {
 			break
+		}
+		// Handle different message types
+		if msgType, ok := msg["type"].(string); ok {
+			if data, ok := msg["data"].(map[string]any); ok {
+				// Handle app update related messages
+				if msgType == "update_confirm_response" || msgType == "restart_confirm_response" {
+					HandleWebSocketMessage(msgType, data)
+				}
+			}
 		}
 	}
 }
@@ -171,7 +181,6 @@ func sendState(conn *websocket.Conn) {
 			return
 		}
 	}
-
 	schedulerState := model.RspSchedulerState{
 		Type:         "state",
 		InstanceName: "",
@@ -187,7 +196,6 @@ func broadcastQueue(istName string) {
 	if tm == nil {
 		return
 	}
-
 	update := model.RspTaskQueue{
 		Type:         "queue",
 		InstanceName: istName,

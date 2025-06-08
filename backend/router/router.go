@@ -81,14 +81,18 @@ func SetupRouter() *gin.Engine {
 
 		scheduler := api.Group("/scheduler")
 		{
-			scheduler.GET("/ws", controller.CreateWS)
 			scheduler.PATCH("/queue", controller.UpdateTaskQueue)
 			scheduler.PATCH("/state", controller.UpdateSchedulerState)
 			scheduler.GET("/queue/:instance_name", controller.GetTaskQueue)
 			scheduler.POST("/cron", controller.SetSchedulerCron)
 		}
 
+		api.POST("/app/check-update", controller.CheckAppUpdate)
+
+		api.GET("/ws", controller.CreateWS)
+
 		api.GET("/updater/:instance_name", controller.UpdateRepo)
+
 		api.GET("/settings", controller.GetSettings)
 		api.PATCH("/settings", controller.UpdateSettings)
 	}

@@ -13,6 +13,7 @@ var (
 	StatusDuplicate = Status{Code: 1003, Message: "Instance name already exists"}
 	StatusGit       = Status{Code: 1004, Message: "Git repository operation failed"}
 	StatusPython    = Status{Code: 1005, Message: "Python environment operation failed"}
+	StatusNetwork   = Status{Code: 1006, Message: "Network operation failed"}
 )
 
 type RspGetInstance struct {
@@ -75,4 +76,11 @@ type RspSettings struct {
 	AutoActionTrigger string `json:"autoActionTrigger"`
 	AutoActionCron    string `json:"autoActionCron"`
 	AutoActionType    string `json:"autoActionType"`
+}
+
+// WebSocket message for app updates
+type RspUpdateMessage struct {
+	Type    string `json:"type"`
+	Data    any    `json:"data"`
+	Message string `json:"message,omitempty"`
 }

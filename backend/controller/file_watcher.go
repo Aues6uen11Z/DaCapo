@@ -188,7 +188,6 @@ func (fw *FileWatcher) broadcastFileChange(instanceName, filename string) {
 		Filename:     filename,
 		Timestamp:    time.Now().Unix(),
 	}
-
 	wsManager := utils.GetWSManager()
 	if wsManager != nil {
 		wsManager.BroadcastJSON(message)

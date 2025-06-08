@@ -4,7 +4,9 @@ go 1.23.3
 
 require (
 	github.com/autobrr/go-shellwords v0.0.0-20250126152152-442731123d51
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/fsnotify/fsnotify v1.8.0
+	github.com/fynelabs/selfupdate v0.2.0
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-git/go-git/v5 v5.13.2

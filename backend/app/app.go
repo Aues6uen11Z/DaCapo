@@ -5,9 +5,9 @@ import (
 	"dacapo/backend/controller"
 	"dacapo/backend/model"
 	"dacapo/backend/utils"
+	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -39,6 +39,8 @@ func (a *App) GetVersion() string {
 func (a *App) Startup(ctx context.Context) {
 	utils.Logger.Info("Application is starting up")
 	a.ctx = ctx
+
+	utils.SetAppVersion(Version)
 	utils.SetAppContext(ctx)
 
 	// Check if the symlink is valid, if not, create it
@@ -56,14 +58,24 @@ func (a *App) Startup(ctx context.Context) {
 			utils.Logger.Errorf("Failed to start file watcher: %v", err)
 		}
 	}
+
+	// Check if the old executable file exists and delete it
+	oldFilePath := ".DaCapo.exe.old"
+	if _, err := os.Stat(oldFilePath); err == nil {
+		err := os.Remove(oldFilePath)
+		if err != nil {
+			utils.Logger.Errorf("Failed to delete old executable file: %v", err)
+			return
+		}
+		utils.Logger.Infof("Deleted old executable file: %s", oldFilePath)
+	}
 }
 
 // OnSecondInstanceLaunch handles when a second instance of the app is launched
 func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 	secondInstanceArgs := secondInstanceData.Args
 
-	utils.Logger.Infoln("User opened second instance", strings.Join(secondInstanceData.Args, ","))
-	utils.Logger.Infoln("User opened second from", secondInstanceData.WorkingDirectory)
+	utils.Logger.Infoln("User opened second instance from", secondInstanceData.WorkingDirectory)
 	runtime.WindowUnminimise(a.ctx)
 	runtime.Show(a.ctx)
 	go runtime.EventsEmit(a.ctx, "launchArgs", secondInstanceArgs)

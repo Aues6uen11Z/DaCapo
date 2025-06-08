@@ -94,3 +94,21 @@ export interface RspSettings {
   autoActionCron: string;
   autoActionType: string;
 }
+
+// App update related interfaces
+export interface UpdateMessage {
+  type: string;
+  data?: UpdateCheckData | UpdateProgressData | unknown;
+  message?: string;
+}
+
+export interface UpdateCheckData {
+  has_update: boolean;
+  current_version: string;
+  latest_version: string;
+}
+
+export interface UpdateProgressData {
+  progress: number; // 0.0 to 1.0
+  description: string;
+}

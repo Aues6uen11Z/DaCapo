@@ -3,6 +3,14 @@
   <div v-else class="fullscreen flex flex-center">
     <q-spinner-dots color="primary" size="40" />
   </div>
+  <!-- Global app update dialog -->
+  <AppUpdateDialog
+    v-if="settingsStore.showUpdateDialog"
+    :is-manual-update="settingsStore.isManualUpdate"
+    @cancel="onUpdateDialogCancel"
+    @confirm="onUpdateDialogConfirm"
+    @complete="onUpdateDialogComplete"
+  />
 </template>
 
 <script setup lang="ts">
@@ -15,6 +23,7 @@ import {
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import { updateRepo } from './services/api';
+import AppUpdateDialog from './components/AppUpdateDialog.vue';
 
 const istStore = useIstStore();
 const taskStore = useSchedulerStore();
@@ -70,6 +79,15 @@ const autoUpdateInstances = async () => {
   }
 };
 
+// Auto check for app updates (non-blocking)
+const autoCheckAppUpdate = async () => {
+  try {
+    await settingsStore.checkForAppUpdates();
+  } catch (err) {
+    // Silently handle auto-update check failures to avoid disrupting user experience
+  }
+};
+
 // Initialize WebSocket connection
 let unsubscribe: (() => void) | null = null;
 
@@ -77,6 +95,9 @@ onMounted(async () => {
   try {
     // Load settings
     settingsStore.loadSettings(i18n, $q);
+
+    // Initialize WebSocket for app updates
+    await settingsStore.initializeWebSocket();
 
     // Load instance data
     await istStore.loadInstance();
@@ -86,9 +107,12 @@ onMounted(async () => {
   } finally {
     loading.value = false;
 
-    // Execute auto-update asynchronously after loading is complete
+    // Execute auto-update asynchronously after loading is complete (non-blocking)
     autoUpdateInstances().catch((err) => {
       console.error('Auto update failed:', err);
+    }); // Auto check for app updates asynchronously (non-blocking)
+    autoCheckAppUpdate().catch(() => {
+      // Silently handle auto-update check completion
     });
   }
 });
@@ -98,4 +122,20 @@ onUnmounted(() => {
     unsubscribe();
   }
 });
+
+// Update dialog event handlers
+const onUpdateDialogCancel = () => {
+  // Only hide dialog when user explicitly cancels from initial confirmation
+  // Don't hide during other phases (progress, restart confirmation)
+  settingsStore.setShowUpdateDialog(false);
+};
+
+const onUpdateDialogConfirm = () => {
+  // User confirmed the update, continue to progress phase
+};
+
+const onUpdateDialogComplete = () => {
+  // Hide dialog only when the entire update process is complete
+  settingsStore.setShowUpdateDialog(false);
+};
 </script>

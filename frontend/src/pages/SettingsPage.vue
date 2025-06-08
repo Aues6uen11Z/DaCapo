@@ -261,7 +261,6 @@
               </div>
             </div>
           </q-tab-panel>
-
           <!-- About Panel -->
           <q-tab-panel name="about">
             <div class="tw-flex tw-flex-col tw-items-center tw-h-full">
@@ -287,6 +286,70 @@
                   <strong>{{ t('settings.license') }}</strong
                   >: GPL-3.0
                 </p>
+              </div>
+              <!-- Update status section -->
+              <div class="tw-mt-8 tw-p-4 tw-bg-gray-50 tw-rounded-lg">
+                <div class="tw-text-center tw-mb-4">
+                  <!-- Display current update status -->
+                  <div
+                    v-if="settingsStore.isUpToDate"
+                    class="tw-flex tw-items-center tw-justify-center tw-text-green-600 tw-mb-2"
+                  >
+                    <q-icon name="check_circle" size="md" class="tw-mr-2" />
+                    <span class="tw-text-base tw-font-medium">{{
+                      t('settings.upToDate')
+                    }}</span>
+                  </div>
+                  <div
+                    v-else-if="settingsStore.isUpdateAvailable"
+                    class="tw-flex tw-items-center tw-justify-center tw-text-orange-600 tw-mb-2"
+                  >
+                    <q-icon name="update" size="md" class="tw-mr-2" />
+                    <span class="tw-text-base tw-font-medium">{{
+                      t('settings.updateAvailable')
+                    }}</span>
+                  </div>
+                  <div
+                    v-else-if="settingsStore.hasUpdateError"
+                    class="tw-flex tw-items-center tw-justify-center tw-text-red-600 tw-mb-2"
+                  >
+                    <q-icon name="error" size="md" class="tw-mr-2" />
+                    <span class="tw-text-base">{{
+                      settingsStore.updateStatusMessage
+                    }}</span>
+                  </div>
+                  <div
+                    v-else
+                    class="tw-flex tw-items-center tw-justify-center tw-text-gray-500 tw-mb-2"
+                  >
+                    <q-icon name="help" size="md" class="tw-mr-2" />
+                    <span class="tw-text-base">{{
+                      t('settings.updateStatusUnknown')
+                    }}</span>
+                  </div>
+                </div>
+
+                <!-- Check for updates button or update action -->
+                <div class="tw-flex tw-justify-center">
+                  <q-btn
+                    v-if="settingsStore.canCheckForUpdates"
+                    outline
+                    color="primary"
+                    :label="t('settings.checkUpdates')"
+                    @click="() => settingsStore.checkForAppUpdates(true)"
+                    icon="system_update"
+                    no-caps
+                  />
+                  <q-btn
+                    v-else-if="settingsStore.isUpdateAvailable"
+                    outline
+                    color="positive"
+                    :label="t('appUpdate.updateNow')"
+                    @click="() => settingsStore.checkForAppUpdates(true)"
+                    icon="download"
+                    no-caps
+                  />
+                </div>
               </div>
             </div>
           </q-tab-panel>
