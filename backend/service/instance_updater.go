@@ -1,4 +1,4 @@
-package controller
+package service
 
 import (
 	"dacapo/backend/model"
@@ -6,33 +6,38 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
-func UpdateRepo(c *gin.Context) {
-	instanceName := c.Param("instance_name")
+type InstanceUpdaterService struct {
+	schedulerService *SchedulerService
+	wsService        *WebSocketService
+}
+
+// UpdateRepo updates repository and manages Python environment for an instance
+func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdateRepo, error) {
 	istInfo, err := model.GetInstanceByName(instanceName)
 	if err != nil {
-		quickResponse(c, model.StatusDatabase, instanceName, err.Error())
-		return
+		return model.RspUpdateRepo{}, err
 	}
 
 	scheduler := model.GetScheduler()
 	tm := scheduler.GetTaskManager(instanceName)
-	broadcastState(instanceName, model.StatusUpdating)
+	s.wsService.BroadcastState(instanceName, model.StatusUpdating)
 	utils.Logger.Infof("[%s]: Updating", instanceName)
 
 	// Pull latest code
 	cmdLog, err := utils.GitPull(istInfo.LocalPath)
 	utils.Logger.Infof("[%s]: %s", instanceName, cmdLog)
 	if err != nil {
-		quickResponse(c, model.StatusGit, instanceName, err.Error())
-		return
+		s.wsService.BroadcastState(instanceName, model.StatusFailed)
+		return model.RspUpdateRepo{
+			Code:    model.StatusGit.Code,
+			Message: model.StatusGit.Message,
+			Detail:  err.Error(),
+		}, err
 	}
 	utils.CheckLink(filepath.Join("instances", instanceName+".json"), istInfo.ConfigPath)
 
@@ -40,20 +45,32 @@ func UpdateRepo(c *gin.Context) {
 	if istInfo.EnvName != "" {
 		envPath := filepath.Join("./envs", istInfo.EnvName)
 		if err := os.MkdirAll(filepath.Dir(envPath), 0755); err != nil {
-			quickResponse(c, model.StatusFile, instanceName, err.Error())
-			return
+			s.wsService.BroadcastState(instanceName, model.StatusFailed)
+			return model.RspUpdateRepo{
+				Code:    model.StatusFile.Code,
+				Message: model.StatusFile.Message,
+				Detail:  err.Error(),
+			}, err
 		}
 
-		if err = createEnv(tm, envPath, istInfo.PythonVersion); err != nil {
-			quickResponse(c, model.StatusPython, instanceName, err.Error())
-			return
+		if err = s.createEnv(tm, envPath, istInfo.PythonVersion); err != nil {
+			s.wsService.BroadcastState(instanceName, model.StatusFailed)
+			return model.RspUpdateRepo{
+				Code:    model.StatusPython.Code,
+				Message: model.StatusPython.Message,
+				Detail:  err.Error(),
+			}, err
 		}
 
 		depsPath := filepath.Join(istInfo.LocalPath, istInfo.DepsPath)
 		envLastUpdate := istInfo.EnvLastUpdate
-		if err = installDeps(tm, envPath, depsPath, envLastUpdate); err != nil {
-			quickResponse(c, model.StatusPython, instanceName, err.Error())
-			return
+		if err = s.installDeps(tm, envPath, depsPath, envLastUpdate); err != nil {
+			s.wsService.BroadcastState(instanceName, model.StatusFailed)
+			return model.RspUpdateRepo{
+				Code:    model.StatusPython.Code,
+				Message: model.StatusPython.Message,
+				Detail:  err.Error(),
+			}, err
 		}
 		istInfo.UpdateField("env_last_update", time.Now())
 	}
@@ -61,61 +78,65 @@ func UpdateRepo(c *gin.Context) {
 	// Update layout if template file has changed
 	var tplInfo model.TemplateInfo
 	if err = tplInfo.GetByName(istInfo.TemplateName); err != nil {
-		quickResponse(c, model.StatusDatabase, instanceName, err.Error())
-		return
+		s.wsService.BroadcastState(instanceName, model.StatusFailed)
+		return model.RspUpdateRepo{
+			Code:    model.StatusDatabase.Code,
+			Message: model.StatusDatabase.Message,
+			Detail:  err.Error(),
+		}, err
 	}
 	tplPath, err := model.GetTplPath(tplInfo.Path, "template")
 	if err != nil {
-		quickResponse(c, model.StatusFile, instanceName, err.Error())
-		return
+		s.wsService.BroadcastState(instanceName, model.StatusFailed)
+		return model.RspUpdateRepo{
+			Code:    model.StatusFile.Code,
+			Message: model.StatusFile.Message,
+			Detail:  err.Error(),
+		}, err
 	}
 	tplFile, err := os.Stat(tplPath)
 	if err != nil {
-		quickResponse(c, model.StatusFile, instanceName, err.Error())
-		return
+		s.wsService.BroadcastState(instanceName, model.StatusFailed)
+		return model.RspUpdateRepo{
+			Code:    model.StatusFile.Code,
+			Message: model.StatusFile.Message,
+			Detail:  err.Error(),
+		}, err
 	}
 	if tplFile.ModTime().After(istInfo.LayoutLastUpdate) {
 		utils.Logger.Infof("[%s]: Template file changed, updating layout and instance config", instanceName)
 		istInfo.UpdateField("layout_last_update", time.Now())
 
-		if err = syncIstConf(instanceName, tplInfo.Path); err != nil {
-			quickResponse(c, model.StatusFile, instanceName, err.Error())
-			return
+		if err = s.syncIstConf(instanceName, tplInfo.Path); err != nil {
+			s.wsService.BroadcastState(instanceName, model.StatusFailed)
+			return model.RspUpdateRepo{
+				Code:    model.StatusFile.Code,
+				Message: model.StatusFile.Message,
+				Detail:  err.Error(),
+			}, err
 		}
 
-		c.JSON(http.StatusOK, model.RspUpdateRepo{
+		s.wsService.BroadcastState(instanceName, model.StatusPending)
+		return model.RspUpdateRepo{
 			Code:      model.StatusSuccess.Code,
 			Message:   model.StatusSuccess.Message,
 			Detail:    "",
 			IsUpdated: true,
-		})
-		return
+		}, nil
 	}
 
 	utils.Logger.Infof("[%s]: No changes detected in template file", instanceName)
-	c.JSON(http.StatusOK, model.RspUpdateRepo{
+	s.wsService.BroadcastState(instanceName, model.StatusPending)
+	return model.RspUpdateRepo{
 		Code:      model.StatusSuccess.Code,
 		Message:   model.StatusSuccess.Message,
 		Detail:    "",
 		IsUpdated: false,
-	})
+	}, nil
 }
 
-func quickResponse(c *gin.Context, status model.Status, instanceName string, err string) {
-	c.JSON(http.StatusOK, gin.H{
-		"code":    status.Code,
-		"message": status.Message,
-		"detail":  err,
-	})
-	if err != "" {
-		utils.Logger.Errorf("[%s]: %v", instanceName, err)
-		broadcastState(instanceName, model.StatusFailed)
-		return
-	}
-	broadcastState(instanceName, model.StatusPending)
-}
-
-func createEnv(tm *model.TaskManager, envPath string, pythonVersion string) error {
+// createEnv creates a Python virtual environment
+func (s *InstanceUpdaterService) createEnv(tm *model.TaskManager, envPath string, pythonVersion string) error {
 	if _, err := os.Stat(envPath); errors.Is(err, fs.ErrNotExist) {
 		uvPath := "./tools/uv.exe"
 		var cmd string
@@ -129,7 +150,7 @@ func createEnv(tm *model.TaskManager, envPath string, pythonVersion string) erro
 			utils.Logger.Warn("[%s]: uv not found or python version not set, using default python command to create venv: %s", tm.InstanceName, cmd)
 		}
 
-		if err := runCommand(tm, cmd, ""); err != nil {
+		if err := s.schedulerService.RunCommand(tm, cmd, ""); err != nil {
 			return err
 		}
 	}
@@ -138,7 +159,7 @@ func createEnv(tm *model.TaskManager, envPath string, pythonVersion string) erro
 }
 
 // getVenvPython returns the path to the Python executable in the virtual environment
-func getVenvPython(envName string) string {
+func (s *InstanceUpdaterService) getVenvPython(envName string) string {
 	possiblePaths := []string{
 		filepath.Join("./envs", envName, "Scripts", "python.exe"), // Windows venv
 		filepath.Join("./envs", envName, "bin", "python"),         // Unix venv
@@ -153,7 +174,8 @@ func getVenvPython(envName string) string {
 	return ""
 }
 
-func installDeps(tm *model.TaskManager, envPath, depsPath string, envLastUpdate time.Time) error {
+// installDeps installs Python dependencies
+func (s *InstanceUpdaterService) installDeps(tm *model.TaskManager, envPath, depsPath string, envLastUpdate time.Time) error {
 	// Check if requirements file exists
 	depsInfo, err := os.Stat(depsPath)
 	if err != nil {
@@ -177,7 +199,7 @@ func installDeps(tm *model.TaskManager, envPath, depsPath string, envLastUpdate 
 			uvPath, depsPath, envPath)
 		utils.Logger.Infof("[%s]: Installing dependencies with uv: %s", tm.InstanceName, cmd)
 	} else {
-		pythonExec := getVenvPython(filepath.Base(envPath))
+		pythonExec := s.getVenvPython(filepath.Base(envPath))
 		if pythonExec == "" {
 			return fmt.Errorf("python not found in %s", envPath)
 		}
@@ -185,14 +207,15 @@ func installDeps(tm *model.TaskManager, envPath, depsPath string, envLastUpdate 
 		utils.Logger.Infof("[%s]: Installing dependencies with pip: %s", tm.InstanceName, cmd)
 	}
 
-	if err = runCommand(tm, cmd, ""); err != nil {
+	if err = s.schedulerService.RunCommand(tm, cmd, ""); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func syncIstConf(istName, tplPath string) (err error) {
+// syncIstConf synchronizes instance configuration with template
+func (s *InstanceUpdaterService) syncIstConf(istName, tplPath string) (err error) {
 	istConf := model.NewIstConf()
 	tplConf := model.NewTplConf()
 

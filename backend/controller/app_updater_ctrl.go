@@ -67,17 +67,7 @@ func CheckAppUpdate(c *gin.Context) {
 		config := &selfupdate.Config{
 			Source:    updateSource,
 			PublicKey: publicKey,
-			ProgressCallback: func(progress float64, err error) {
-				if err != nil {
-					broadcastUpdateMessage("update_error", nil, fmt.Sprintf("Progress error: %v", err))
-					return
-				}
-				progressData := map[string]any{
-					"progress":    progress,
-					"description": fmt.Sprintf("Download progress: %.1f%%", progress*100),
-				}
-				broadcastUpdateMessage("update_progress", progressData, "")
-			}, UpgradeConfirmCallback: func(message string) bool {
+			UpgradeConfirmCallback: func(message string) bool {
 				// If this is a manual update (user clicked check updates), auto-confirm
 				if isManualUpdate {
 					utils.Logger.Info("Auto-confirming upgrade for manual update request")
@@ -94,6 +84,17 @@ func CheckAppUpdate(c *gin.Context) {
 					broadcastUpdateMessage("update_error", nil, "Upgrade confirmation timeout")
 					return false
 				}
+			},
+			ProgressCallback: func(progress float64, err error) {
+				if err != nil {
+					broadcastUpdateMessage("update_error", nil, fmt.Sprintf("Progress error: %v", err))
+					return
+				}
+				progressData := map[string]any{
+					"progress":    progress,
+					"description": fmt.Sprintf("Download progress: %.1f%%", progress*100),
+				}
+				broadcastUpdateMessage("update_progress", progressData, "")
 			},
 			RestartConfirmCallback: func() bool {
 				// Ask frontend for restart confirmation via WebSocket
@@ -148,20 +149,6 @@ func HandleRestartConfirmation(confirmed bool) {
 		utils.Logger.Infof("Restart confirmation received: %v", confirmed)
 	default:
 		utils.Logger.Warn("No pending restart confirmation")
-	}
-}
-
-// HandleWebSocketMessage handles incoming WebSocket messages for app updates
-func HandleWebSocketMessage(messageType string, data map[string]any) {
-	switch messageType {
-	case "update_confirm_response":
-		if confirmed, ok := data["confirmed"].(bool); ok {
-			HandleUpdateConfirmation(confirmed)
-		}
-	case "restart_confirm_response":
-		if confirmed, ok := data["confirmed"].(bool); ok {
-			HandleRestartConfirmation(confirmed)
-		}
 	}
 }
 
