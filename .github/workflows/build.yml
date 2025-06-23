@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-        
+
       - name: Get version from tag
         id: get_version
         shell: bash
@@ -48,13 +48,14 @@ jobs:
             echo "VERSION=dev" >> $GITHUB_ENV
           fi
           echo "Version: ${VERSION}"
-      
+          echo "CURRENT_TAG=v${VERSION}" >> $GITHUB_ENV
+
       - name: Download UV
         shell: bash
         run: |
           echo "Downloading UV v0.7.9..."
           mkdir -p tools
-          
+
           curl -LsSf https://github.com/astral-sh/uv/releases/download/0.7.9/uv-x86_64-pc-windows-msvc.zip -o uv.zip
           unzip uv.zip
           mv uv.exe tools/
@@ -63,13 +64,13 @@ jobs:
           echo "UV downloaded successfully:"
           ls -la tools/
           ./tools/uv.exe --version
-      
+
       - name: Update version in files
         shell: bash
         run: |
           sed -i "s/const Version = \".*\"/const Version = \"${{ env.VERSION }}\"/" backend/app/app.go
           sed -i "s/\"productVersion\": \".*\"/\"productVersion\": \"${{ env.VERSION }}\"/" wails.json
-          
+
           echo "Updated version to ${{ env.VERSION }} in files:"
           grep "const Version" backend/app/app.go
           grep "productVersion" wails.json
@@ -79,7 +80,7 @@ jobs:
         with:
           build-name: "DaCapo.exe"
           build-platform: ${{ matrix.build.platform }}
-          wails-version: v2.9.2
+          wails-version: v2.10.1
           go-version: 1.23
           node-version: 22.11
           nsis: true
@@ -100,15 +101,94 @@ jobs:
 
           cp build/bin/DaCapo-amd64-installer.exe DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
 
+      - name: Install selfupdatectl
+        shell: bash
+        run: |
+          echo "Installing selfupdatectl..."
+          go install github.com/fynelabs/selfupdate/cmd/selfupdatectl@latest
+          echo "selfupdatectl installed successfully"
+
+      - name: Sign application
+        shell: bash
+        run: |
+          echo "Setting up private key..."
+          echo "${{ secrets.PRIVATE_KEY }}" > ed25519.key
+
+          echo "Signing DaCapo.exe..."
+          selfupdatectl sign DaCapo/DaCapo.exe
+
+          echo "Signature created:"
+          ls -la DaCapo/DaCapo.exe.ed25519
+
+          echo "Cleaning up private key..."
+          rm ed25519.key
+
+      - name: Create version file
+        shell: bash
+        run: |
+          echo "${{ env.VERSION }}" > version.txt
+          echo "Version file created with content: $(cat version.txt)"
+
+      - name: Update tools release on GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: tools
+          files: |
+            DaCapo/DaCapo.exe
+            DaCapo/DaCapo.exe.ed25519
+            version.txt
+          make_latest: false
+
+      - name: Delete Gitee Assets
+        uses: nicennnnnnnlee/action-gitee-release@master
+        with:
+          gitee_action: delete_asset
+          gitee_owner: aues6uen11z
+          gitee_repo: da-capo
+          gitee_token: ${{ secrets.GITEE_TOKEN }}
+          gitee_tag_name: latest
+          gitee_delete_assets: |
+            DaCapo.exe
+            DaCapo.exe.ed25519
+            version.txt
+
+      - name: Upload assets to Gitee
+        uses: nicennnnnnnlee/action-gitee-release@master
+        with:
+          gitee_action: upload_asset
+          gitee_owner: aues6uen11z
+          gitee_repo: da-capo
+          gitee_token: ${{ secrets.GITEE_TOKEN }}
+          gitee_tag_name: latest
+          gitee_upload_retry_times: 3
+          gitee_files: |
+            DaCapo/DaCapo.exe
+            DaCapo/DaCapo.exe.ed25519
+            version.txt
+
+      - name: Get previous tag
+        id: get_previous_tag
+        shell: bash
+        run: |
+          # Fetch all tags
+          git fetch --tags
+
+          # Get the current tag
+          CURRENT_TAG="${{ env.CURRENT_TAG }}"
+
+          # Get all tags sorted by version, excluding the current tag
+          PREVIOUS_TAG=$(git tag -l --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -1)
+
+          echo "COMPARE_URL=https://github.com/Aues6uen11Z/DaCapo/compare/${PREVIOUS_TAG}...${CURRENT_TAG}" >> $GITHUB_ENV
+          echo "Compare URL: https://github.com/Aues6uen11Z/DaCapo/compare/${PREVIOUS_TAG}...${CURRENT_TAG}"
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: ${{ github.event.inputs.tag || github.ref_name }}
           body: |
-            仅支持Windows10/11
-            
-            Only supports Windows 10/11
+            ${{ env.COMPARE_URL && format('**Full Changelog**: {0}', env.COMPARE_URL) || '' }}
           files: |
             DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
             DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe
