@@ -96,12 +96,12 @@ onMounted(async () => {
     // Load settings
     settingsStore.loadSettings(i18n, $q);
 
-    // Initialize WebSocket for app updates
+    // Initialize WebSocket connections first to ensure we capture initial state
     await settingsStore.initializeWebSocket();
-
-    // Load instance data
-    await istStore.loadInstance();
     unsubscribe = taskStore.initWebSocket();
+
+    // Load instance data after WebSocket is ready
+    await istStore.loadInstance();
   } catch (err) {
     console.error('Failed to initialize app:', err);
   } finally {
