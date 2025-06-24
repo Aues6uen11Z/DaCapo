@@ -34,7 +34,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Get version from tag
-        id: get_version
         shell: bash
         run: |
           if [[ $GITHUB_REF == refs/tags/* ]]; then
@@ -48,7 +47,19 @@ jobs:
             echo "VERSION=dev" >> $GITHUB_ENV
           fi
           echo "Version: ${VERSION}"
-          echo "CURRENT_TAG=v${VERSION}" >> $GITHUB_ENV
+
+      - name: Get latest two tags
+        shell: bash
+        run: |
+          git fetch --tags --force
+          mapfile -t TAGS < <(git tag -l "v*" --sort=-version:refname)
+          CURRENT_TAG="${TAGS[0]}"
+          PREVIOUS_TAG="${TAGS[1]}"
+          echo "Current tag: $CURRENT_TAG"
+          echo "Previous tag: $PREVIOUS_TAG"
+
+          echo "COMPARE_URL=https://github.com/Aues6uen11Z/DaCapo/compare/${PREVIOUS_TAG}...${CURRENT_TAG}" >> $GITHUB_ENV
+          echo "Compare URL: https://github.com/Aues6uen11Z/DaCapo/compare/${PREVIOUS_TAG}...${CURRENT_TAG}"
 
       - name: Download UV
         shell: bash
@@ -165,22 +176,6 @@ jobs:
             DaCapo/DaCapo.exe
             DaCapo/DaCapo.exe.ed25519
             version.txt
-
-      - name: Get previous tag
-        id: get_previous_tag
-        shell: bash
-        run: |
-          # Fetch all tags
-          git fetch --tags
-
-          # Get the current tag
-          CURRENT_TAG="${{ env.CURRENT_TAG }}"
-
-          # Get all tags sorted by version, excluding the current tag
-          PREVIOUS_TAG=$(git tag -l --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -1)
-
-          echo "COMPARE_URL=https://github.com/Aues6uen11Z/DaCapo/compare/${PREVIOUS_TAG}...${CURRENT_TAG}" >> $GITHUB_ENV
-          echo "Compare URL: https://github.com/Aues6uen11Z/DaCapo/compare/${PREVIOUS_TAG}...${CURRENT_TAG}"
 
       - name: Release
         uses: softprops/action-gh-release@v2
