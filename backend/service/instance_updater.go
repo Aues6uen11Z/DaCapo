@@ -29,8 +29,12 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 	utils.Logger.Infof("[%s]: Updating", instanceName)
 
 	// Pull latest code
+	if err := utils.RemoveLink(istInfo.ConfigPath); err != nil {
+		utils.Logger.Warnf("[%s]: Failed to remove symlink: %v", instanceName, err)
+	}
 	cmdLog, err := utils.GitPull(istInfo.LocalPath)
 	utils.Logger.Infof("[%s]: %s", instanceName, cmdLog)
+	utils.CheckLink(filepath.Join("instances", instanceName+".json"), istInfo.ConfigPath)
 	if err != nil {
 		s.wsService.BroadcastState(instanceName, model.StatusFailed)
 		return model.RspUpdateRepo{
@@ -39,7 +43,6 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 			Detail:  err.Error(),
 		}, err
 	}
-	utils.CheckLink(filepath.Join("instances", instanceName+".json"), istInfo.ConfigPath)
 
 	// Create/update Python environment
 	if istInfo.EnvName != "" {

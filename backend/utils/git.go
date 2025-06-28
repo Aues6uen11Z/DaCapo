@@ -155,9 +155,28 @@ func GitPull(repoPath string) (cmd string, err error) {
 		return
 	}
 
+	// Perform the pull operation
 	err = worktree.Pull(&git.PullOptions{RemoteName: "origin"})
 	if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
-		return
+		if errors.Is(err, git.ErrUnstagedChanges) {
+			// TODO: check if this bug is fixed by go-git
+			// Get the current HEAD commit hash
+			ref, err := repo.Head()
+			if err != nil {
+				return cmd, fmt.Errorf("failed to get HEAD reference: %v", err)
+			}
+
+			// Perform hard reset to ensure working directory is clean
+			err = worktree.Reset(&git.ResetOptions{
+				Commit: ref.Hash(),
+				Mode:   git.HardReset,
+			})
+			if err != nil {
+				return cmd, fmt.Errorf("failed to hard reset: %v", err)
+			}
+		} else {
+			return
+		}
 	}
 
 	return cmd, nil

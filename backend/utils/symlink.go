@@ -107,3 +107,19 @@ func CreateLink(srcPath, tgtPath, oldPath string) error {
 
 	return nil
 }
+
+// RemoveLink removes the symlink at the specified path if it exists
+func RemoveLink(linkPath string) error {
+	if linkPath == "" {
+		return nil
+	}
+
+	if _, err := os.Stat(linkPath); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	return os.Remove(linkPath)
+}
