@@ -453,6 +453,22 @@ func (s *InstanceService) BuildLayout(istInfo *model.InstanceInfo, istConf *mode
 			newTask.Set("_Base", newGroupBase)
 			taskInfo := istInfo.GetTaskByName(taskName)
 
+			// If task does not exist in the database, create it with template defaults
+			if taskInfo == nil {
+				utils.Logger.Warnf("[%s]: Task %s not found in database, creating with template defaults", istInfo.Name, taskName)
+
+				if err := istInfo.CreateTask(taskName, taskConf); err != nil {
+					utils.Logger.Errorf("[%s]: Failed to create task %s: %v", istInfo.Name, taskName, err)
+					continue
+				}
+
+				taskInfo = istInfo.GetTaskByName(taskName)
+				if taskInfo == nil {
+					utils.Logger.Errorf("[%s]: Still cannot get task %s after creation", istInfo.Name, taskName)
+					continue
+				}
+			}
+
 			itemActive := model.ItemConf{
 				Type:     "checkbox",
 				Value:    *taskInfo.Active,

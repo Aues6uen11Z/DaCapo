@@ -6,6 +6,7 @@ import (
 	"slices"
 	"time"
 
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"gorm.io/gorm"
 )
 
@@ -217,38 +218,9 @@ func (i *InstanceInfo) Create(istName, tplName string, tpl *TemplateConf) error 
 				taskName := pair.Key
 				taskConf := pair.Value
 				// Create new Task
-				task := TaskInfo{
-					Name:       taskName,
-					InstanceID: i.ID, // Set relation ID
+				if err := i.CreateTask(taskName, taskConf); err != nil {
+					return err
 				}
-				// Set basic task properties
-				if baseGroup, ok := taskConf.Get("_Base"); ok {
-					if activeConf, exists := baseGroup.Get("active"); exists {
-						if v, ok := activeConf.Value.(bool); ok {
-							task.Active = &v
-							task.ActiveDisabled = activeConf.Disabled
-						}
-					}
-					if priorityConf, exists := baseGroup.Get("priority"); exists {
-						switch v := priorityConf.Value.(type) {
-						case uint:
-							task.Priority = v
-						case int:
-							task.Priority = uint(v)
-						case float64:
-							task.Priority = uint(v)
-						}
-						task.PriorityDisabled = priorityConf.Disabled
-					}
-					if cmdConf, exists := baseGroup.Get("command"); exists {
-						if v, ok := cmdConf.Value.(string); ok {
-							task.Command = v
-							task.CommandDisabled = cmdConf.Disabled
-						}
-					}
-				}
-
-				i.Tasks = append(i.Tasks, task)
 			}
 		}
 	}
@@ -323,4 +295,58 @@ func (i *InstanceInfo) GetTaskQueue() (waiting []string, stopped []string) {
 	})
 
 	return
+}
+
+// CreateTask creates a new task for the instance with values from template configuration
+func (i *InstanceInfo) CreateTask(taskName string, taskConf *orderedmap.OrderedMap[string, *orderedmap.OrderedMap[string, ItemConf]]) error {
+	// Check if task already exists
+	if i.GetTaskByName(taskName) != nil {
+		return nil
+	}
+
+	// Create new task with template configuration
+	task := TaskInfo{
+		Name:       taskName,
+		InstanceID: i.ID,
+	}
+
+	// Set properties from template configuration if provided
+	if taskConf != nil {
+		if baseGroup, ok := taskConf.Get("_Base"); ok {
+			if activeConf, exists := baseGroup.Get("active"); exists {
+				if v, ok := activeConf.Value.(bool); ok {
+					task.Active = &v
+					task.ActiveDisabled = activeConf.Disabled
+				}
+			}
+			if priorityConf, exists := baseGroup.Get("priority"); exists {
+				switch v := priorityConf.Value.(type) {
+				case uint:
+					task.Priority = v
+				case int:
+					task.Priority = uint(v)
+				case float64:
+					task.Priority = uint(v)
+				}
+				task.PriorityDisabled = priorityConf.Disabled
+			}
+			if cmdConf, exists := baseGroup.Get("command"); exists {
+				if v, ok := cmdConf.Value.(string); ok {
+					task.Command = v
+					task.CommandDisabled = cmdConf.Disabled
+				}
+			}
+		}
+	}
+
+	// If instance has ID (already saved), save task to database immediately
+	if i.ID != 0 {
+		if err := db.Create(&task).Error; err != nil {
+			return err
+		}
+	}
+
+	// Add to in-memory tasks slice
+	i.Tasks = append(i.Tasks, task)
+	return nil
 }
