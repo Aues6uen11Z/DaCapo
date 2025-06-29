@@ -16,7 +16,7 @@ import (
 )
 
 // Define version constant
-const Version = "1.2.3"
+const Version = "1.2.4"
 
 // var wailsContext *context.Context
 

@@ -4,7 +4,7 @@
     <q-card-section>
       <card-title
         :name="getGroupName(menuName, taskName, groupName)"
-        :help="getGroupHelp(menuName, taskName, groupName)"
+        :help="String(helpText)"
       />
       <div class="my-column tw-gap-0">
         <div
@@ -45,6 +45,13 @@ const props = defineProps<{
 
   groupConf: Group;
 }>();
+
+const helpText = computed(
+  () =>
+    getGroupHelp(props.menuName, props.taskName, props.groupName) ||
+    props.groupConf._help?.value ||
+    '',
+);
 
 const { getGroupName, getGroupHelp, getItemName, getItemHelp } = useTranslation(
   props.istName,
