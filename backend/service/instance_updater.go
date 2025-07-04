@@ -1,11 +1,14 @@
 package service
 
 import (
+	"context"
 	"dacapo/backend/model"
 	"dacapo/backend/utils"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -177,6 +180,50 @@ func (s *InstanceUpdaterService) getVenvPython(envName string) string {
 	return ""
 }
 
+// getPyPIMirror returns the fastest available PyPI mirror URL
+func getPyPIMirror() (string, error) {
+	mirrors := map[string]string{
+		"https://pypi.tuna.tsinghua.edu.cn/simple": "https://pypi.tuna.tsinghua.edu.cn/packages/8c/0f/a1f269b125806212a876f7efb049b06c6f8772cf0121139f97774cd95626/numpy-2.3.1-cp313-cp313-macosx_14_0_arm64.whl",
+		"https://mirrors.aliyun.com/pypi/simple":   "https://mirrors.aliyun.com/pypi/packages/8c/0f/a1f269b125806212a876f7efb049b06c6f8772cf0121139f97774cd95626/numpy-2.3.1-cp313-cp313-macosx_14_0_arm64.whl",
+		"https://pypi.mirrors.ustc.edu.cn/simple":  "https://mirrors.ustc.edu.cn/pypi/packages/8c/0f/a1f269b125806212a876f7efb049b06c6f8772cf0121139f97774cd95626/numpy-2.3.1-cp313-cp313-macosx_14_0_arm64.whl",
+		"https://pypi.org/simple":                  "https://files.pythonhosted.org/packages/8c/0f/a1f269b125806212a876f7efb049b06c6f8772cf0121139f97774cd95626/numpy-2.3.1-cp313-cp313-macosx_14_0_arm64.whl",
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	resultChan := make(chan string, 1)
+
+	for mirror, url := range mirrors {
+		go func() {
+			req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				return
+			}
+			defer resp.Body.Close()
+
+			if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+				return
+			}
+
+			select {
+			case resultChan <- mirror:
+			default:
+			}
+		}()
+	}
+
+	select {
+	case fastest := <-resultChan:
+		cancel() // Cancel other ongoing downloads when first mirror completes
+		return fastest, nil
+	case <-ctx.Done():
+		return "", fmt.Errorf("network too slow, unable to download Python packages, please try again later")
+	}
+}
+
 // installDeps installs Python dependencies
 func (s *InstanceUpdaterService) installDeps(tm *model.TaskManager, envPath, depsPath string, envLastUpdate time.Time) error {
 	// Check if requirements file exists
@@ -196,17 +243,21 @@ func (s *InstanceUpdaterService) installDeps(tm *model.TaskManager, envPath, dep
 
 	uvPath := "./tools/uv.exe"
 	var cmd string
+	fastestMirror, err := getPyPIMirror()
+	if err != nil {
+		return err
+	}
 
 	if _, err := os.Stat(uvPath); err == nil {
-		cmd = fmt.Sprintf("%s pip install -r %s --python %s -i https://pypi.tuna.tsinghua.edu.cn/simple/",
-			uvPath, depsPath, envPath)
+		cmd = fmt.Sprintf("%s pip install -r %s --python %s -i %s",
+			uvPath, depsPath, envPath, fastestMirror)
 		utils.Logger.Infof("[%s]: Installing dependencies with uv: %s", tm.InstanceName, cmd)
 	} else {
 		pythonExec := s.getVenvPython(filepath.Base(envPath))
 		if pythonExec == "" {
 			return fmt.Errorf("python not found in %s", envPath)
 		}
-		cmd = pythonExec + " -m pip install -r " + depsPath + " -i https://pypi.tuna.tsinghua.edu.cn/simple/"
+		cmd = pythonExec + " -m pip install -r " + depsPath + " -i " + fastestMirror
 		utils.Logger.Infof("[%s]: Installing dependencies with pip: %s", tm.InstanceName, cmd)
 	}
 
