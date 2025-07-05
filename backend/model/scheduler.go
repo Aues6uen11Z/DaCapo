@@ -87,15 +87,17 @@ func GetScheduler() *Scheduler {
 	return scheduler
 }
 
+func (s *Scheduler) TriggerCloseFunc() {
+	if s.AutoClose && s.CloseFunc != nil {
+		s.CloseFunc()
+	}
+}
+
 // Stop halts the scheduler
 func (s *Scheduler) Stop() {
 	s.mu.Lock()
 	s.IsRunning = false
 	s.mu.Unlock()
-
-	if s.AutoClose && s.CloseFunc != nil {
-		s.CloseFunc()
-	}
 }
 
 // Start activates the scheduler

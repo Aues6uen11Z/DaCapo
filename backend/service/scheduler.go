@@ -348,6 +348,7 @@ func (s *SchedulerService) StartAll() {
 		wg.Wait()
 		utils.Logger.Info("All tasks completed, stopping scheduler")
 		scheduler.Stop()
+		scheduler.TriggerCloseFunc()
 		s.wsService.BroadcastState("", model.StatusPending)
 	}()
 }
@@ -448,24 +449,7 @@ func (s *SchedulerService) runForegroundTasks(tasks []string) {
 // StopAll stops the scheduler and all tasks
 func (s *SchedulerService) StopAll() {
 	utils.Logger.Info("Stopping all running instances...")
-
-	// Get all instances
-	var instances []model.InstanceInfo
-	if err := model.GetAllInstances(&instances); err != nil {
-		utils.Logger.Error("Failed to get all instances:", err)
-		return
-	}
-
-	// Stop all running instances
 	scheduler := model.GetScheduler()
-	for _, ist := range instances {
-		tm := scheduler.GetTaskManager(ist.Name)
-		if tm != nil && tm.Status == model.StatusRunning {
-			s.stopOne(ist.Name, nil)
-		}
-	}
-
-	// Prevent loop calls in CloseApp
 	if !scheduler.IsRunning {
 		utils.Logger.Info("Scheduler is not running")
 		return
@@ -474,4 +458,20 @@ func (s *SchedulerService) StopAll() {
 	// Stop the scheduler
 	scheduler.Stop()
 	s.wsService.BroadcastState("", model.StatusPending)
+
+	// Get all instances
+	var instances []model.InstanceInfo
+	if err := model.GetAllInstances(&instances); err != nil {
+		utils.Logger.Error("Failed to get all instances:", err)
+		return
+	}
+	// Stop all running instances
+	for _, ist := range instances {
+		tm := scheduler.GetTaskManager(ist.Name)
+		if tm != nil && tm.Status == model.StatusRunning {
+			s.stopOne(ist.Name, nil)
+		}
+	}
+
+	scheduler.TriggerCloseFunc()
 }

@@ -7,7 +7,7 @@
     "frontend:dev:watcher": "npm run dev",
     "frontend:dev:serverUrl": "http://localhost:33204",
     "info": {
-        "productVersion": "1.2.4",
+        "productVersion": "1.2.6",
         "copyright": "Copyright © 2024 DaCapo Aues6uen11Z",
         "comments": "A graphical script manager driven by configuration files"
     }
