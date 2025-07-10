@@ -11,6 +11,12 @@
   </p>
 </div>
 
+
+
+✨点击get用于游戏自动化的最佳实践：[赛博代肝从开机到关机](docs/赛博代肝从开机到关机.md)
+
+
+
 ## 简介
 
 本项目旨在为有繁杂用户配置的程序提供图形化界面，开发者无需编写额外代码，只需按特定要求提供和使用配置文件，即可为自己的程序创建GUI。同时对于用户而言，可以将多个程序脚本集中管理，很适合一些需要周期性执行的任务。
@@ -23,6 +29,7 @@
 - 一键管理和运行多个任务实例
 - 自动从远程仓库拉取代码并创建界面
 - 自动管理python虚拟环境并更新依赖
+- 使用Cron表达式灵活设置定时执行计划
 - 支持多语言
 
 ## 使用指南
@@ -31,12 +38,7 @@
 
 如何使用DaCapo？ 👉 [用户指南](./docs/用户指南.md)
 
-**示例：**
-
-1. [DaCapoDemo](https://github.com/Aues6uen11Z/DaCapoExample)：一个简单的入门示例
-2. [HonkaiHelper](https://github.com/Aues6uen11Z/HonkaiHelper)：崩坏3自动化脚本
-3. [DaCapo-SRC-Adapter](https://github.com/Aues6uen11Z/DaCapo-SRC-Adapter)：崩坏：星穹铁道自动化脚本，依赖StarRailCopilot但无需下载本体
-4. [GameSripts](https://github.com/Aues6uen11Z/GameScripts)：原神、绝区零自动化脚本，依赖BetterGI和ZenlessZoneZero-OneDragon，未适配需要下载本体
+> 快速上手示例：[DaCapoDemo](https://github.com/Aues6uen11Z/DaCapoExample)
 
 ## 安装
 
@@ -49,6 +51,13 @@
 1. 按照[安装说明](https://wails.io/docs/gettingstarted/installation/)准备好Go、NPM、WebView2、Wails等依赖，直至`wails doctor`命令显示一切就绪。
 2. 克隆本项目。
 3. 在根目录执行`wails build`。
+
+## 相关项目
+
+1. [HonkaiHelper](https://github.com/Aues6uen11Z/HonkaiHelper)：崩坏3自动化脚本
+2. [DaCapo-SRC-Adapter](https://github.com/Aues6uen11Z/DaCapo-SRC-Adapter)：崩坏：星穹铁道自动化脚本，依赖StarRailCopilot但无需下载本体
+3. [GameSripts](https://github.com/Aues6uen11Z/GameScripts)：原神、绝区零自动化脚本，依赖BetterGI和ZenlessZoneZero-OneDragon，未适配需要下载本体
+4. [MihoyoBBSTools](https://github.com/Womsxd/MihoyoBBSTools)：米游社相关脚本
 
 ## 致谢
 
