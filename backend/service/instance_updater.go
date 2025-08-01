@@ -153,7 +153,7 @@ func (s *InstanceUpdaterService) createEnv(tm *model.TaskManager, envPath string
 			utils.Logger.Infof("[%s]: Creating venv with uv: %s", tm.InstanceName, cmd)
 		} else {
 			cmd = fmt.Sprintf("python -m venv %s", envPath)
-			utils.Logger.Warn("[%s]: uv not found or python version not set, using default python command to create venv: %s", tm.InstanceName, cmd)
+			utils.Logger.Warnf("[%s]: uv not found or python version not set, using default python command to create venv: %s", tm.InstanceName, cmd)
 		}
 
 		if err := s.schedulerService.RunCommand(tm, cmd, ""); err != nil {
