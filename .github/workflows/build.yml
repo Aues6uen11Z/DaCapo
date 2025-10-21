@@ -18,7 +18,7 @@ jobs:
             {
               name: "Windows-amd64",
               platform: windows/amd64,
-              os: windows-latest,
+              os: windows-2022,
             },
             # { name: "Linux-amd64", platform: linux/amd64, os: ubuntu-latest },
             # {
@@ -64,10 +64,10 @@ jobs:
       - name: Download UV
         shell: bash
         run: |
-          echo "Downloading UV v0.7.9..."
+          echo "Downloading UV v0.9.4..."
           mkdir -p tools
 
-          curl -LsSf https://github.com/astral-sh/uv/releases/download/0.7.9/uv-x86_64-pc-windows-msvc.zip -o uv.zip
+          curl -LsSf https://github.com/astral-sh/uv/releases/download/0.9.4/uv-x86_64-pc-windows-msvc.zip -o uv.zip
           unzip uv.zip
           mv uv.exe tools/
           rm uv.zip
