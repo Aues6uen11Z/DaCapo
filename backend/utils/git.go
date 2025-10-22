@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -209,6 +210,14 @@ func runGitCommand(args []string, workDir string) error {
 	cmd := exec.Command(gitExec, args...)
 	if workDir != "" {
 		cmd.Dir = workDir
+	}
+
+	// Hide console window on Windows
+	if runtime.GOOS == "windows" {
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			HideWindow:    true,
+			CreationFlags: 0x08000000, // CREATE_NO_WINDOW
+		}
 	}
 
 	// Capture output
