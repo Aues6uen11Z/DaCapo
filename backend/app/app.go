@@ -16,7 +16,8 @@ import (
 )
 
 // Define version constant
-const Version = "1.2.6"
+// This is a placeholder. The actual version is set during CI/CD build.
+const Version = "0.0.0-dev"
 
 // var wailsContext *context.Context
 
