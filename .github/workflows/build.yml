@@ -91,7 +91,7 @@ jobs:
         with:
           build-name: "DaCapo.exe"
           build-platform: ${{ matrix.build.platform }}
-          wails-version: v2.10.1
+          wails-version: v2.11.0
           go-version: 1.23
           node-version: 22.11
           nsis: true
