@@ -34,6 +34,13 @@ func (s *SchedulerService) UpdateTaskQueue(queues map[string]model.TaskQueue) {
 	scheduler.UpdateQueue(queues)
 }
 
+// UpdateInstanceStatus updates the instance status and broadcasts it
+func (s *SchedulerService) UpdateInstanceStatus(instanceName, status string) {
+	scheduler := model.GetScheduler()
+	scheduler.UpdateTaskManagerStatus(instanceName, status)
+	s.wsService.BroadcastState(instanceName, status)
+}
+
 // UpdateSchedulerState updates the scheduler state
 func (s *SchedulerService) UpdateSchedulerState(actionType, instanceName string) {
 	if actionType == "start" {
@@ -81,8 +88,7 @@ func (s *SchedulerService) stopOne(instanceName string, err error) {
 		status = model.StatusFailed
 	}
 
-	scheduler.UpdateTaskManagerStatus(instanceName, status)
-	s.wsService.BroadcastState(instanceName, status)
+	s.UpdateInstanceStatus(instanceName, status)
 	scheduler.TaskManagers[instanceName].RemoveRun()
 	s.wsService.BroadcastQueue(instanceName)
 	if err != nil {
@@ -232,8 +238,13 @@ func (s *SchedulerService) StartOne(instanceName string) {
 		return
 	}
 
-	scheduler.UpdateTaskManagerStatus(instanceName, model.StatusRunning)
-	s.wsService.BroadcastState(instanceName, model.StatusRunning)
+	// Don't start if instance is updating
+	if tm.Status == model.StatusUpdating {
+		utils.Logger.Warnf("[%s]: Cannot start - instance is updating", instanceName)
+		return
+	}
+
+	s.UpdateInstanceStatus(instanceName, model.StatusRunning)
 	s.wsService.BroadcastQueue(instanceName)
 
 	for len(tm.Queue.Waiting) > 0 {
@@ -282,8 +293,7 @@ func (s *SchedulerService) StartOne(instanceName string) {
 	}
 
 	tm.SwitchRun() // Clean up the last task
-	scheduler.UpdateTaskManagerStatus(instanceName, model.StatusPending)
-	s.wsService.BroadcastState(instanceName, model.StatusPending)
+	s.UpdateInstanceStatus(instanceName, model.StatusPending)
 	s.wsService.BroadcastQueue(instanceName)
 }
 

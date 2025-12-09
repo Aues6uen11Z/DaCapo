@@ -28,7 +28,19 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 
 	scheduler := model.GetScheduler()
 	tm := scheduler.GetTaskManager(instanceName)
-	s.wsService.BroadcastState(instanceName, model.StatusUpdating)
+
+	// Check if instance is running
+	if tm != nil && tm.Status == model.StatusRunning {
+		errMsg := "cannot update - instance is running"
+		utils.Logger.Warnf("[%s]: %s", instanceName, errMsg)
+		return model.RspUpdateRepo{
+			Code:    model.StatusBusy.Code,
+			Message: model.StatusBusy.Message,
+			Detail:  errMsg,
+		}, errors.New(errMsg)
+	}
+
+	s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusUpdating)
 	utils.Logger.Infof("[%s]: Updating", instanceName)
 
 	// Pull latest code
@@ -39,7 +51,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 	utils.Logger.Infof("[%s]: %s", instanceName, cmdLog)
 	utils.CheckLink(filepath.Join("instances", instanceName+".json"), istInfo.ConfigPath)
 	if err != nil {
-		s.wsService.BroadcastState(instanceName, model.StatusFailed)
+		s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 		return model.RspUpdateRepo{
 			Code:    model.StatusGit.Code,
 			Message: model.StatusGit.Message,
@@ -51,7 +63,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 	if istInfo.EnvName != "" {
 		envPath := filepath.Join("./envs", istInfo.EnvName)
 		if err := os.MkdirAll(filepath.Dir(envPath), 0755); err != nil {
-			s.wsService.BroadcastState(instanceName, model.StatusFailed)
+			s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 			return model.RspUpdateRepo{
 				Code:    model.StatusFile.Code,
 				Message: model.StatusFile.Message,
@@ -60,7 +72,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 		}
 
 		if err = s.createEnv(tm, envPath, istInfo.PythonVersion); err != nil {
-			s.wsService.BroadcastState(instanceName, model.StatusFailed)
+			s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 			return model.RspUpdateRepo{
 				Code:    model.StatusPython.Code,
 				Message: model.StatusPython.Message,
@@ -71,7 +83,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 		depsPath := filepath.Join(istInfo.LocalPath, istInfo.DepsPath)
 		envLastUpdate := istInfo.EnvLastUpdate
 		if err = s.installDeps(tm, envPath, depsPath, envLastUpdate); err != nil {
-			s.wsService.BroadcastState(instanceName, model.StatusFailed)
+			s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 			return model.RspUpdateRepo{
 				Code:    model.StatusPython.Code,
 				Message: model.StatusPython.Message,
@@ -84,7 +96,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 	// Update layout if template file has changed
 	var tplInfo model.TemplateInfo
 	if err = tplInfo.GetByName(istInfo.TemplateName); err != nil {
-		s.wsService.BroadcastState(instanceName, model.StatusFailed)
+		s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 		return model.RspUpdateRepo{
 			Code:    model.StatusDatabase.Code,
 			Message: model.StatusDatabase.Message,
@@ -93,7 +105,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 	}
 	tplPath, err := model.GetTplPath(tplInfo.Path, "template")
 	if err != nil {
-		s.wsService.BroadcastState(instanceName, model.StatusFailed)
+		s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 		return model.RspUpdateRepo{
 			Code:    model.StatusFile.Code,
 			Message: model.StatusFile.Message,
@@ -102,7 +114,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 	}
 	tplFile, err := os.Stat(tplPath)
 	if err != nil {
-		s.wsService.BroadcastState(instanceName, model.StatusFailed)
+		s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 		return model.RspUpdateRepo{
 			Code:    model.StatusFile.Code,
 			Message: model.StatusFile.Message,
@@ -114,7 +126,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 		istInfo.UpdateField("layout_last_update", time.Now())
 
 		if err = s.syncIstConf(instanceName, tplInfo.Path); err != nil {
-			s.wsService.BroadcastState(instanceName, model.StatusFailed)
+			s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 			return model.RspUpdateRepo{
 				Code:    model.StatusFile.Code,
 				Message: model.StatusFile.Message,
@@ -122,7 +134,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 			}, err
 		}
 
-		s.wsService.BroadcastState(instanceName, model.StatusPending)
+		s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusPending)
 		return model.RspUpdateRepo{
 			Code:      model.StatusSuccess.Code,
 			Message:   model.StatusSuccess.Message,
@@ -132,7 +144,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 	}
 
 	utils.Logger.Infof("[%s]: No changes detected in template file", instanceName)
-	s.wsService.BroadcastState(instanceName, model.StatusPending)
+	s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusPending)
 	return model.RspUpdateRepo{
 		Code:      model.StatusSuccess.Code,
 		Message:   model.StatusSuccess.Message,

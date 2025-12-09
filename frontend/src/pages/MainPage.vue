@@ -31,6 +31,13 @@
             class="tw-w-2 tw-h-2 tw-rounded-full"
           />
           <q-badge
+            v-if="taskStore.getInstanceState(instance) === 'updating'"
+            color="info"
+            floating
+            transparent
+            class="tw-w-2 tw-h-2 tw-rounded-full"
+          />
+          <q-badge
             v-if="taskStore.getInstanceState(instance) === 'failed'"
             color="negative"
             floating
