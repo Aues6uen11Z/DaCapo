@@ -26,6 +26,7 @@ func GetSettings(c *gin.Context) {
 		AutoActionTrigger: settings.AutoActionTrigger,
 		AutoActionCron:    settings.AutoActionCron,
 		AutoActionType:    settings.AutoActionType,
+		MaxBgConcurrent:   settings.MaxBgConcurrent,
 	}
 
 	c.JSON(http.StatusOK, response)

@@ -77,6 +77,7 @@ type RspSettings struct {
 	AutoActionTrigger string `json:"autoActionTrigger"`
 	AutoActionCron    string `json:"autoActionCron"`
 	AutoActionType    string `json:"autoActionType"`
+	MaxBgConcurrent   int    `json:"maxBgConcurrent"`
 }
 
 // WebSocket message for app updates
