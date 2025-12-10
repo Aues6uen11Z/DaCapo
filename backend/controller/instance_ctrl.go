@@ -248,3 +248,29 @@ func updateIstConf(instanceName string, req model.ReqUpdateInstance) (model.Stat
 	}
 	return model.StatusSuccess, nil
 }
+
+// UpdateInstanceOrder updates the execution order of instances
+func UpdateInstanceOrder(c *gin.Context) {
+	var req model.ReqUpdateOrder
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		utils.Logger.Error("Invalid request format\n", err)
+		return
+	}
+
+	instanceService := Services.InstanceService()
+	if err := instanceService.UpdateOrder(req.Names); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    model.StatusDatabase.Code,
+			"message": model.StatusDatabase.Message,
+			"detail":  err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    model.StatusSuccess.Code,
+		"message": model.StatusSuccess.Message,
+		"detail":  "",
+	})
+}

@@ -71,6 +71,7 @@ func SetupRouter() *gin.Engine {
 			ist.GET("/:instance_name", controller.GetInstance)
 			ist.PATCH("/:instance_name", controller.UpdateInstance)
 			ist.DELETE("/:instance_name", controller.DeleteInstance)
+			ist.PATCH("/order", controller.UpdateInstanceOrder)
 		}
 
 		tpl := api.Group("/template")

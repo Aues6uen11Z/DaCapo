@@ -75,6 +75,12 @@ export async function deleteInstance(instanceName: string) {
   handleApiResponse(response);
 }
 
+// PATCH /api/instance/order
+export async function updateInstanceOrder(names: string[]) {
+  const response = await api.patch<RspApi>('/instance/order', { names });
+  handleApiResponse(response);
+}
+
 // GET /api/template
 export async function fetchTemplates(): Promise<string[]> {
   const response = await api.get<RspApi & { templates: string[] }>('/template');

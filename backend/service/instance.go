@@ -555,3 +555,9 @@ func (s *InstanceService) updateInstanceInfo(instanceName, taskName, fieldName s
 
 	return nil
 }
+
+// UpdateOrder updates the execution order of multiple instances
+func (s *InstanceService) UpdateOrder(names []string) error {
+	var instanceInfo model.InstanceInfo
+	return instanceInfo.UpdateOrder(names)
+}

@@ -47,6 +47,11 @@ type ReqSchedulerCron struct {
 	CronExpr string `json:"cron_expr" binding:"required"`
 }
 
+// ReqUpdateOrder represents a request to update instance execution order
+type ReqUpdateOrder struct {
+	Names []string `json:"names" binding:"required"`
+}
+
 // Settings related requests
 type ReqUpdateSettings struct {
 	Language          string  `json:"language"`

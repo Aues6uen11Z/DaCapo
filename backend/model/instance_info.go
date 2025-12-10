@@ -30,6 +30,7 @@ type InstanceInfo struct {
 
 	Name             string `gorm:"uniqueIndex;not null"`
 	TemplateName     string `gorm:"not null"`
+	Order            int    `gorm:"default:-1;index"` // Execution and display order, -1 means uninitialized
 	Ready            bool
 	LayoutLastUpdate time.Time
 	EnvLastUpdate    time.Time
@@ -65,7 +66,7 @@ type InstanceInfo struct {
 
 // GetAllInstances retrieves all instance information
 func GetAllInstances(instances *[]InstanceInfo) error {
-	return db.Find(instances).Error
+	return db.Order("`order` ASC, id ASC").Find(instances).Error
 }
 
 // GetInstanceByName retrieves instance information by name
@@ -78,7 +79,10 @@ func GetInstanceByName(name string) (*InstanceInfo, error) {
 // GetAllIstNames retrieves all instance names
 func GetAllIstNames() ([]string, error) {
 	var names []string
-	err := db.Model(&InstanceInfo{}).Select("name").Find(&names).Error
+	err := db.Model(&InstanceInfo{}).
+		Select("name").
+		Order("`order` ASC, id ASC").
+		Find(&names).Error
 	return names, err
 }
 
@@ -99,6 +103,20 @@ func DeleteIstInfoByName(name string) error {
 	// Delete the instance from database
 	err := instance.Delete()
 	return err
+}
+
+// UpdateOrder updates the execution order of multiple instances
+func (i *InstanceInfo) UpdateOrder(names []string) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		for idx, name := range names {
+			if err := tx.Model(&InstanceInfo{}).
+				Where("name = ?", name).
+				Update("`order`", idx).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func GetConfigPaths() ([][2]string, error) {
@@ -224,6 +242,11 @@ func (i *InstanceInfo) Create(istName, tplName string, tpl *TemplateConf) error 
 			}
 		}
 	}
+
+	// Auto-assign order (append to end)
+	var maxOrder int
+	db.Model(&InstanceInfo{}).Select("COALESCE(MAX(`order`), -1)").Scan(&maxOrder)
+	i.Order = maxOrder + 1
 
 	if err := db.Create(i).Error; err != nil {
 		return err
