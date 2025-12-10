@@ -176,15 +176,10 @@
               </div>
 
               <div class="my-row tw-w-full tw-justify-between tw--mb-4">
-                <q-toggle
-                  v-model="selectAll"
-                  :label="t('settings.selectAll')"
-                  @update:model-value="toggleAll"
-                />
-
                 <q-checkbox
                   v-model="runOnStartup"
                   :label="t('settings.runOnStartup')"
+                  class="tw-w-1/3"
                 />
 
                 <q-input
@@ -194,30 +189,52 @@
                   :disable="runOnStartup"
                   :rules="[(val) => validateCron(val) || t('item.cronHelp')]"
                   @blur="handleCronBlur"
+                  class="tw-w-1/3"
+                />
+
+                <q-input
+                  dense
+                  type="number"
+                  v-model.number="maxBgConcurrent"
+                  :label="t('settings.maxConcurrent')"
+                  :rules="[(val) => val >= 0 || 'Must be 0 or greater']"
+                  class="tw-w-1/3"
                 />
               </div>
 
-              <q-scroll-area class="tw-w-full tw-h-2/5 tw-border">
-                <div class="tw-grid tw-grid-cols-2 tw-gap-4">
-                  <div v-for="instance in instances" :key="instance">
-                    <div class="my-row tw-justify-between">
-                      <q-toggle
-                        v-model="readyInstances[instance]"
-                        @update:model-value="
-                          (value) => istStore.updateReady(value, instance)
-                        "
-                        :label="instance"
-                      />
-                      <q-btn
-                        flat
-                        icon="delete"
-                        color="primary"
-                        @click="istStore.removeInstance(instance)"
-                      />
+              <div class="tw-w-full tw-h-2/5 tw-border">
+                <div
+                  class="tw-flex tw-items-center tw-justify-end tw-px-2 tw-py-1 tw-border-b tw-bg-gray-50"
+                >
+                  <q-toggle
+                    v-model="selectAll"
+                    :label="t('settings.selectAll')"
+                    @update:model-value="toggleAll"
+                    dense
+                  />
+                </div>
+                <q-scroll-area class="tw-w-full tw-h-[calc(100%-40px)]">
+                  <div class="tw-grid tw-grid-cols-2 tw-gap-4 tw-p-2">
+                    <div v-for="instance in instances" :key="instance">
+                      <div class="my-row tw-justify-between">
+                        <q-toggle
+                          v-model="readyInstances[instance]"
+                          @update:model-value="
+                            (value) => istStore.updateReady(value, instance)
+                          "
+                          :label="instance"
+                        />
+                        <q-btn
+                          flat
+                          icon="delete"
+                          color="primary"
+                          @click="istStore.removeInstance(instance)"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </q-scroll-area>
+                </q-scroll-area>
+              </div>
             </div>
           </q-tab-panel>
 
@@ -619,6 +636,11 @@ const handleCronBlur = () => {
     settingsStore.setSchedulerCron(schedulerCron.value);
   }
 };
+
+const maxBgConcurrent = computed({
+  get: () => settingsStore.maxBgConcurrent,
+  set: (value) => settingsStore.setMaxBgConcurrent(value),
+});
 
 // Instance management
 const instances = computed(() => istStore.instanceNames);

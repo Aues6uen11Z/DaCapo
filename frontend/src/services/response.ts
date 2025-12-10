@@ -93,6 +93,7 @@ export interface RspSettings {
   autoActionTrigger: string;
   autoActionCron: string;
   autoActionType: string;
+  maxBgConcurrent: number;
 }
 
 // App update related interfaces

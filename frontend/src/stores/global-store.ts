@@ -387,6 +387,7 @@ export const useSettingsStore = defineStore('settings', {
     autoActionTrigger: 'scheduler_end', // 'scheduler_end' | 'scheduled'
     autoActionCron: '',
     autoActionType: 'none', // 'none' | 'close_app' | 'hibernate' | 'shutdown'
+    maxBgConcurrent: 0,
     appUpdateStatus: 'unknown' as
       | 'unknown'
       | 'available'
@@ -446,6 +447,12 @@ export const useSettingsStore = defineStore('settings', {
       this.autoActionType = value;
       await this.saveSettings();
     },
+    async setMaxBgConcurrent(value: number) {
+      if (value >= 0) {
+        this.maxBgConcurrent = value;
+        await this.saveSettings();
+      }
+    },
     async loadSettings(i18n: Composer, quasar: QVueGlobals) {
       try {
         const settings = await fetchSettings();
@@ -475,8 +482,7 @@ export const useSettingsStore = defineStore('settings', {
         this.autoActionTrigger = settings.autoActionTrigger || 'scheduler_end';
         this.autoActionCron = settings.autoActionCron || '';
         this.autoActionType = settings.autoActionType || 'none';
-
-        // Validate settings
+        this.maxBgConcurrent = settings.maxBgConcurrent ?? 0; // Validate settings
         const validTriggers = ['scheduler_end', 'scheduled'];
         const validTypes = ['none', 'close_app', 'hibernate', 'shutdown'];
 
@@ -632,6 +638,7 @@ export const useSettingsStore = defineStore('settings', {
           autoActionTrigger: this.autoActionTrigger,
           autoActionCron: this.autoActionCron,
           autoActionType: this.autoActionType,
+          maxBgConcurrent: this.maxBgConcurrent,
         });
       } catch (error) {
         console.error('Failed to save settings:', error);

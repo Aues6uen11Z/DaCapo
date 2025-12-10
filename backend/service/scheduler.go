@@ -395,10 +395,32 @@ func (s *SchedulerService) runWithCheck(istName string) {
 	}
 }
 
-// runBackgroundTasks executes background tasks concurrently
+// runBackgroundTasks executes background tasks concurrently with limit
 func (s *SchedulerService) runBackgroundTasks(tasks []string) {
 	utils.Logger.Info("Starting background tasks")
 	var wg sync.WaitGroup
+
+	// Load max concurrent setting
+	settings, err := model.LoadSettings()
+	if err != nil {
+		utils.Logger.Warn("Failed to load settings, using default concurrency")
+		settings = &model.AppSettings{MaxBgConcurrent: 0}
+	}
+	maxConcurrent := settings.MaxBgConcurrent
+	if maxConcurrent < 0 {
+		maxConcurrent = 0 // Fallback to no limit
+	}
+
+	if maxConcurrent > 0 {
+		utils.Logger.Infof("Max concurrent background tasks: %d", maxConcurrent)
+	} else {
+		utils.Logger.Info("Max concurrent background tasks: unlimited")
+	}
+
+	var semaphore chan struct{}
+	if maxConcurrent > 0 {
+		semaphore = make(chan struct{}, maxConcurrent)
+	}
 
 	for _, istName := range tasks {
 		if !model.GetScheduler().IsRunning {
@@ -408,6 +430,13 @@ func (s *SchedulerService) runBackgroundTasks(tasks []string) {
 		wg.Add(1)
 		go func(name string) {
 			defer wg.Done()
+
+			// Acquire semaphore (blocks if limit reached) only if limit is set
+			if semaphore != nil {
+				semaphore <- struct{}{}
+				defer func() { <-semaphore }() // Release semaphore
+			}
+
 			s.runWithCheck(name)
 		}(istName)
 	}

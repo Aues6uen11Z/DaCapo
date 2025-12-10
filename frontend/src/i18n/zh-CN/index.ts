@@ -94,6 +94,7 @@ export default {
     manage: '管理',
     selectAll: '全选',
     runOnStartup: '启动时运行',
+    maxConcurrent: '最大后台并发数(0-无限制)',
     schedulerEnd: '调度器结束时',
     scheduled: '在指定时间',
     autoAction: '动作',

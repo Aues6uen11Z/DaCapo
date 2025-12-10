@@ -15,6 +15,7 @@ type AppSettings struct {
 	AutoActionTrigger string `yaml:"auto_action_trigger"`
 	AutoActionCron    string `yaml:"auto_action_cron"`
 	AutoActionType    string `yaml:"auto_action_type"`
+	MaxBgConcurrent   int    `yaml:"max_bg_concurrent"`
 }
 
 const settingsPath = "settings.yml"
@@ -29,9 +30,8 @@ func LoadSettings() (*AppSettings, error) {
 		AutoActionTrigger: "scheduler_end",
 		AutoActionCron:    "",
 		AutoActionType:    "none",
-	}
-
-	// Create settings directory if it doesn't exist
+		MaxBgConcurrent:   0, // Default to 0 (no limit)
+	} // Create settings directory if it doesn't exist
 	if err := os.MkdirAll(filepath.Dir(settingsPath), 0755); err != nil {
 		return settings, err
 	}
@@ -95,14 +95,19 @@ func UpdateSettings(updates *ReqUpdateSettings) error {
 	if updates.SchedulerCron != nil {
 		settings.SchedulerCron = *updates.SchedulerCron
 	}
-	if updates.AutoActionTrigger != "" {
-		settings.AutoActionTrigger = updates.AutoActionTrigger
+	if updates.AutoActionTrigger != nil {
+		settings.AutoActionTrigger = *updates.AutoActionTrigger
 	}
 	if updates.AutoActionCron != nil {
 		settings.AutoActionCron = *updates.AutoActionCron
 	}
-	if updates.AutoActionType != "" {
-		settings.AutoActionType = updates.AutoActionType
+	if updates.AutoActionType != nil {
+		settings.AutoActionType = *updates.AutoActionType
+	}
+	if updates.MaxBgConcurrent != nil {
+		if *updates.MaxBgConcurrent >= 0 {
+			settings.MaxBgConcurrent = *updates.MaxBgConcurrent
+		}
 	}
 
 	return SaveSettings(settings)

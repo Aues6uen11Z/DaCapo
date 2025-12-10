@@ -102,6 +102,7 @@ export default {
     manage: 'Manage',
     selectAll: 'Select all',
     runOnStartup: 'Run on startup',
+    maxConcurrent: 'Max background concurrent(0-unlimited)',
     schedulerEnd: 'On scheduler end',
     scheduled: 'Scheduled',
     autoAction: 'Action',

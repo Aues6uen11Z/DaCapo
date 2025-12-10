@@ -253,6 +253,7 @@ export async function updateSettings(settings: {
   autoActionTrigger?: string;
   autoActionCron?: string;
   autoActionType?: string;
+  maxBgConcurrent?: number;
 }) {
   const response = await api.patch<RspApi>('/settings', settings);
   handleApiResponse(response);

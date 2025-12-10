@@ -57,7 +57,8 @@ type ReqUpdateSettings struct {
 	Language          string  `json:"language"`
 	RunOnStartup      *bool   `json:"runOnStartup"`
 	SchedulerCron     *string `json:"schedulerCron"`
-	AutoActionTrigger string  `json:"autoActionTrigger"`
+	AutoActionTrigger *string `json:"autoActionTrigger"`
 	AutoActionCron    *string `json:"autoActionCron"`
-	AutoActionType    string  `json:"autoActionType"`
+	AutoActionType    *string `json:"autoActionType"`
+	MaxBgConcurrent   *int    `json:"maxBgConcurrent"`
 }
