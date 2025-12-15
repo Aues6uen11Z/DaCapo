@@ -242,7 +242,7 @@
           <q-tab-panel name="general">
             <div class="my-column tw-gap-4">
               <div
-                class="tw-grid tw-grid-cols-2 tw-gap-4 tw-place-items-center tw-w-full"
+                class="tw-grid tw-grid-cols-2 tw-gap-8 tw-place-items-center tw-w-full"
               >
                 <div class="tw-flex tw-items-center">
                   <q-icon name="g_translate" size="md" class="tw-mr-2" />
@@ -256,11 +256,12 @@
                   v-model="language"
                   :options="['zh-CN', 'en-US']"
                   @update:model-value="onLanguageChange"
+                  class="tw-w-full"
                 />
               </div>
 
               <div
-                class="tw-grid tw-grid-cols-2 tw-gap-4 tw-place-items-center tw-w-full"
+                class="tw-grid tw-grid-cols-2 tw-gap-8 tw-place-items-center tw-w-full"
               >
                 <div class="tw-flex tw-items-center">
                   <q-icon name="article" size="md" class="tw-mr-2" />
@@ -274,6 +275,7 @@
                   :label="t('settings.openLog')"
                   no-caps
                   @click="openLog"
+                  class="tw-w-full"
                 />
               </div>
 
