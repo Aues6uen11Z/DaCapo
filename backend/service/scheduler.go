@@ -24,8 +24,15 @@ import (
 
 var ErrManualStop = errors.New("task manually stopped")
 
+// Constants for scheduler configuration
+const (
+	MaxErrorLength      = 2000             // Maximum length of error message in notification
+	UpdateCheckInterval = 10 * time.Second // Interval to check for instance updates
+)
+
 type SchedulerService struct {
-	wsService *WebSocketService
+	wsService    *WebSocketService
+	notifService *NotificationService
 }
 
 // UpdateTaskQueue updates the task queue
@@ -74,13 +81,21 @@ func (s *SchedulerService) SetSchedulerCron(cronExpr string) {
 // stopOne stops the instance-level task manager
 func (s *SchedulerService) stopOne(instanceName string, err error) {
 	scheduler := model.GetScheduler()
+	tm := scheduler.GetTaskManager(instanceName)
 
 	if err == nil {
 		// User manually stopped, cancel task execution
 		scheduler.CancelTask(instanceName)
 		utils.Logger.Infof("[%s]: stopped manually", instanceName)
+		if tm != nil {
+			tm.LastError = ""
+		}
 	} else {
 		utils.Logger.Errorf("[%s]: task execution failed: %v", instanceName, err)
+		// Store the error message in TaskManager
+		if tm != nil {
+			tm.LastError = err.Error()
+		}
 	}
 
 	status := model.StatusPending
@@ -160,14 +175,16 @@ func (s *SchedulerService) RunCommand(tm *model.TaskManager, command string, wor
 
 	// Create wait group to ensure both goroutines complete
 	var wg sync.WaitGroup
+	var stderrBuf bytes.Buffer
+
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		s.processOutput(stdoutPipe, tm.InstanceName, false)
+		s.processOutput(stdoutPipe, tm.InstanceName, false, nil)
 	}()
 	go func() {
 		defer wg.Done()
-		s.processOutput(stderrPipe, tm.InstanceName, true)
+		s.processOutput(stderrPipe, tm.InstanceName, true, &stderrBuf)
 	}()
 
 	// Wait for command to complete
@@ -178,6 +195,17 @@ func (s *SchedulerService) RunCommand(tm *model.TaskManager, command string, wor
 		if tm.ManualStop {
 			tm.ManualStop = false
 			return ErrManualStop
+		}
+
+		// Build detailed error message with stderr content
+		stderrContent := stderrBuf.String()
+		if stderrContent != "" {
+			// Limit error message length to avoid excessive size
+			if len(stderrContent) > MaxErrorLength {
+				// Keep the last part which usually contains the actual error
+				stderrContent = "...\n" + stderrContent[len(stderrContent)-MaxErrorLength:]
+			}
+			return fmt.Errorf("command failed with exit code %v:\n%s", err, stderrContent)
 		}
 		return fmt.Errorf("command failed: %w", err)
 	}
@@ -200,7 +228,8 @@ func (s *SchedulerService) detectAndConvert(data []byte) string {
 }
 
 // processOutput handles reading from a pipe and broadcasting/logging the output
-func (s *SchedulerService) processOutput(pipe io.ReadCloser, instanceName string, isError bool) {
+// If buf is provided, it will also capture the output
+func (s *SchedulerService) processOutput(pipe io.ReadCloser, instanceName string, isError bool, buf *bytes.Buffer) {
 	defer pipe.Close()
 
 	reader := bufio.NewReader(pipe)
@@ -217,6 +246,9 @@ func (s *SchedulerService) processOutput(pipe io.ReadCloser, instanceName string
 		line = bytes.TrimRight(line, "\r\n")
 		if len(line) == 0 {
 			s.wsService.BroadcastLog(instanceName, "")
+			if buf != nil {
+				buf.WriteString("\n")
+			}
 			continue
 		}
 
@@ -224,58 +256,109 @@ func (s *SchedulerService) processOutput(pipe io.ReadCloser, instanceName string
 		text := s.detectAndConvert(line)
 		s.wsService.BroadcastLog(instanceName, text)
 
+		// Capture to buffer if provided
+		if buf != nil {
+			buf.WriteString(text)
+			buf.WriteString("\n")
+		}
+
 		if isError {
 			utils.Logger.Errorf("[%s]: %s", instanceName, text)
 		}
 	}
 }
 
-// StartOne runs tasks for a single instance
-func (s *SchedulerService) StartOne(instanceName string) {
+// validateTaskManager validates TaskManager state and returns an error result if invalid
+func (s *SchedulerService) validateTaskManager(instanceName string) (tm *model.TaskManager, result *model.InstanceResult) {
 	scheduler := model.GetScheduler()
-	tm := scheduler.GetTaskManager(instanceName)
+	tm = scheduler.GetTaskManager(instanceName)
+
 	if tm == nil {
-		return
+		return nil, &model.InstanceResult{
+			Name:     instanceName,
+			TaskName: "",
+			Success:  false,
+			Error:    "TaskManager not found",
+		}
 	}
 
-	// Don't start if instance is updating
+	if tm.Status == model.StatusFailed {
+		errMsg := tm.LastError
+		if errMsg == "" {
+			errMsg = "Instance in failed state"
+		}
+		return tm, &model.InstanceResult{
+			Name:     instanceName,
+			TaskName: "",
+			Success:  false,
+			Error:    errMsg,
+		}
+	}
+
+	return tm, nil
+}
+
+// StartOne runs tasks for a single instance (public wrapper)
+func (s *SchedulerService) StartOne(instanceName string) {
+	s.startOne(instanceName)
+}
+
+// startOne runs tasks for a single instance and returns result
+func (s *SchedulerService) startOne(instanceName string) model.InstanceResult {
+	tm, errResult := s.validateTaskManager(instanceName)
+	if errResult != nil {
+		return *errResult
+	}
+
+	// Helper function to create error result
+	failWithError := func(err error, taskName string) model.InstanceResult {
+		s.stopOne(instanceName, err)
+		return model.InstanceResult{
+			Name:     instanceName,
+			TaskName: taskName,
+			Success:  false,
+			Error:    err.Error(),
+		}
+	}
+
 	if tm.Status == model.StatusUpdating {
 		utils.Logger.Warnf("[%s]: Cannot start - instance is updating", instanceName)
-		return
+		return model.InstanceResult{
+			Name:     instanceName,
+			TaskName: "",
+			Success:  false,
+			Error:    "Instance is updating",
+		}
 	}
 
+	// Clear previous error message when starting a new run
+	tm.LastError = ""
 	s.UpdateInstanceStatus(instanceName, model.StatusRunning)
 	s.wsService.BroadcastQueue(instanceName)
 
 	for len(tm.Queue.Waiting) > 0 {
-		// Get information about the running task
 		taskName := tm.SwitchRun()
 		s.wsService.BroadcastQueue(instanceName)
 
 		var istInfo model.InstanceInfo
 		if err := istInfo.GetByName(instanceName); err != nil {
-			s.stopOne(instanceName, fmt.Errorf("failed to get instance info: %w", err))
-			return
+			return failWithError(fmt.Errorf("failed to get instance info: %w", err), taskName)
 		}
 
 		task := istInfo.GetTaskByName(taskName)
 		if task == nil {
-			s.stopOne(instanceName, fmt.Errorf("task not found: %s", taskName))
-			return
+			return failWithError(fmt.Errorf("task not found: %s", taskName), taskName)
 		}
 
-		// Execute command
 		cmd := task.Command
 		if strings.HasPrefix(task.Command, "py ") {
 			pythonExec := s.getVenvPython(istInfo.EnvName)
 			if pythonExec == "" {
-				s.stopOne(instanceName, fmt.Errorf("failed to find python executable in venv: %s", istInfo.EnvName))
-				return
+				return failWithError(fmt.Errorf("failed to find python executable in venv: %s", istInfo.EnvName), taskName)
 			}
 			pythonExec, err := filepath.Abs(pythonExec)
 			if err != nil {
-				s.stopOne(instanceName, fmt.Errorf("failed to get absolute path: %w", err))
-				return
+				return failWithError(fmt.Errorf("failed to get absolute path: %w", err), taskName)
 			}
 			cmd = strings.Replace(task.Command, "py ", "\""+pythonExec+"\" ", 1)
 		}
@@ -283,10 +366,14 @@ func (s *SchedulerService) StartOne(instanceName string) {
 		utils.Logger.Infof("[%s]: Running task <%s>: %s", instanceName, taskName, cmd)
 		if err := s.RunCommand(tm, cmd, istInfo.WorkDir); err != nil {
 			if errors.Is(err, ErrManualStop) {
-				return
+				return model.InstanceResult{
+					Name:     instanceName,
+					TaskName: taskName,
+					Success:  false,
+					Error:    "Manually stopped",
+				}
 			}
-			s.stopOne(instanceName, err)
-			return
+			return failWithError(err, taskName)
 		}
 
 		utils.Logger.Infof("[%s]: task %s finished", instanceName, taskName)
@@ -295,6 +382,13 @@ func (s *SchedulerService) StartOne(instanceName string) {
 	tm.SwitchRun() // Clean up the last task
 	s.UpdateInstanceStatus(instanceName, model.StatusPending)
 	s.wsService.BroadcastQueue(instanceName)
+
+	return model.InstanceResult{
+		Name:     instanceName,
+		TaskName: "", // Success - no specific failing task
+		Success:  true,
+		Error:    "",
+	}
 }
 
 // StartAll starts tasks for all instances
@@ -310,6 +404,8 @@ func (s *SchedulerService) StartAll() {
 	var instances []model.InstanceInfo
 	if err := model.GetAllInstances(&instances); err != nil {
 		utils.Logger.Error("Failed to get all instances:", err)
+		scheduler.Stop()
+		s.wsService.BroadcastState("", model.StatusPending)
 		return
 	}
 
@@ -335,12 +431,15 @@ func (s *SchedulerService) StartAll() {
 	utils.Logger.Infof("Background tasks (%d): %v", len(backgroundTasks), backgroundTasks)
 	utils.Logger.Infof("Foreground tasks (%d): %v", len(foregroundTasks), foregroundTasks)
 
+	// Initialize result tracking
+	resultChan := make(chan model.InstanceResult, len(backgroundTasks)+len(foregroundTasks))
+
 	// Handle background tasks
 	if len(backgroundTasks) > 0 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			s.runBackgroundTasks(backgroundTasks)
+			s.runBackgroundTasks(backgroundTasks, resultChan)
 		}()
 	}
 
@@ -349,13 +448,29 @@ func (s *SchedulerService) StartAll() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			s.runForegroundTasks(foregroundTasks)
+			s.runForegroundTasks(foregroundTasks, resultChan)
 		}()
 	}
 
 	// Wait for all tasks to complete before stopping the scheduler
 	go func() {
 		wg.Wait()
+		close(resultChan)
+
+		// Collect results
+		results := make([]model.InstanceResult, 0)
+		for result := range resultChan {
+			results = append(results, result)
+		}
+
+		// Build notification result
+		schedulerResult := s.buildSchedulerResult(results)
+
+		// Send notification using injected service
+		if s.notifService != nil {
+			s.notifService.SendSchedulerNotification(&schedulerResult)
+		}
+
 		utils.Logger.Info("All tasks completed, stopping scheduler")
 		scheduler.Stop()
 		scheduler.TriggerCloseFunc()
@@ -363,40 +478,36 @@ func (s *SchedulerService) StartAll() {
 	}()
 }
 
-// runWithCheck waits for instance updates to complete before execution
-func (s *SchedulerService) runWithCheck(istName string) {
+// runWithCheck waits for instance updates to complete before execution and returns result
+func (s *SchedulerService) runWithCheck(istName string) model.InstanceResult {
 	scheduler := model.GetScheduler()
 	for {
 		if !scheduler.IsRunning {
-			return
+			return model.InstanceResult{
+				Name:     istName,
+				TaskName: "",
+				Success:  false,
+				Error:    "Scheduler stopped",
+			}
 		}
 
-		tm := scheduler.GetTaskManager(istName)
-		if tm == nil {
-			utils.Logger.Warnf("TaskManager not found for instance: %s", istName)
-			return
+		tm, errResult := s.validateTaskManager(istName)
+		if errResult != nil {
+			utils.Logger.Warnf("Skip instance %s: %s", istName, errResult.Error)
+			return *errResult
 		}
 
 		if tm.Status == model.StatusUpdating {
-			utils.Logger.Debugf("Instance %s is still updating, waiting...", istName)
-			time.Sleep(10 * time.Second)
+			time.Sleep(UpdateCheckInterval)
 			continue
 		}
 
-		if tm.Status == model.StatusFailed {
-			utils.Logger.Warnf("Skip failed instance: %s", istName)
-			return
-		}
-
-		if tm.Status == model.StatusPending {
-			s.StartOne(istName)
-		}
-		return
+		return s.startOne(istName)
 	}
 }
 
 // runBackgroundTasks executes background tasks concurrently with limit
-func (s *SchedulerService) runBackgroundTasks(tasks []string) {
+func (s *SchedulerService) runBackgroundTasks(tasks []string, resultChan chan<- model.InstanceResult) {
 	utils.Logger.Info("Starting background tasks")
 	var wg sync.WaitGroup
 
@@ -431,13 +542,13 @@ func (s *SchedulerService) runBackgroundTasks(tasks []string) {
 		go func(name string) {
 			defer wg.Done()
 
-			// Acquire semaphore (blocks if limit reached) only if limit is set
 			if semaphore != nil {
 				semaphore <- struct{}{}
-				defer func() { <-semaphore }() // Release semaphore
+				defer func() { <-semaphore }()
 			}
 
-			s.runWithCheck(name)
+			result := s.runWithCheck(name)
+			resultChan <- result
 		}(istName)
 	}
 
@@ -446,7 +557,7 @@ func (s *SchedulerService) runBackgroundTasks(tasks []string) {
 }
 
 // runForegroundTasks executes foreground tasks sequentially
-func (s *SchedulerService) runForegroundTasks(tasks []string) {
+func (s *SchedulerService) runForegroundTasks(tasks []string, resultChan chan<- model.InstanceResult) {
 	utils.Logger.Info("Starting foreground tasks")
 	scheduler := model.GetScheduler()
 
@@ -459,26 +570,26 @@ func (s *SchedulerService) runForegroundTasks(tasks []string) {
 				return
 			}
 
-			tm := scheduler.GetTaskManager(istName)
-			if tm == nil {
+			tm, errResult := s.validateTaskManager(istName)
+			if errResult != nil {
+				utils.Logger.Warnf("Skip instance %s: %s", istName, errResult.Error)
+				resultChan <- *errResult
 				continue
 			}
 
-			switch tm.Status {
-			case model.StatusUpdating:
+			if tm.Status == model.StatusUpdating {
 				remainingTasks = append(remainingTasks, istName)
-			case model.StatusFailed:
-				utils.Logger.Warnf("Skip failed instance: %s", istName)
-			default:
+			} else {
 				allUpdating = false
-				s.StartOne(istName)
+				result := s.startOne(istName)
+				resultChan <- result
 			}
 		}
 
 		tasks = remainingTasks
 		if allUpdating && len(tasks) > 0 {
 			utils.Logger.Debug("All remaining foreground tasks are updating, waiting...")
-			time.Sleep(10 * time.Second)
+			time.Sleep(UpdateCheckInterval)
 		}
 	}
 
@@ -513,4 +624,28 @@ func (s *SchedulerService) StopAll() {
 	}
 
 	scheduler.TriggerCloseFunc()
+}
+
+// buildSchedulerResult builds the final scheduler result from instance results
+func (s *SchedulerService) buildSchedulerResult(results []model.InstanceResult) model.SchedulerResult {
+	schedulerResult := model.SchedulerResult{
+		Success:      true,
+		FailedCount:  0,
+		SuccessCount: 0,
+		TotalCount:   len(results),
+		FailedNames:  make([]string, 0),
+		Results:      results,
+	}
+
+	for _, result := range results {
+		if result.Success {
+			schedulerResult.SuccessCount++
+		} else {
+			schedulerResult.FailedCount++
+			schedulerResult.FailedNames = append(schedulerResult.FailedNames, result.Name)
+			schedulerResult.Success = false
+		}
+	}
+
+	return schedulerResult
 }

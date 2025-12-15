@@ -4,6 +4,7 @@ import (
 	"context"
 	"dacapo/backend/controller"
 	"dacapo/backend/model"
+	"dacapo/backend/service"
 	"dacapo/backend/utils"
 	"os"
 	"os/exec"
@@ -99,7 +100,9 @@ func (a App) DomReady(ctx context.Context) {
 	c := cron.New()
 	for _, instance := range instances {
 		if instance.Ready && instance.CronExpr != "" {
-			entryID, err := c.AddFunc(instance.CronExpr, func() { controller.StartOne(instance.Name) })
+			entryID, err := c.AddFunc(instance.CronExpr, func() {
+				service.GetServiceManager().SchedulerService().StartOne(instance.Name)
+			})
 			if err != nil {
 				utils.Logger.Errorf("[%s]: Failed to add cron job: %v", instance.Name, err)
 			} else {
@@ -116,13 +119,13 @@ func (a App) DomReady(ctx context.Context) {
 	if settings.RunOnStartup {
 		utils.Logger.Info("Run on startup is enabled, starting scheduler")
 		scheduler.AutoClose = true
-		go controller.StartAll()
+		go service.GetServiceManager().SchedulerService().StartAll()
 	} else if settings.SchedulerCron != "" {
 		// If runOnStartup is false but schedulerCron is set, use cron scheduling
 		scheduler.CronExpr = settings.SchedulerCron
 		entryID, err := c.AddFunc(scheduler.CronExpr, func() {
 			scheduler.AutoClose = true
-			controller.StartAll()
+			service.GetServiceManager().SchedulerService().StartAll()
 		})
 		if err != nil {
 			utils.Logger.Errorf("Scheduler failed to add cron job: %v", err)
@@ -168,7 +171,7 @@ func (a App) DomReady(ctx context.Context) {
 // either by clicking the window close button or calling runtime.Quit.
 // Returning true will cause the application to continue, false will continue shutdown as normal.
 func (a *App) BeforeClose(ctx context.Context) (prevent bool) {
-	controller.StopAll()
+	service.GetServiceManager().SchedulerService().StopAll()
 
 	// Stop file watcher
 	fileWatcher := controller.GetFileWatcher()

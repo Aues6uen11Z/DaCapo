@@ -276,6 +276,40 @@
                   @click="openLog"
                 />
               </div>
+
+              <!-- Notification Settings -->
+              <div
+                class="tw-grid tw-grid-cols-2 tw-gap-8 tw-place-items-center tw-w-full"
+              >
+                <div class="tw-flex tw-items-center">
+                  <q-icon name="notifications" size="md" class="tw-mr-2" />
+                  <span class="tw-text-xl tw-font-bold">{{
+                    t('settings.notification')
+                  }}</span>
+                </div>
+                <q-input
+                  dense
+                  outlined
+                  :type="isPwdVisible ? 'text' : 'password'"
+                  v-model="serverChanSendKey"
+                  :placeholder="t('settings.serverChanPlaceholder')"
+                  @blur="onServerChanSendKeyBlur"
+                >
+                  <template v-slot:prepend>
+                    <q-icon name="key" />
+                  </template>
+                  <template v-slot:append>
+                    <q-icon
+                      :name="isPwdVisible ? 'visibility' : 'visibility_off'"
+                      class="cursor-pointer"
+                      @click="isPwdVisible = !isPwdVisible"
+                    />
+                    <q-btn flat dense icon="help" @click="openServerChanHelp">
+                      <q-tooltip>{{ t('settings.serverChanHelp') }}</q-tooltip>
+                    </q-btn>
+                  </template>
+                </q-input>
+              </div>
             </div>
           </q-tab-panel>
           <!-- About Panel -->
@@ -657,6 +691,19 @@ const language = ref(settingsStore.language);
 const onLanguageChange = (newLang: MessageLanguages) => {
   settingsStore.setLanguage(newLang, i18n);
 };
+
+const serverChanSendKey = ref(settingsStore.serverChanSendKey);
+const isPwdVisible = ref(false);
+const onServerChanSendKeyBlur = () => {
+  // Only save when user finishes editing (blur event)
+  if (serverChanSendKey.value !== settingsStore.serverChanSendKey) {
+    settingsStore.setServerChanSendKey(serverChanSendKey.value);
+  }
+};
+const openServerChanHelp = () => {
+  window.open('https://sct.ftqq.com', '_blank');
+};
+
 const openLog = async () => {
   await OpenFileExplorer('.', 'logs');
 };

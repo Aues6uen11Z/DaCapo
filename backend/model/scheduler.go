@@ -14,6 +14,24 @@ const (
 	StatusFailed   string = "failed"
 )
 
+// SchedulerResult represents the result of a scheduler run
+type SchedulerResult struct {
+	Success      bool
+	FailedCount  int
+	SuccessCount int
+	TotalCount   int
+	FailedNames  []string
+	Results      []InstanceResult
+}
+
+// InstanceResult represents the result of a single instance execution
+type InstanceResult struct {
+	Name     string
+	TaskName string // Name of the task that failed (if applicable)
+	Success  bool
+	Error    string
+}
+
 // TaskQueue represents the task queue status for an instance
 type TaskQueue struct {
 	Running string   `json:"running"`
@@ -28,6 +46,7 @@ type TaskManager struct {
 	Queue        TaskQueue
 	Cmd          *exec.Cmd // Current executing command
 	ManualStop   bool
+	LastError    string // Last error message
 }
 
 // SwitchRun switches to the next task in the queue and returns its name

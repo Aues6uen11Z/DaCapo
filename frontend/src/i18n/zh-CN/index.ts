@@ -104,6 +104,9 @@ export default {
     shutdown: '关机',
 
     language: '语言',
+    notification: '推送',
+    serverChanPlaceholder: 'Server酱 SendKey',
+    serverChanHelp: '如何获取 SendKey',
     log: '日志',
     openLog: '打开目录',
     homepage: '主页',

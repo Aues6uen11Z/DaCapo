@@ -9,9 +9,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var schedulerService = Services.SchedulerService()
-var wsService = Services.WebSocketService()
-
 // CreateWS establishes a unified WebSocket connection for all message types
 func CreateWS(c *gin.Context) {
 	upgrader := websocket.Upgrader{
@@ -37,7 +34,7 @@ func CreateWS(c *gin.Context) {
 		}
 	}
 
-	wsService.HandleConnection(conn, messageHandler)
+	Services.WebSocketService().HandleConnection(conn, messageHandler)
 }
 
 // UpdateTaskQueue updates the task queue
@@ -49,7 +46,7 @@ func UpdateTaskQueue(c *gin.Context) {
 		return
 	}
 
-	schedulerService.UpdateTaskQueue(req.Queues)
+	Services.SchedulerService().UpdateTaskQueue(req.Queues)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    model.StatusSuccess.Code,
@@ -67,7 +64,7 @@ func UpdateSchedulerState(c *gin.Context) {
 		return
 	}
 
-	schedulerService.UpdateSchedulerState(req.Type, req.InstanceName)
+	Services.SchedulerService().UpdateSchedulerState(req.Type, req.InstanceName)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    model.StatusSuccess.Code,
@@ -78,7 +75,7 @@ func UpdateSchedulerState(c *gin.Context) {
 
 func GetTaskQueue(c *gin.Context) {
 	instanceName := c.Param("instance_name")
-	schedulerService.GetTaskQueue(instanceName)
+	Services.SchedulerService().GetTaskQueue(instanceName)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    model.StatusSuccess.Code,
@@ -95,28 +92,11 @@ func SetSchedulerCron(c *gin.Context) {
 		return
 	}
 
-	schedulerService.SetSchedulerCron(req.CronExpr)
+	Services.SchedulerService().SetSchedulerCron(req.CronExpr)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    model.StatusSuccess.Code,
 		"message": model.StatusSuccess.Message,
 		"detail":  "",
 	})
-}
-
-// Public functions for app.go
-
-// StartOne runs tasks for a single instance
-func StartOne(instanceName string) {
-	schedulerService.StartOne(instanceName)
-}
-
-// StartAll starts tasks for all instances
-func StartAll() {
-	schedulerService.StartAll()
-}
-
-// StopAll stops the scheduler and all tasks
-func StopAll() {
-	schedulerService.StopAll()
 }

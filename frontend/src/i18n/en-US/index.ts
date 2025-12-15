@@ -112,6 +112,9 @@ export default {
     shutdown: 'Shutdown',
 
     language: 'Language',
+    notification: 'Notification',
+    serverChanPlaceholder: 'ServerChan SendKey',
+    serverChanHelp: 'How to get SendKey',
     log: 'Log',
     openLog: 'Open directory',
     homepage: 'Homepage',

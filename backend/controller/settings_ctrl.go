@@ -2,6 +2,7 @@ package controller
 
 import (
 	"dacapo/backend/model"
+	"dacapo/backend/service"
 	"dacapo/backend/utils"
 	"net/http"
 
@@ -27,6 +28,7 @@ func GetSettings(c *gin.Context) {
 		AutoActionCron:    settings.AutoActionCron,
 		AutoActionType:    settings.AutoActionType,
 		MaxBgConcurrent:   settings.MaxBgConcurrent,
+		ServerChanSendKey: settings.ServerChanSendKey,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -47,6 +49,15 @@ func UpdateSettings(c *gin.Context) {
 		})
 		utils.Logger.Error("Failed to save settings:", err)
 		return
+	}
+
+	// Reload notification service if SendKey was updated
+	if req.ServerChanSendKey != nil {
+		sm := service.GetServiceManager()
+		if err := sm.ReloadNotificationService(); err != nil {
+			utils.Logger.Warn("Failed to reload notification service:", err)
+			// Don't fail the request, just log the warning
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{

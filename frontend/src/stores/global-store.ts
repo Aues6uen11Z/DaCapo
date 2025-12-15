@@ -388,6 +388,7 @@ export const useSettingsStore = defineStore('settings', {
     autoActionCron: '',
     autoActionType: 'none', // 'none' | 'close_app' | 'hibernate' | 'shutdown'
     maxBgConcurrent: 0,
+    serverChanSendKey: '',
     appUpdateStatus: 'unknown' as
       | 'unknown'
       | 'available'
@@ -453,6 +454,10 @@ export const useSettingsStore = defineStore('settings', {
         await this.saveSettings();
       }
     },
+    async setServerChanSendKey(value: string) {
+      this.serverChanSendKey = value;
+      await this.saveSettings();
+    },
     async loadSettings(i18n: Composer, quasar: QVueGlobals) {
       try {
         const settings = await fetchSettings();
@@ -482,7 +487,9 @@ export const useSettingsStore = defineStore('settings', {
         this.autoActionTrigger = settings.autoActionTrigger || 'scheduler_end';
         this.autoActionCron = settings.autoActionCron || '';
         this.autoActionType = settings.autoActionType || 'none';
-        this.maxBgConcurrent = settings.maxBgConcurrent ?? 0; // Validate settings
+        this.maxBgConcurrent = settings.maxBgConcurrent ?? 0;
+        this.serverChanSendKey = settings.serverChanSendKey || '';
+        // Validate settings
         const validTriggers = ['scheduler_end', 'scheduled'];
         const validTypes = ['none', 'close_app', 'hibernate', 'shutdown'];
 
@@ -639,6 +646,7 @@ export const useSettingsStore = defineStore('settings', {
           autoActionCron: this.autoActionCron,
           autoActionType: this.autoActionType,
           maxBgConcurrent: this.maxBgConcurrent,
+          serverChanSendKey: this.serverChanSendKey,
         });
       } catch (error) {
         console.error('Failed to save settings:', error);

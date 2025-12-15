@@ -7,12 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var instanceUpdaterService = Services.InstanceUpdaterService()
-
 func UpdateRepo(c *gin.Context) {
 	instanceName := c.Param("instance_name")
 
-	result, err := instanceUpdaterService.UpdateRepo(instanceName)
+	result, err := Services.InstanceUpdaterService().UpdateRepo(instanceName)
 	if err != nil {
 		utils.Logger.Errorf("[%s]: %v", instanceName, err)
 	}
