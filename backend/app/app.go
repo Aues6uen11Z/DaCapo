@@ -45,6 +45,11 @@ func (a *App) Startup(ctx context.Context) {
 	utils.SetAppVersion(Version)
 	utils.SetAppContext(ctx)
 
+	// Wake up the screen on startup
+	if err := utils.WakeScreen(); err != nil {
+		utils.Logger.Error("Failed to wake screen: %v", err)
+	}
+
 	// Check if the symlink is valid, if not, create it
 	paths, err := model.GetConfigPaths()
 	if err == nil {
