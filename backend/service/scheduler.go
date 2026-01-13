@@ -52,6 +52,9 @@ func (s *SchedulerService) UpdateInstanceStatus(instanceName, status string) {
 func (s *SchedulerService) UpdateSchedulerState(actionType, instanceName string) {
 	if actionType == "start" {
 		if instanceName == "" {
+			// Manual start - disable auto close to prevent unexpected shutdown/hibernate
+			scheduler := model.GetScheduler()
+			scheduler.AutoClose = false
 			go s.StartAll()
 		} else {
 			go s.StartOne(instanceName)
