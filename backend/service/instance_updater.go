@@ -80,17 +80,22 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 			}, err
 		}
 
-		depsPath := filepath.Join(istInfo.LocalPath, istInfo.DepsPath)
-		envLastUpdate := istInfo.EnvLastUpdate
-		if err = s.installDeps(tm, envPath, depsPath, envLastUpdate); err != nil {
-			s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
-			return model.RspUpdateRepo{
-				Code:    model.StatusPython.Code,
-				Message: model.StatusPython.Message,
-				Detail:  err.Error(),
-			}, err
+		// Install dependencies only if DepsPath is specified
+		if istInfo.DepsPath != "" {
+			depsPath := filepath.Join(istInfo.LocalPath, istInfo.DepsPath)
+			envLastUpdate := istInfo.EnvLastUpdate
+			if err = s.installDeps(tm, envPath, depsPath, envLastUpdate); err != nil {
+				s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
+				return model.RspUpdateRepo{
+					Code:    model.StatusPython.Code,
+					Message: model.StatusPython.Message,
+					Detail:  err.Error(),
+				}, err
+			}
+			istInfo.UpdateField("env_last_update", time.Now())
+		} else {
+			utils.Logger.Infof("[%s]: DepsPath not set, skipping dependency installation", instanceName)
 		}
-		istInfo.UpdateField("env_last_update", time.Now())
 	}
 
 	// Update layout if template file has changed
