@@ -269,7 +269,10 @@ func (s *SchedulerService) processOutput(pipe io.ReadCloser, instanceName string
 }
 
 // validateTaskManager validates TaskManager state and returns an error result if invalid
-func (s *SchedulerService) validateTaskManager(instanceName string) (tm *model.TaskManager, result *model.InstanceResult) {
+// allowFailed: if true, allows restarting failed instances (for manual start)
+//
+//	if false, blocks failed instances (for scheduler auto-start)
+func (s *SchedulerService) validateTaskManager(instanceName string, allowFailed bool) (tm *model.TaskManager, result *model.InstanceResult) {
 	scheduler := model.GetScheduler()
 	tm = scheduler.GetTaskManager(instanceName)
 
@@ -282,7 +285,8 @@ func (s *SchedulerService) validateTaskManager(instanceName string) (tm *model.T
 		}
 	}
 
-	if tm.Status == model.StatusFailed {
+	// Check failed state based on context
+	if !allowFailed && tm.Status == model.StatusFailed {
 		errMsg := tm.LastError
 		if errMsg == "" {
 			errMsg = "Instance in failed state"
@@ -305,7 +309,8 @@ func (s *SchedulerService) StartOne(instanceName string) {
 
 // startOne runs tasks for a single instance and returns result
 func (s *SchedulerService) startOne(instanceName string) model.InstanceResult {
-	tm, errResult := s.validateTaskManager(instanceName)
+	// Allow manual restart of failed instances
+	tm, errResult := s.validateTaskManager(instanceName, true)
 	if errResult != nil {
 		return *errResult
 	}
@@ -491,7 +496,8 @@ func (s *SchedulerService) runWithCheck(istName string) model.InstanceResult {
 			}
 		}
 
-		tm, errResult := s.validateTaskManager(istName)
+		// Do not allow scheduler to execute failed instances
+		tm, errResult := s.validateTaskManager(istName, false)
 		if errResult != nil {
 			utils.Logger.Warnf("Skip instance %s: %s", istName, errResult.Error)
 			return *errResult
@@ -570,7 +576,8 @@ func (s *SchedulerService) runForegroundTasks(tasks []string, resultChan chan<- 
 				return
 			}
 
-			tm, errResult := s.validateTaskManager(istName)
+			// Do not allow scheduler to execute failed instances
+			tm, errResult := s.validateTaskManager(istName, false)
 			if errResult != nil {
 				utils.Logger.Warnf("Skip instance %s: %s", istName, errResult.Error)
 				resultChan <- *errResult
