@@ -61,21 +61,6 @@ jobs:
           echo "COMPARE_URL=https://github.com/Aues6uen11Z/DaCapo/compare/${PREVIOUS_TAG}...${CURRENT_TAG}" >> $GITHUB_ENV
           echo "Compare URL: https://github.com/Aues6uen11Z/DaCapo/compare/${PREVIOUS_TAG}...${CURRENT_TAG}"
 
-      - name: Download UV
-        shell: bash
-        run: |
-          echo "Downloading UV v0.9.4..."
-          mkdir -p tools
-
-          curl -LsSf https://github.com/astral-sh/uv/releases/download/0.9.4/uv-x86_64-pc-windows-msvc.zip -o uv.zip
-          unzip uv.zip
-          mv uv.exe tools/
-          rm uv.zip
-
-          echo "UV downloaded successfully:"
-          ls -la tools/
-          ./tools/uv.exe --version
-
       - name: Update version in files
         shell: bash
         run: |
@@ -97,17 +82,11 @@ jobs:
           nsis: true
           package: false
 
-      - name: Debug
-        run: |
-          dir build/bin
-          dir tools
-
       - name: Prepare release
         shell: bash
         run: |
           mkdir -p DaCapo
           cp build/bin/DaCapo.exe DaCapo/
-          cp -r tools DaCapo/
           powershell Compress-Archive -Path DaCapo -DestinationPath DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-portable.zip
 
           cp build/bin/DaCapo-amd64-installer.exe DaCapo-v${{ env.VERSION }}-${{ matrix.build.name }}-installer.exe

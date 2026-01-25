@@ -47,10 +47,10 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 	if err := utils.RemoveLink(istInfo.ConfigPath); err != nil {
 		utils.Logger.Warnf("[%s]: Failed to remove symlink: %v", instanceName, err)
 	}
-	cmdLog, err := utils.GitPull(istInfo.LocalPath)
-	utils.Logger.Infof("[%s]: %s", instanceName, cmdLog)
-	utils.CheckLink(filepath.Join("instances", instanceName+".json"), istInfo.ConfigPath)
-	if err != nil {
+	utils.Logger.Infof("[%s]: Pulling latest changes", instanceName)
+	if _, err := utils.GitPull(istInfo.LocalPath); err != nil {
+		utils.Logger.Errorf("[%s]: Failed to pull: %v", instanceName, err)
+		utils.CheckLink(filepath.Join("instances", instanceName+".json"), istInfo.ConfigPath)
 		s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 		return model.RspUpdateRepo{
 			Code:    model.StatusGit.Code,
@@ -58,6 +58,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 			Detail:  err.Error(),
 		}, err
 	}
+	utils.Logger.Infof("[%s]: Repository updated successfully", instanceName)
 
 	// Create/update Python environment
 	if istInfo.EnvName != "" {
@@ -161,16 +162,23 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 // createEnv creates a Python virtual environment
 func (s *InstanceUpdaterService) createEnv(tm *model.TaskManager, envPath string, pythonVersion string) error {
 	if _, err := os.Stat(envPath); errors.Is(err, fs.ErrNotExist) {
-		uvPath := "./tools/uv.exe"
 		var cmd string
 
-		// Check if uv exists
-		if _, err := os.Stat(uvPath); err == nil && pythonVersion != "" {
+		// Try to get UV executable (system -> bundled -> download)
+		uvPath, err := utils.GetUVExecutable()
+		if err == nil && pythonVersion != "" {
+			// Use uv to create venv with specific Python version
 			cmd = fmt.Sprintf("%s venv --python %s %s", uvPath, pythonVersion, envPath)
 			utils.Logger.Infof("[%s]: Creating venv with uv: %s", tm.InstanceName, cmd)
 		} else {
+			// Fallback to system python
+			if err != nil {
+				utils.Logger.Warnf("[%s]: UV not available (%v), using system python", tm.InstanceName, err)
+			} else {
+				utils.Logger.Warnf("[%s]: Python version not set, using system python", tm.InstanceName)
+			}
 			cmd = fmt.Sprintf("python -m venv %s", envPath)
-			utils.Logger.Warnf("[%s]: uv not found or python version not set, using default python command to create venv: %s", tm.InstanceName, cmd)
+			utils.Logger.Infof("[%s]: Creating venv with python: %s", tm.InstanceName, cmd)
 		}
 
 		if err := s.schedulerService.RunCommand(tm, cmd, ""); err != nil {
@@ -258,18 +266,22 @@ func (s *InstanceUpdaterService) installDeps(tm *model.TaskManager, envPath, dep
 		return nil
 	}
 
-	uvPath := "./tools/uv.exe"
 	var cmd string
 	fastestMirror, err := getPyPIMirror()
 	if err != nil {
 		return err
 	}
 
-	if _, err := os.Stat(uvPath); err == nil {
+	// Try to get UV executable (system -> bundled -> download)
+	uvPath, uvErr := utils.GetUVExecutable()
+	if uvErr == nil {
+		// Use uv to install dependencies
 		cmd = fmt.Sprintf("%s pip install -r %s --python %s -i %s",
 			uvPath, depsPath, envPath, fastestMirror)
 		utils.Logger.Infof("[%s]: Installing dependencies with uv: %s", tm.InstanceName, cmd)
 	} else {
+		// Fallback to pip
+		utils.Logger.Warnf("[%s]: UV not available (%v), using pip", tm.InstanceName, uvErr)
 		pythonExec := s.getVenvPython(filepath.Base(envPath))
 		if pythonExec == "" {
 			return fmt.Errorf("python not found in %s", envPath)

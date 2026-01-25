@@ -114,11 +114,12 @@ func (s *InstanceService) getRepoName(url string) string {
 func (s *InstanceService) CreateFromRemote(req model.ReqFromRemote) (model.Status, error) {
 	// 1. Clone the repository
 	repoName := s.getRepoName(req.URL)
-	cmdLog, err := utils.GitClone(req.URL, req.LocalPath, req.Branch)
-	utils.Logger.Infof("[%s]: %s", req.InstanceName, cmdLog)
-	if err != nil {
+	utils.Logger.Infof("[%s]: Cloning repository from %s", req.InstanceName, req.URL)
+	if err := utils.GitClone(req.URL, req.LocalPath, req.Branch); err != nil {
+		utils.Logger.Errorf("[%s]: Failed to clone repository: %v", req.InstanceName, err)
 		return model.StatusGit, err
 	}
+	utils.Logger.Infof("[%s]: Repository cloned successfully", req.InstanceName)
 
 	// 2. Create a new instance, with operations similar to local creation
 	templatePath := filepath.Join(req.LocalPath, repoName, req.TemplateRelPath)
