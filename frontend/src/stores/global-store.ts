@@ -339,7 +339,19 @@ export const useSchedulerStore = defineStore('scheduler', {
             this.schedulerRunning = data.state === 'running';
           }
         } else if (data.type === 'log' && data.instance_name && data.content) {
-          (this.logs[data.instance_name] ??= []).push(data.content);
+          const logs = (this.logs[data.instance_name] ??= []);
+          logs.push(data.content);
+          // Limit log buffer size to prevent memory issues
+          const MAX_LOG_LINES = 5000;
+          const TRUNCATE_NOTICE =
+            '--- Log truncated. Check local log file for full output. ---';
+          if (logs.length > MAX_LOG_LINES) {
+            logs.splice(0, logs.length - MAX_LOG_LINES);
+            // Add notice at the beginning if not already there
+            if (logs[0] !== TRUNCATE_NOTICE) {
+              logs[0] = TRUNCATE_NOTICE;
+            }
+          }
         } else if (data.type === 'file_change' && data.instance_name) {
           // Handle file modification notifications
           // Trigger a reload of the instance configuration
