@@ -41,16 +41,14 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 	}
 
 	s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusUpdating)
-	utils.Logger.Infof("[%s]: Updating", instanceName)
 
 	// Pull latest code
 	if err := utils.RemoveLink(istInfo.ConfigPath); err != nil {
 		utils.Logger.Warnf("[%s]: Failed to remove symlink: %v", instanceName, err)
 	}
 	utils.Logger.Infof("[%s]: Pulling latest changes", instanceName)
-	if _, err := utils.GitPull(istInfo.LocalPath); err != nil {
+	if err := utils.GitPull(istInfo.LocalPath); err != nil {
 		utils.Logger.Errorf("[%s]: Failed to pull: %v", instanceName, err)
-		utils.CheckLink(filepath.Join("instances", instanceName+".json"), istInfo.ConfigPath)
 		s.schedulerService.UpdateInstanceStatus(instanceName, model.StatusFailed)
 		return model.RspUpdateRepo{
 			Code:    model.StatusGit.Code,
@@ -58,6 +56,7 @@ func (s *InstanceUpdaterService) UpdateRepo(instanceName string) (model.RspUpdat
 			Detail:  err.Error(),
 		}, err
 	}
+	utils.CheckLink(filepath.Join("instances", instanceName+".json"), istInfo.ConfigPath)
 	utils.Logger.Infof("[%s]: Repository updated successfully", instanceName)
 
 	// Create/update Python environment

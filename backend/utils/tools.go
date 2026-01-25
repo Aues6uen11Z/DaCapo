@@ -280,7 +280,6 @@ func runGitCommand(args []string, workDir string) error {
 
 // GitClone clones a git repository
 func GitClone(repoURL, localDir, branch string) error {
-	// Extract repository name from URL (e.g., "repo.git" -> "repo")
 	parts := strings.Split(repoURL, "/")
 	repoName := strings.TrimSuffix(parts[len(parts)-1], ".git")
 	repoPath := filepath.Join(localDir, repoName)
@@ -302,41 +301,27 @@ func GitClone(repoURL, localDir, branch string) error {
 	return nil
 }
 
-// GitCheckout checks out a specific branch
-func GitCheckout(repoPath, branch string) error {
-	if err := runGitCommand([]string{"checkout", branch}, repoPath); err != nil {
-		return fmt.Errorf("failed to checkout branch: %w", err)
+// GitPull pulls the latest changes from the remote repository
+// If conflicts occur, it resets to the remote branch
+func GitPull(repoPath string) error {
+	if err := runGitCommand([]string{"pull", "origin"}, repoPath); err != nil {
+		if strings.Contains(err.Error(), "Already up to date") {
+			return nil
+		}
+
+		Logger.Warn("Pull failed due to conflicts, resetting to remote branch")
+		runGitCommand([]string{"merge", "--abort"}, repoPath)
+		// Fetch and reset to remote tracking branch
+		if err = runGitCommand([]string{"fetch", "origin"}, repoPath); err != nil {
+			return fmt.Errorf("failed to fetch: %w", err)
+		}
+		if err = runGitCommand([]string{"reset", "--hard", "@{u}"}, repoPath); err != nil {
+			return fmt.Errorf("failed to reset to remote: %w", err)
+		}
+		Logger.Info("Successfully reset to remote branch")
 	}
 
 	return nil
-}
-
-// GitPull pulls the latest changes from the remote repository
-func GitPull(repoPath string) (cmd string, err error) {
-	if err = runGitCommand([]string{"pull", "origin"}, repoPath); err != nil {
-		errMsg := err.Error()
-
-		// Check if it's a merge conflict
-		if strings.Contains(errMsg, "conflict") || strings.Contains(errMsg, "would be overwritten") {
-			// Abort any ongoing merge
-			runGitCommand([]string{"merge", "--abort"}, repoPath)
-
-			// Fetch and reset to remote tracking branch
-			if err = runGitCommand([]string{"fetch", "origin"}, repoPath); err != nil {
-				return cmd, fmt.Errorf("failed to fetch: %w", err)
-			}
-
-			if err = runGitCommand([]string{"reset", "--hard", "@{u}"}, repoPath); err != nil {
-				return cmd, fmt.Errorf("failed to reset to remote: %w", err)
-			}
-
-			return cmd, nil
-		}
-
-		return cmd, fmt.Errorf("failed to pull: %w", err)
-	}
-
-	return
 }
 
 // GetVenvPython returns the path to the Python executable in a virtual environment.
