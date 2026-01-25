@@ -114,19 +114,6 @@ func (s *SchedulerService) stopOne(instanceName string, err error) {
 	}
 }
 
-// getVenvPython gets the Python executable path for a virtual environment
-func (s *SchedulerService) getVenvPython(envName string) string {
-	if envName == "" {
-		return ""
-	}
-
-	venvPath := filepath.Join("envs", envName)
-	if runtime.GOOS == "windows" {
-		return filepath.Join(venvPath, "Scripts", "python.exe")
-	}
-	return filepath.Join(venvPath, "bin", "python")
-}
-
 // runCommand executes a command and processes the output
 func (s *SchedulerService) RunCommand(tm *model.TaskManager, command string, workDir string) error {
 	// Create command
@@ -360,7 +347,7 @@ func (s *SchedulerService) startOne(instanceName string) model.InstanceResult {
 
 		cmd := task.Command
 		if strings.HasPrefix(task.Command, "py ") {
-			pythonExec := s.getVenvPython(istInfo.EnvName)
+			pythonExec := utils.GetVenvPython(istInfo.EnvName)
 			if pythonExec == "" {
 				return failWithError(fmt.Errorf("failed to find python executable in venv: %s", istInfo.EnvName), taskName)
 			}

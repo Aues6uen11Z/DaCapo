@@ -338,3 +338,26 @@ func GitPull(repoPath string) (cmd string, err error) {
 
 	return
 }
+
+// GetVenvPython returns the path to the Python executable in a virtual environment.
+// It searches common locations for Python executables across different platforms and venv types.
+func GetVenvPython(envName string) string {
+	if envName == "" {
+		return ""
+	}
+
+	possiblePaths := []string{
+		filepath.Join("envs", envName, "Scripts", "python.exe"), // Windows venv
+		filepath.Join("envs", envName, "bin", "python"),         // Unix venv
+		filepath.Join("envs", envName, "python.exe"),            // Windows embed python
+		filepath.Join("envs", envName, "python"),                // Unix embed python
+	}
+
+	for _, path := range possiblePaths {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+
+	return ""
+}

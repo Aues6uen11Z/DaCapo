@@ -189,22 +189,6 @@ func (s *InstanceUpdaterService) createEnv(tm *model.TaskManager, envPath string
 	return nil
 }
 
-// getVenvPython returns the path to the Python executable in the virtual environment
-func (s *InstanceUpdaterService) getVenvPython(envName string) string {
-	possiblePaths := []string{
-		filepath.Join("./envs", envName, "Scripts", "python.exe"), // Windows venv
-		filepath.Join("./envs", envName, "bin", "python"),         // Unix venv
-		filepath.Join("./envs", envName, "python.exe"),            // Windows embed python
-		filepath.Join("./envs", envName, "python"),                // Unix embed python
-	}
-	for _, path := range possiblePaths {
-		if _, err := os.Stat(path); err == nil {
-			return path
-		}
-	}
-	return ""
-}
-
 // getPyPIMirror returns the fastest available PyPI mirror URL
 func getPyPIMirror() (string, error) {
 	mirrors := map[string]string{
@@ -282,7 +266,7 @@ func (s *InstanceUpdaterService) installDeps(tm *model.TaskManager, envPath, dep
 	} else {
 		// Fallback to pip
 		utils.Logger.Warnf("[%s]: UV not available (%v), using pip", tm.InstanceName, uvErr)
-		pythonExec := s.getVenvPython(filepath.Base(envPath))
+		pythonExec := utils.GetVenvPython(filepath.Base(envPath))
 		if pythonExec == "" {
 			return fmt.Errorf("python not found in %s", envPath)
 		}
