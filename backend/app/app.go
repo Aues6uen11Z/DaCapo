@@ -184,6 +184,9 @@ func (a *App) BeforeClose(ctx context.Context) (prevent bool) {
 		fileWatcher.Stop()
 	}
 
+	// Close instance log files
+	service.GetInstanceLogService().CloseAll()
+
 	model.CloseDB()
 	return false
 }
@@ -216,9 +219,12 @@ func (a *App) SelectFile() string {
 }
 
 // OpenFileExplorer opens the file explorer at the specified directory path
-func (a *App) OpenFileExplorer(workDir, logPath string) {
+// If logPath is empty, opens the instance log directory (logs/instanceName)
+func (a *App) OpenFileExplorer(workDir, logPath, instanceName string) {
 	var absPath string
-	if filepath.IsAbs(logPath) {
+	if logPath == "" {
+		absPath = filepath.Join("logs", instanceName)
+	} else if filepath.IsAbs(logPath) {
 		absPath = logPath
 	} else {
 		absPath = filepath.Join(workDir, logPath)
@@ -227,6 +233,6 @@ func (a *App) OpenFileExplorer(workDir, logPath string) {
 	cmd := exec.Command("explorer.exe", absPath)
 	err := cmd.Start()
 	if err != nil {
-		utils.Logger.Error(err.Error())
+		utils.Logger.Errorf("Failed to open explorer: %v", err)
 	}
 }

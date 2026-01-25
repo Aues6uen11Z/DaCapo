@@ -707,6 +707,6 @@ const openServerChanHelp = () => {
 };
 
 const openLog = async () => {
-  await OpenFileExplorer('.', 'logs');
+  await OpenFileExplorer('.', 'logs', '');
 };
 </script>

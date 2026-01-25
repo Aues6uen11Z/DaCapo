@@ -101,8 +101,16 @@ func (s *WebSocketService) BroadcastState(istName, state string) {
 	utils.GetWSManager().BroadcastJSON(message)
 }
 
-// BroadcastLog broadcasts log messages
+// BroadcastLog broadcasts log messages and saves to file
 func (s *WebSocketService) BroadcastLog(istName, content string) {
+	// Save to file
+	if content != "" {
+		if err := GetInstanceLogService().WriteLog(istName, content); err != nil {
+			utils.Logger.Warnf("[%s]: Failed to write log to file: %v", istName, err)
+		}
+	}
+
+	// Broadcast to WebSocket clients
 	message := model.RspLogMessage{
 		Type:         "log",
 		InstanceName: istName,

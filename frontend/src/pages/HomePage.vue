@@ -80,12 +80,12 @@
       <q-card-section class="tw-h-full tw-flex tw-flex-col">
         <card-title :name="t('home.logs')" icon="description">
           <q-btn
-              icon="open_in_new"
-              flat
-              round
-              text-color="primary"
-              @click="openLog"
-            />
+            icon="open_in_new"
+            flat
+            round
+            text-color="primary"
+            @click="openLog"
+          />
         </card-title>
 
         <log-viewer :instance-name="instanceName" />
@@ -214,12 +214,18 @@ const moveAllToStopped = () => {
 
 const istStore = useIstStore();
 const workDir = computed(() => {
-  return istStore.layout[props.instanceName]?.Project?.General?._Base?.work_dir?.value as string || '';
+  return (
+    (istStore.layout[props.instanceName]?.Project?.General?._Base?.work_dir
+      ?.value as string) || ''
+  );
 });
 const logPath = computed(() => {
-  return istStore.layout[props.instanceName]?.Project?.General?._Base?.log_path?.value as string || '';
+  return (
+    (istStore.layout[props.instanceName]?.Project?.General?._Base?.log_path
+      ?.value as string) || ''
+  );
 });
 const openLog = async () => {
-  await OpenFileExplorer(workDir.value, logPath.value)
-}
+  await OpenFileExplorer(workDir.value, logPath.value, props.instanceName);
+};
 </script>
