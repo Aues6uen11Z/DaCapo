@@ -131,14 +131,9 @@ func (s *SchedulerService) RunCommand(tm *model.TaskManager, command string, wor
 		}
 	}
 
-	// Set environment variables to force color output
+	// Set environment variables
 	cmd.Env = append(os.Environ(),
-		"PYTHONUNBUFFERED=1",  // Disable Python output buffering
-		"FORCE_COLOR=1",       // Force enable color
-		"TERM=xterm-256color", // Set terminal type to support color
-		"COLORTERM=truecolor", // Enable true color support
-		"CLICOLOR=1",          // Enable CLI color
-		"CLICOLOR_FORCE=1",    // Force enable CLI color
+		"PYTHONUNBUFFERED=1", // Disable Python output buffering
 	)
 
 	// Set working directory

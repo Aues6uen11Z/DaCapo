@@ -4,10 +4,10 @@
     :thumb-style="thumbStyle"
     content-style="max-width: 100%;"
     content-active-style="max-width: 100%;"
-    class="tw-h-full tw-font-light tw-font-mono tw-text-sm tw-bg-gray-100 tw-px-4"
+    class="log-viewer tw-h-full tw-font-light tw-font-mono tw-text-sm tw-bg-gray-100 tw-px-4"
   >
     <div
-      v-for="(log, index) in parsedLogs"
+      v-for="(log, index) in highlightedLogs"
       :key="index"
       class="tw-whitespace-pre-wrap"
       v-html="log"
@@ -19,7 +19,7 @@
 import { ref, watch, computed, nextTick, onMounted } from 'vue';
 import { useSchedulerStore } from '../stores/global-store';
 import { QScrollArea } from 'quasar';
-import Convert from 'ansi-to-html';
+import { highlightLog } from '../utils/logHighlighter';
 
 const props = defineProps<{
   instanceName: string;
@@ -34,35 +34,10 @@ const taskStore = useSchedulerStore();
 const scrollArea = ref<InstanceType<typeof QScrollArea> | null>(null);
 const logs = ref<string[]>([]);
 
-// Create ANSI converter instance
-const convert = new Convert({
-  fg: '#000',
-  bg: '#fff',
-  newline: false,
-  escapeXML: true,
-  stream: false,
-  colors: {
-    0: '#000000', // Black
-    1: '#cd3131', // Red
-    2: '#0dbc79', // Green
-    3: '#e5e510', // Yellow
-    4: '#2472c8', // Blue
-    5: '#bc3fbc', // Magenta
-    6: '#11a8cd', // Cyan
-    7: '#e5e5e5', // White
-    8: '#666666', // Bright Black (Gray)
-    9: '#f14c4c', // Bright Red
-    10: '#23d18b', // Bright Green
-    11: '#f5f543', // Bright Yellow
-    12: '#3b8eea', // Bright Blue
-    13: '#d670d6', // Bright Magenta
-    14: '#29b8db', // Bright Cyan
-    15: '#ffffff', // Bright White
-  },
-});
-
-// Convert logs to HTML format
-const parsedLogs = computed(() => logs.value.map((log) => convert.toHtml(log)));
+// Apply syntax highlighting to logs
+const highlightedLogs = computed(() =>
+  logs.value.map((log) => highlightLog(log)),
+);
 
 // Scroll to the bottom of the log viewer
 const scrollToBottom = () => {
@@ -109,8 +84,65 @@ watch(
   { immediate: true },
 );
 
-// Watch parsed logs and apply smart scroll behavior
-watch(parsedLogs, () => {
+// Watch highlighted logs and apply smart scroll behavior
+watch(highlightedLogs, () => {
   smartScroll();
 });
 </script>
+
+<style scoped>
+/* Log syntax highlighting styles */
+.log-viewer :deep(.log-error) {
+  color: #dc2626;
+}
+.log-viewer :deep(.log-error-type) {
+  color: #dc2626;
+  font-weight: 600;
+}
+.log-viewer :deep(.log-warning) {
+  color: #d97706;
+}
+.log-viewer :deep(.log-info) {
+  color: #059669;
+}
+.log-viewer :deep(.log-debug) {
+  color: #6b7280;
+}
+.log-viewer :deep(.log-success) {
+  color: #16a34a;
+}
+.log-viewer :deep(.log-time) {
+  color: #0891b2;
+}
+.log-viewer :deep(.log-path) {
+  color: #0891b2;
+}
+.log-viewer :deep(.log-url) {
+  color: #2563eb;
+  text-decoration: underline;
+}
+.log-viewer :deep(.log-number) {
+  color: #0284c7;
+}
+.log-viewer :deep(.log-string) {
+  color: #16a34a;
+}
+.log-viewer :deep(.log-bool-true) {
+  color: #16a34a;
+  font-style: italic;
+}
+.log-viewer :deep(.log-bool-false) {
+  color: #dc2626;
+  font-style: italic;
+}
+.log-viewer :deep(.log-none) {
+  color: #9333ea;
+  font-style: italic;
+}
+.log-viewer :deep(.log-bracket) {
+  font-weight: 600;
+}
+.log-viewer :deep(.log-muted) {
+  color: #6b7280;
+}
+</style>

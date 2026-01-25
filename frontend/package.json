@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
-    "ansi-to-html": "^0.7.2",
     "axios": "^1.2.1",
     "pinia": "^2.0.11",
     "quasar": "^2.16.0",
