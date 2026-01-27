@@ -167,7 +167,7 @@ func (s *InstanceUpdaterService) createEnv(tm *model.TaskManager, envPath string
 		uvPath, err := utils.GetUVExecutable()
 		if err == nil && pythonVersion != "" {
 			// Use uv to create venv with specific Python version
-			cmd = fmt.Sprintf("%s venv --python %s %s", uvPath, pythonVersion, envPath)
+			cmd = fmt.Sprintf("\"%s\" venv --python %s \"%s\"", uvPath, pythonVersion, envPath)
 			utils.Logger.Infof("[%s]: Creating venv with uv: %s", tm.InstanceName, cmd)
 		} else {
 			// Fallback to system python
@@ -176,7 +176,7 @@ func (s *InstanceUpdaterService) createEnv(tm *model.TaskManager, envPath string
 			} else {
 				utils.Logger.Warnf("[%s]: Python version not set, using system python", tm.InstanceName)
 			}
-			cmd = fmt.Sprintf("python -m venv %s", envPath)
+			cmd = fmt.Sprintf("python -m venv \"%s\"", envPath)
 			utils.Logger.Infof("[%s]: Creating venv with python: %s", tm.InstanceName, cmd)
 		}
 
@@ -259,7 +259,7 @@ func (s *InstanceUpdaterService) installDeps(tm *model.TaskManager, envPath, dep
 	uvPath, uvErr := utils.GetUVExecutable()
 	if uvErr == nil {
 		// Use uv to install dependencies
-		cmd = fmt.Sprintf("%s pip install -r %s --python %s -i %s",
+		cmd = fmt.Sprintf("\"%s\" pip install -r \"%s\" --python \"%s\" -i %s",
 			uvPath, depsPath, envPath, fastestMirror)
 		utils.Logger.Infof("[%s]: Installing dependencies with uv: %s", tm.InstanceName, cmd)
 	} else {
@@ -269,7 +269,7 @@ func (s *InstanceUpdaterService) installDeps(tm *model.TaskManager, envPath, dep
 		if pythonExec == "" {
 			return fmt.Errorf("python not found in %s", envPath)
 		}
-		cmd = pythonExec + " -m pip install -r " + depsPath + " -i " + fastestMirror
+		cmd = fmt.Sprintf("\"%s\" -m pip install -r \"%s\" -i %s", pythonExec, depsPath, fastestMirror)
 		utils.Logger.Infof("[%s]: Installing dependencies with pip: %s", tm.InstanceName, cmd)
 	}
 
