@@ -298,6 +298,14 @@ func GitClone(repoURL, localDir, branch string) error {
 		return fmt.Errorf("failed to clone repository: %w", err)
 	}
 
+	// Add to safe.directory to avoid "dubious ownership" errors
+	absRepoPath, err := filepath.Abs(repoPath)
+	if err == nil {
+		if err := runGitCommand([]string{"config", "--global", "--add", "safe.directory", absRepoPath}, ""); err != nil {
+			Logger.Debugf("Failed to add repository to safe.directory (non-critical): %v", err)
+		}
+	}
+
 	return nil
 }
 
