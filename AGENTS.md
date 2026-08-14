@@ -21,6 +21,7 @@ DaCapo 是 Wails v2 桌面应用：Go 后端（Gin，端口 `:48596`）+ Vue 3 /
 - Go：`gofmt -s`；文件命名 `<topic>.go`。
 - 前端：2 空格缩进、单引号、分号（`.editorconfig`、Prettier、ESLint `vue3-essential`）。
 - i18n：`zh-CN` 与 `en-US` 必须同时更新。
+- 代码注释统一使用英文。
 
 ## 文档维护
 
@@ -30,4 +31,4 @@ DaCapo 是 Wails v2 桌面应用：Go 后端（Gin，端口 `:48596`）+ Vue 3 /
 
 ## 提交与发布
 
-遵循 Conventional Commits：`feat:`/`fix:`/`refactor:`/`build:`/`chore:`/`docs:`，小写、祈使语气。发布由推送 `v*.*.*` 标签触发（版本号由 CI 写入，勿手动改）。
+遵循 Conventional Commits：`feat:`/`fix:`/`refactor:`/`build:`/`chore:`/`docs:`，小写、祈使语气，提交信息使用英文。发布由推送 `v*.*.*` 标签触发（版本号由 CI 写入，勿手动改）。
