@@ -32,8 +32,11 @@ const dirPath = ref(props.modelValue);
 const selectDir = async () => {
   try {
     const path = await SelectDir();
-    dirPath.value = path;
-    emit('update:modelValue', path);
+    // Dialog returns '' when canceled; keep the existing value in that case
+    if (path) {
+      dirPath.value = path;
+      emit('update:modelValue', path);
+    }
   } catch (err) {
     console.error('Failed to select directory:', err);
   }

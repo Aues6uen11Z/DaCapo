@@ -38,8 +38,11 @@ const filePath = ref(props.modelValue);
 const selectFile = async () => {
   try {
     const path = await SelectFile();
-    filePath.value = path;
-    emit('update:modelValue', path);
+    // Dialog returns '' when canceled; keep the existing value in that case
+    if (path) {
+      filePath.value = path;
+      emit('update:modelValue', path);
+    }
   } catch (err) {
     console.error('Failed to select file:', err);
   }
