@@ -70,6 +70,8 @@ export interface RspGetInstance {
   ready: Record<string, boolean>;
   layout: Layout;
   translation: Record<string, Translation>;
+  // instance name -> reason for broken template/config; only present when a fallback layout is shown
+  errors?: Record<string, string>;
 }
 
 export interface RspUpdateRepo {

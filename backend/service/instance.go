@@ -146,22 +146,29 @@ func (s *InstanceService) CreateFromRemote(req model.ReqFromRemote) (model.Statu
 }
 
 // GetAllInstances retrieves layout for all instances
-func (s *InstanceService) GetAllInstances() ([]string, map[string]bool, any, map[string]any, model.Status, error) {
+func (s *InstanceService) GetAllInstances() ([]string, map[string]bool, any, map[string]any, map[string]string, model.Status, error) {
 	workingTemplate := []string{}
 	ready := map[string]bool{}
 	layout := orderedmap.New[string, any]()
 	translation := map[string]any{}
+	errMsgs := map[string]string{}
 
 	// Get layout information for all instances
 	instanceNames, err := model.GetAllIstNames()
 	if err != nil {
-		return nil, nil, nil, nil, model.StatusDatabase, err
+		return nil, nil, nil, nil, nil, model.StatusDatabase, err
 	}
 	for _, instanceName := range instanceNames {
-		singleTemplate, singleReady, singleLayout, singleTranslation, _, err := s.GetSingleInstance(instanceName)
+		singleTemplate, singleReady, singleLayout, singleTranslation, singleErrMsg, _, err := s.GetSingleInstance(instanceName)
 		if err != nil {
+			// Instance names come from the database and are normally present; skip only on this unrecoverable case
 			utils.Logger.Warnf("[%s]: Get instance layout failed: %v", instanceName, err)
 			continue
+		}
+		// Broken templates/configs already return a fallback layout; only surface the reason here
+		if singleErrMsg != "" {
+			utils.Logger.Warnf("[%s]: %s", instanceName, singleErrMsg)
+			errMsgs[instanceName] = singleErrMsg
 		}
 
 		workingTemplate = append(workingTemplate, singleTemplate)
@@ -169,48 +176,68 @@ func (s *InstanceService) GetAllInstances() ([]string, map[string]bool, any, map
 		layout.Set(instanceName, singleLayout)
 		translation[instanceName] = singleTranslation
 	}
-	return workingTemplate, ready, layout, translation, model.StatusSuccess, nil
+	return workingTemplate, ready, layout, translation, errMsgs, model.StatusSuccess, nil
 }
 
-// GetSingleInstance retrieves layout for a single instance
-func (s *InstanceService) GetSingleInstance(instanceName string) (string, bool, any, any, model.Status, error) {
+// GetSingleInstance retrieves layout for a single instance.
+// Broken templates/configs return a fallback layout with only the Project menu so the
+// instance stays visible and the update entry remains usable; only a missing instance record returns an error.
+func (s *InstanceService) GetSingleInstance(instanceName string) (string, bool, any, any, string, model.Status, error) {
 	// 1. Get instance information from the database
 	var instanceInfo model.InstanceInfo
 	if err := instanceInfo.GetByName(instanceName); err != nil {
-		return "", false, nil, nil, model.StatusDatabase, err
+		return "", false, nil, nil, "", model.StatusDatabase, err
 	}
 
-	// 2. Get instance configuration from the file
-	instanceConf := model.NewIstConf()
-	if err := instanceConf.Load(instanceName); err != nil {
-		return "", false, nil, nil, model.StatusFile, err
+	// Fallback layout: an empty template only yields the Project menu, whose items come entirely from the database
+	buildFallback := func(tplPath, reason string) (string, bool, any, any, string) {
+		fallbackTpl := model.NewTplConf()
+		fallbackTpl.Path = tplPath
+		fbLayout, lang := s.BuildLayout(&instanceInfo, model.NewIstConf(), fallbackTpl)
+		fbTranslation, transMsg := s.loadTranslation(instanceName, lang)
+		if transMsg != "" {
+			reason += "\n" + transMsg
+		}
+		return instanceInfo.TemplateName, instanceInfo.Ready, fbLayout, fbTranslation, reason
 	}
 
-	// 3. Get template information from the database
+	// 2. Get template information from the database
 	var templateInfo model.TemplateInfo
 	if err := templateInfo.GetByName(instanceInfo.TemplateName); err != nil {
-		return "", false, nil, nil, model.StatusDatabase, err
+		fbTemplate, fbReady, fbLayout, fbTranslation, fbMsg := buildFallback("", "template record not found: "+err.Error())
+		return fbTemplate, fbReady, fbLayout, fbTranslation, fbMsg, model.StatusSuccess, nil
+	}
+
+	// 3. Get instance configuration from the file
+	instanceConf := model.NewIstConf()
+	if err := instanceConf.Load(instanceName); err != nil {
+		fbTemplate, fbReady, fbLayout, fbTranslation, fbMsg := buildFallback(templateInfo.Path, "instance config load failed: "+err.Error())
+		return fbTemplate, fbReady, fbLayout, fbTranslation, fbMsg, model.StatusSuccess, nil
 	}
 
 	// 4. Get layout information from the template file
-	templateDir := templateInfo.Path
 	templateConf := model.NewTplConf()
-	if err := templateConf.Load(templateDir); err != nil {
-		return "", false, nil, nil, model.StatusFile, err
+	if err := templateConf.Load(templateInfo.Path); err != nil {
+		fbTemplate, fbReady, fbLayout, fbTranslation, fbMsg := buildFallback(templateInfo.Path, "template load failed: "+err.Error())
+		return fbTemplate, fbReady, fbLayout, fbTranslation, fbMsg, model.StatusSuccess, nil
 	}
 
 	// 5. Combine layout information
 	layout, lang := s.BuildLayout(&instanceInfo, instanceConf, templateConf)
-	var translation any
-	if lang != "" {
-		var err error
-		translation, err = s.GetTranslation(instanceName, lang)
-		if err != nil {
-			return "", false, nil, nil, model.StatusFile, err
-		}
-	}
+	translation, transMsg := s.loadTranslation(instanceName, lang)
+	return templateInfo.Name, instanceInfo.Ready, layout, translation, transMsg, model.StatusSuccess, nil
+}
 
-	return templateInfo.Name, instanceInfo.Ready, layout, translation, model.StatusSuccess, nil
+// loadTranslation best-effort loads translations; on failure it only returns the reason without blocking the layout
+func (s *InstanceService) loadTranslation(instanceName, lang string) (any, string) {
+	if lang == "" {
+		return nil, ""
+	}
+	translation, err := s.GetTranslation(instanceName, lang)
+	if err != nil {
+		return nil, "translation load failed: " + err.Error()
+	}
+	return translation, ""
 }
 
 // UpdateInstance updates instance configuration

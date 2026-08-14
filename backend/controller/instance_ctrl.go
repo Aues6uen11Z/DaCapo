@@ -89,7 +89,7 @@ func CreateIstFromRemote(c *gin.Context) {
 
 func GetAllInstances(c *gin.Context) {
 	instanceService := Services.InstanceService()
-	workingTpl, ready, layout, translation, status, err := instanceService.GetAllInstances()
+	workingTpl, ready, layout, translation, errMsgs, status, err := instanceService.GetAllInstances()
 	if err != nil {
 		c.JSON(http.StatusOK, model.RspGetInstance{
 			Code:    status.Code,
@@ -108,6 +108,7 @@ func GetAllInstances(c *gin.Context) {
 		Ready:           ready,
 		Layout:          layout,
 		Translation:     translation,
+		Errors:          errMsgs,
 	})
 }
 
@@ -115,7 +116,7 @@ func GetInstance(c *gin.Context) {
 	instanceName := c.Param("instance_name")
 
 	instanceService := Services.InstanceService()
-	templateName, ready, layout, translation, status, err := instanceService.GetSingleInstance(instanceName)
+	templateName, ready, layout, translation, errMsg, status, err := instanceService.GetSingleInstance(instanceName)
 	if err != nil {
 		c.JSON(http.StatusOK, model.RspGetInstance{
 			Code:    status.Code,
@@ -126,6 +127,11 @@ func GetInstance(c *gin.Context) {
 		return
 	}
 
+	errMsgs := map[string]string{}
+	if errMsg != "" {
+		errMsgs[instanceName] = errMsg
+	}
+
 	c.JSON(http.StatusOK, model.RspGetInstance{
 		Code:            model.StatusSuccess.Code,
 		Message:         model.StatusSuccess.Message,
@@ -134,6 +140,7 @@ func GetInstance(c *gin.Context) {
 		Ready:           map[string]bool{instanceName: ready},
 		Layout:          map[string]any{instanceName: layout},
 		Translation:     map[string]any{instanceName: translation},
+		Errors:          errMsgs,
 	})
 }
 

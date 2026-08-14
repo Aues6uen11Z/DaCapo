@@ -75,6 +75,7 @@ export const useIstStore = defineStore('instance', {
     ready: {} as Record<string, boolean>,
     workingTemplate: [] as string[],
     error: null as string | null,
+    instanceErrors: {} as Record<string, string>,
   }),
   getters: {
     instanceNames: (state) => Object.keys(state.layout),
@@ -161,12 +162,21 @@ export const useIstStore = defineStore('instance', {
           this.ready = { ...this.ready, ...response.ready };
           this.workingTemplate.push(...response.working_template);
           this.translation = { ...this.translation, ...response.translation };
+          // Keep the per-instance error state in sync; cleared automatically once the template recovers
+          const nextErrors = { ...this.instanceErrors };
+          if (response.errors?.[instanceName]) {
+            nextErrors[instanceName] = response.errors[instanceName];
+          } else {
+            delete nextErrors[instanceName];
+          }
+          this.instanceErrors = nextErrors;
         } else {
           const response = await fetchInstance();
           this.layout = response.layout;
           this.ready = response.ready;
           this.workingTemplate = response.working_template;
           this.translation = response.translation;
+          this.instanceErrors = response.errors || {};
         }
         this.error = null;
       } catch (err) {

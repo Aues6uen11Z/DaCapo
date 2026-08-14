@@ -83,3 +83,10 @@ Menu(菜单)   例如 General / Update / 自定义菜单
 
 > 符号链接：`instances/<name>.json` -> 仓库内 `config_path`，让脚本直接读自己仓库里的配置文件。
 > 更新流程会先 `RemoveLink` 再 `CheckLink` 重建（见 [updater.md](./backend/updater.md)）。
+
+### 模板/配置损坏时的兜底
+
+`GetSingleInstance` 加载模板或实例配置失败时**不报错**，而是用空模板返回仅含 `Project` 菜单的兜底布局
+（General/Update 项全部来自数据库，不依赖模板解析），实例保持可见、更新入口可用；
+错误原因通过响应 `errors`（实例名 -> 原因）透出，前端在实例页顶部显示横幅。
+模板修复后重新拉取更新（`UpdatePage` 成功后重载布局）即可恢复完整页面。

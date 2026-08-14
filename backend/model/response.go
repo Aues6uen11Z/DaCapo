@@ -22,10 +22,13 @@ type RspGetInstance struct {
 	Message string `json:"message"`
 	Detail  string `json:"detail"`
 
-	WorkingTemplate []string        `json:"working_template"`
-	Ready           map[string]bool `json:"ready"`
-	Layout          any             `json:"layout"`
-	Translation     any             `json:"translation"`
+	WorkingTemplate []string          `json:"working_template"`
+	Ready           map[string]bool   `json:"ready"`
+	Layout          any               `json:"layout"`
+	Translation     any               `json:"translation"`
+
+	// Instances with broken templates/configs get a fallback layout; Errors records the reason (instance name -> reason)
+	Errors map[string]string `json:"errors,omitempty"`
 }
 
 type RspGetTemplate struct {

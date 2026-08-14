@@ -1,5 +1,18 @@
 <template>
-  <div class="my-row tw-h-full tw-px-4">
+  <div class="tw-flex tw-h-full tw-flex-col tw-px-4">
+    <!-- Show the error reason when the template/config is broken; the instance stays visible with its update entry -->
+    <q-banner
+      v-if="istStore.instanceErrors[instanceName]"
+      class="bg-negative text-white tw-mb-2 tw-whitespace-pre-line"
+      dense
+    >
+      <template #avatar>
+        <q-icon name="error" />
+      </template>
+      {{ istStore.instanceErrors[instanceName] }}
+    </q-banner>
+
+    <div class="my-row tw-min-h-0 tw-flex-1">
     <!-- Left sidebar with instance navigation -->
     <q-card class="tw-w-48">
       <q-card-section class="tw-p-0">
@@ -90,6 +103,7 @@
         </template>
       </template>
     </q-tab-panels>
+    </div>
   </div>
 </template>
 
