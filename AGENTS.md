@@ -31,4 +31,6 @@ DaCapo 是 Wails v2 桌面应用：Go 后端（Gin，端口 `:48596`）+ Vue 3 /
 
 ## 提交与发布
 
+默认不擅自提交或推送：未经明确要求，不执行 `git commit` / `git push`（含 amend、rebase 等改写历史操作）；需提交时先列出改动供确认。
+
 遵循 Conventional Commits：`feat:`/`fix:`/`refactor:`/`build:`/`chore:`/`docs:`，小写、祈使语气，提交信息使用英文。发布由推送 `v*.*.*` 标签触发（版本号由 CI 写入，勿手动改）。
