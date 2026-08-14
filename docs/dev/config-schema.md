@@ -28,7 +28,7 @@ Menu(菜单)   例如 General / Update / 自定义菜单
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `type` | string | 控件类型：`input`/`checkbox`/`dropdown`/`select`/`dir`/`file`/`priority` 等 |
+| `type` | string | 控件类型，见下表 |
 | `value` | any | 默认值 |
 | `help` | string | 帮助文本（可选） |
 | `option` | []any | 下拉/单选选项（可选） |
@@ -36,6 +36,22 @@ Menu(菜单)   例如 General / Update / 自定义菜单
 | `disabled` | bool | 只读 |
 
 实例配置里 item **只存值**（无 type 等元数据），元数据运行时从模板取。
+
+## 控件类型
+
+`type` 决定前端渲染的控件（`frontend/src/components/ItemLine.vue`）：
+
+| type | 控件 | 说明 |
+| --- | --- | --- |
+| `input` | 文本框 | 未识别的 type 也回退到此 |
+| `select` | 下拉框 | 需配合 `option` |
+| `checkbox` | 复选框 | 布尔值 |
+| `priority` | 数字框 | 0-31，任务优先级专用 |
+| `folder` | 目录选择框 | 文本框 + 选目录按钮 |
+| `file` | 文件选择框 | 文本框 + 选文件按钮 |
+| `cron` | cron 输入框 | 失焦校验表达式 |
+
+`priority`、`cron` 为内置项类型（分别用于 `_Base.priority`、`General.cron_expr`），自定义项一般使用其余 5 种。
 
 ## 保留名称
 
